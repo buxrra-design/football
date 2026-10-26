@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Football Manager</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f1f4f8;color:#1b2430}
+  header{background:#0b6b3a;color:#fff;padding:14px 20px;font-size:20px;font-weight:600}
+  nav{display:flex;gap:4px;background:#0f8a4b;padding:0 12px;flex-wrap:wrap}
+  nav button{background:none;border:0;color:#fff;padding:12px 16px;cursor:pointer;font-size:15px;opacity:.8}
+  nav button.active{opacity:1;border-bottom:3px solid #fff;font-weight:600}
+  main{max-width:1000px;margin:16px auto;padding:0 12px}
+  section{display:none}section.active{display:block}
+  .card{background:#fff;border-radius:8px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
+  h2,h3{margin-top:0}
+  input,select,button{font-size:15px;padding:7px 10px;border-radius:6px;border:1px solid #bbc4d0}
+  button{cursor:pointer;background:#0f8a4b;color:#fff;border-color:#0f8a4b}
+  button.sec{background:#fff;color:#1b2430;border-color:#bbc4d0}
+  button.danger{background:#c0392b;border-color:#c0392b}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  table{border-collapse:collapse;width:100%}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e3e8ee}
+  .teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .team{border:1px solid #d5dbe3;border-radius:8px;padding:10px}
+  .team li{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}
+  .team ul{list-style:none;padding:0;margin:0}
+  .match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:700px){.match{grid-template-columns:1fr}}
+  .score{font-size:40px;text-align:center;font-weight:700;margin:8px 0}
+  .stat{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ctr{display:inline-flex;align-items:center;gap:4px}
+  .ctr button{padding:2px 9px}
+  .muted{color:#667}
+  .win{color:#0b6b3a;font-weight:700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .fut{border-radius:14px 14px 40px 40px;padding:12px 10px 16px;text-align:center;color:#2b2208;box-shadow:0 2px 6px #0004;position:relative}
+  .fut.gold{background:linear-gradient(160deg,#fbe9a0,#d6a82e)}
+  .fut.silver{background:linear-gradient(160deg,#f1f3f6,#a9b2bd);color:#222}
+  .fut.bronze{background:linear-gradient(160deg,#e8b98a,#a8683a);color:#2d1606}
+  .fut .ovr{font-size:38px;font-weight:800;line-height:1}
+  .fut .rk{position:absolute;top:8px;right:10px;font-size:12px;font-weight:700}
+  .fut .nm{font-weight:700;margin:6px 0;border-bottom:1px solid #0003;padding-bottom:6px;overflow:hidden;text-overflow:ellipsis}
+  .fut .sub{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:12px}
+  .fut .sub b{display:block;font-size:18px}
+  .fut.rare{position:relative;overflow:hidden;filter:saturate(1.35) brightness(1.08);box-shadow:0 0 14px #fff8,0 2px 6px #0004;border:2px solid #fff9}
+  .fut.rare::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
+  @keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
+  .fut.totw{background:linear-gradient(160deg,#4a4a4f,#111114);color:#fff;border:2px solid #ffd33d}
+  .fut.totw .ovr{color:#ffd33d}
+  .fut.toty{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#fff;border:2px solid #7fd0ff;box-shadow:0 0 14px #3aa0ff99}
+  .fut.toty .ovr{color:#9fe0ff}
+  .fut.star{background:linear-gradient(160deg,#c05cff,#ff5fb0);color:#fff;box-shadow:0 0 12px #e060ff99}
+  .fut .tag{position:absolute;top:8px;left:10px;font-size:11px;font-weight:700;text-align:left}
+  .timer{text-align:center;font-size:22px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header>⚽ Football Manager</header>
+<nav id="nav">
+  <button data-t="players" class="active">Players</button>
+  <button data-t="teams">Teams</button>
+  <button data-t="game">Game</button>
+  <button data-t="history">History</button>
+  <button data-t="sessions">Sessions</button>
+  <button data-t="ranking">Ranking</button>
+  <button data-t="stats">Totals</button>
+</nav>
+<main>
+
+<section id="players" class="active">
+  <div class="card">
+    <h2>Add player</h2>
+    <form id="playerForm" class="row">
+      <input id="playerName" placeholder="Player name" required maxlength="40">
+      <button>Add</button>
+    </form>
+  </div>
+  <div class="card"><h3>All players (<span id="pCount">0</span>)</h3><div id="playerList"></div></div>
+</section>
+
+<section id="teams">
+  <div class="card">
+    <h2>Default teams</h2>
+    <div class="row">
+      <label>Number of teams
+        <select id="teamCount"><option>2</option><option>3</option><option>4</option></select>
+      </label>
+      <button id="genTeams">Generate random teams</button>
+      <span class="muted">Then move players between teams with the dropdown. Changes save automatically.</span>
+    </div>
+    <div id="teamsBal"></div>
+    <div id="teamsView" class="teams"></div>
+  </div>
+</section>
+
+<section id="game">
+  <div class="card" id="setup">
+    <h2>Start game</h2>
+    <div class="row">
+      <select id="teamA"></select> <b>vs</b> <select id="teamB"></select>
+      <button id="startBtn">Start Game</button>
+    </div>
+    <div class="muted" id="setupMsg"></div>
+  </div>
+  <div class="card" id="live" style="display:none">
+    <div class="timer">⏱ <span id="clock">00:00</span></div>
+    <div class="score"><span id="nameA"></span> <span id="scoreA">0</span> : <span id="scoreB">0</span> <span id="nameB"></span></div>
+    <div class="row" style="justify-content:center"><button id="stopBtn" class="danger">Stop Game</button><button id="cancelBtn" class="sec">Cancel (don't save)</button></div>
+    <div id="liveBal"></div>
+    <div class="match"><div id="liveA"></div><div id="liveB"></div></div>
+  </div>
+</section>
+
+<section id="history">
+  <div class="card"><h2>Game history</h2><div id="historyList"></div></div>
+</section>
+
+<section id="sessions">
+  <div class="card"><h2>Daily session summary</h2>
+  <div class="muted">One block per played date. Win % = wins ÷ matches that team played that day. Best duo/trio = players who were on the same team, ranked by points per match (win 3, draw 1), then matches together, then combined goals + assists.</div></div>
+  <div id="sessionList"></div>
+</section>
+
+<section id="ranking">
+  <div class="card"><h2>Player ranking</h2>
+  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT: goals (SHO), assists (PAS), clean sheets (DEF), per match, 40% all time + 60% last 5 match days.<br>
+  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): not played in the last 4 match days. 📋 <b>TOTW</b> (black): top 3 form over last 5 days. ⭐ <b>Future Star</b> (purple/pink): selected in Players tab. 🏆 <b>TOTY</b> (dark blue): after 15 January, top 5 rated + best goalkeeper (the player outside the top 5 with the most clean sheets, then highest rating) of the previous year. Priority: TOTY › Future Star › TOTW › base.</div>
+  <div id="rankCards" class="cards"></div></div>
+  <div class="card"><div id="rankTable"></div></div>
+</section>
+
+<section id="stats">
+  <div class="card"><h2>Player totals</h2><div id="statsList"></div>
+  <div class="row" style="margin-top:12px"><button id="exportBtn">⬆ Export all data</button>
+  <label class="sec" style="cursor:pointer;padding:7px 10px;border:1px solid #bbc4d0;border-radius:6px">⬇ Import &amp; merge <input type="file" id="importFile" accept=".json,application/json" hidden></label>
+  <label class="sec" style="cursor:pointer;padding:7px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b">Import &amp; replace all <input type="file" id="replaceFile" accept=".json,application/json" hidden></label></div>
+  <div class="muted">Merge adds new players and games to existing data and skips duplicates, so you can sync back and forth between PC and iPhone.</div></div>
+</section>
+</main>
+
+<script>
+// ---------- IndexedDB ----------
+const DB_NAME = 'footballApp';
+let db;
+const openDB = () => new Promise((res, rej) => {
+  const r = indexedDB.open(DB_NAME, 1);
+  r.onupgradeneeded = () => {
+    const d = r.result;
+    d.createObjectStore('players', {keyPath: 'id', autoIncrement: true});
+    d.createObjectStore('games', {keyPath: 'id', autoIncrement: true});
+    d.createObjectStore('kv', {keyPath: 'key'});
+  };
+  r.onsuccess = () => { db = r.result; db.onversionchange = () => db.close(); res(); };
+  r.onerror = () => rej(r.error);
+});
+const tx = (store, mode, fn) => new Promise((res, rej) => {
+  const t = db.transaction(store, mode), s = t.objectStore(store), req = fn(s);
+  t.oncomplete = () => res(req && req.result);
+  t.onerror = () => rej(t.error);
+});
+const all = s => tx(s, 'readonly', st => st.getAll());
+const put = (s, v) => tx(s, 'readwrite', st => st.put(v));
+const add = (s, v) => tx(s, 'readwrite', st => st.add(v));
+const del = (s, k) => tx(s, 'readwrite', st => st.delete(k));
+const getKV = async k => (await tx('kv', 'readonly', st => st.get(k)))?.value;
+const setKV = (k, value) => put('kv', {key: k, value});
+
+// ---------- State ----------
+let players = [], teams = [], game = null, timer = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pName = id => players.find(p => p.id === id)?.name ?? '(removed)';
+const COLORS = ['Black', 'White', 'Blue', 'Yellow', 'Red', 'Green'];
+let teamNames = [];
+const teamLabel = i => teamNames[i] || COLORS[i];
+
+// ---------- Tabs ----------
+$('nav').onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b === e.target));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === t));
+  if (t === 'history') renderHistory();
+  if (t === 'stats') renderStats();
+  if (t === 'ranking') renderRanking();
+  if (t === 'sessions') renderSessions();
+};
+
+// ---------- Players ----------
+$('playerForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('playerName').value.trim();
+  if (!name) return;
+  if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) return alert('Player already exists');
+  await add('players', {name});
+  $('playerName').value = '';
+  await loadPlayers(); renderAll();
+};
+async function loadPlayers() { players = await all('players'); }
+function renderPlayers() {
+  $('pCount').textContent = players.length;
+  const n = players.filter(isAvail).length;
+  $('playerList').innerHTML = players.length ?
+    `<div class="row"><b>${n} available</b><button class="sec" data-all="1">All available</button><button class="sec" data-all="0">None available</button></div>
+    <table><tr><th>Available</th><th>Name</th><th>Future Star</th><th></th></tr>` + players.map(p =>
+    `<tr><td style="width:80px"><input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}></td>
+    <td class="${isAvail(p) ? '' : 'muted'}">${esc(p.name)}</td>
+    <td><input type="checkbox" data-star="${p.id}" ${p.star ? 'checked' : ''}></td>
+    <td style="width:90px"><button class="danger" data-del="${p.id}">Delete</button></td></tr>`).join('') + '</table>'
+    : '<span class="muted">No players yet.</span>';
+}
+const isAvail = p => p.available !== false;
+$('playerList').onchange = async e => {
+  const d = e.target.dataset;
+  const field = d.avail ? 'avail' : d.star ? 'star' : null; if (!field) return;
+  const p = players.find(x => x.id === +d[field]);
+  if (field === 'avail') p.available = e.target.checked; else p[field] = e.target.checked;
+  await put('players', p); renderAll();
+};
+$('playerList').onclick = async e => {
+  if (e.target.dataset.all !== undefined) {
+    for (const p of players) { p.available = e.target.dataset.all === '1'; await put('players', p); }
+    return renderAll();
+  }
+  const id = +e.target.dataset.del; if (!id) return;
+  if (!confirm('Delete ' + pName(id) + '? Past game records keep their stats.')) return;
+  await del('players', id);
+  teams = teams.map(t => t.filter(x => x !== id)); await setKV('teams', teams);
+  await loadPlayers(); renderAll();
+};
+
+// ---------- Team balance ----------
+let ratingCache = {byName: {}, fb: {ovr: 60, sho: 60, pas: 60, def: 60}};
+async function refreshRatings() {
+  const {list} = await computeRatings();
+  const avg = k => list.length ? Math.round(list.reduce((s, p) => s + p[k], 0) / list.length) : 60;
+  ratingCache = {byName: Object.fromEntries(list.map(p => [p.name, p])), fb: {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), def: avg('def')}};
+}
+const rOf = name => ratingCache.byName[name] || ratingCache.fb;
+const equality = vals => { const mx = Math.max(...vals); return mx ? Math.round(100 * Math.min(...vals) / mx) : 100; };
+const eqColor = v => v >= 90 ? '#1e8e4e' : v >= 80 ? '#d98a00' : '#c0392b';
+// groups: [{label, names}] -> equality % based on summed player ratings
+function balanceHtml(groups) {
+  if (groups.length < 2) return '';
+  const sum = (g, k) => g.names.reduce((s, n) => s + rOf(n)[k], 0);
+  const rows = [['ovr', 'Overall'], ['sho', 'SHO'], ['pas', 'PAS'], ['def', 'DEF']].map(([k, title]) => {
+    const vals = groups.map(g => sum(g, k)), eq = equality(vals);
+    return `<div style="display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;margin:3px 0;font-size:${k === 'ovr' ? 15 : 13}px">
+      <b>${title}</b><div style="background:#e3e8ee;border-radius:6px;height:10px"><div style="width:${eq}%;height:100%;border-radius:6px;background:${eqColor(eq)}"></div></div>
+      <b style="color:${eqColor(eq)}">${eq}%</b></div>
+      <div class="muted" style="font-size:11px;margin:-2px 0 4px 78px">${groups.map((g, i) => `${esc(g.label)} ${vals[i]}`).join(' · ')}</div>`;
+  }).join('');
+  return `<div style="border:1px solid #d5dbe3;border-radius:8px;padding:8px 12px;margin-bottom:10px"><b>⚖️ Team equality</b>${rows}</div>`;
+}
+const activeNames = t => t.players.filter(p => !p.left).map(p => p.name);
+
+// ---------- Teams ----------
+$('genTeams').onclick = async () => {
+  const n = +$('teamCount').value;
+  const avail = players.filter(isAvail);
+  if (avail.length < n) return alert(`Mark at least ${n} players as available (Players tab).`);
+  const {list} = await computeRatings();
+  const ovr = Object.fromEntries(list.map(p => [p.name, p.ovr]));
+  const known = list.map(p => p.ovr), fallback = known.length ? Math.round(known.reduce((a, b) => a + b, 0) / known.length) : 60;
+  // random jitter so repeated generations differ, then greedy balance by rating
+  const rated = avail.map(p => ({id: p.id, r: (ovr[p.name] ?? fallback) + (Math.random() * 6 - 3)})).sort((a, b) => b.r - a.r);
+  teams = Array.from({length: n}, () => []);
+  const sums = Array(n).fill(0);
+  teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
+  rated.forEach(p => {
+    const min = Math.min(...teams.map(t => t.length));
+    let best = -1;
+    teams.forEach((t, i) => { if (t.length === min && (best < 0 || sums[i] < sums[best])) best = i; });
+    teams[best].push(p.id); sums[best] += p.r;
+  });
+  await setKV('teams', teams); renderAll();
+};
+$('teamsView').onchange = async e => {
+  if (e.target.dataset.tname !== undefined) {
+    const i = +e.target.dataset.tname, v = e.target.value;
+    const j = teams.findIndex((_, x) => x !== i && teamLabel(x) === v);
+    const names = teams.map((_, x) => teamLabel(x));
+    if (j >= 0) names[j] = names[i];
+    names[i] = v; teamNames = names;
+    await setKV('teamNames', teamNames); return renderAll();
+  }
+  const pid = +e.target.dataset.move; if (!pid) return;
+  const to = +e.target.value;
+  teams = teams.map(t => t.filter(x => x !== pid));
+  if (to >= 0) teams[to].push(pid);
+  await setKV('teams', teams); renderAll();
+};
+function renderTeams() {
+  const assigned = new Set(teams.flat());
+  const free = players.filter(p => isAvail(p) && !assigned.has(p.id));
+  const opts = cur => teams.map((_, i) => `<option value="${i}" ${i === cur ? 'selected' : ''}>${teamLabel(i)}</option>`).join('') +
+    `<option value="-1" ${cur === -1 ? 'selected' : ''}>Unassigned</option>`;
+  const nameSel = i => `<select data-tname="${i}">${COLORS.map(c => `<option ${c === teamLabel(i) ? 'selected' : ''}>${c}</option>`).join('')}</select> (${teams[i].length})`;
+  const box = (title, ids, cur) => `<div class="team"><h3>${title}</h3><ul>` +
+    ids.map(id => `<li>${esc(pName(id))}<select data-move="${id}">${opts(cur)}</select></li>`).join('') + '</ul></div>';
+  $('teamsView').innerHTML = teams.length
+    ? teams.map((t, i) => box(nameSel(i), t, i)).join('') + (free.length ? box('Unassigned', free.map(p => p.id), -1) : '')
+    : '<span class="muted">No teams yet. Click “Generate random teams”.</span>';
+  $('teamsBal').innerHTML = balanceHtml(teams.map((t, i) => ({label: teamLabel(i), names: t.map(pName)})));
+  $('teamCount').value = teams.length >= 2 ? teams.length : $('teamCount').value;
+}
+
+// ---------- Game ----------
+function renderSetup() {
+  const o = teams.map((t, i) => `<option value="${i}">${teamLabel(i)} (${t.length})</option>`).join('');
+  const a = $('teamA').value, b = $('teamB').value;
+  $('teamA').innerHTML = o; $('teamB').innerHTML = o;
+  $('teamA').value = a || 0; $('teamB').value = b || (teams.length > 1 ? 1 : 0);
+  $('setupMsg').textContent = teams.length < 2 ? 'Create default teams first (Teams tab).' : '';
+  $('startBtn').disabled = teams.length < 2;
+}
+$('startBtn').onclick = () => {
+  const a = +$('teamA').value, b = +$('teamB').value;
+  if (a === b) return alert('Pick two different teams.');
+  const mk = (idx) => ({name: teamLabel(idx), players: teams[idx].map(id => ({id, name: pName(id), goals: 0, assists: 0, cleanSheet: 0}))});
+  game = {start: Date.now(), A: mk(a), B: mk(b)};
+  localStorage.setItem('liveGame', JSON.stringify(game));
+  showLive();
+};
+function showLive() {
+  $('setup').style.display = 'none'; $('live').style.display = '';
+  clearInterval(timer);
+  const tick = () => {
+    const s = Math.floor((Date.now() - game.start) / 1000);
+    $('clock').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  };
+  tick(); timer = setInterval(tick, 1000);
+  renderLive();
+}
+const goals = t => t.players.reduce((s, p) => s + p.goals, 0);
+function renderLive() {
+  $('nameA').textContent = game.A.name; $('nameB').textContent = game.B.name;
+  $('scoreA').textContent = goals(game.A); $('scoreB').textContent = goals(game.B);
+  $('liveBal').innerHTML = balanceHtml([{label: game.A.name, names: activeNames(game.A)}, {label: game.B.name, names: activeNames(game.B)}]);
+  const inGame = new Set([...game.A.players, ...game.B.players].map(p => p.id));
+  const cands = players.filter(p => isAvail(p) && !inGame.has(p.id));
+  const side = (k, t) => `<h3>${esc(t.name)}</h3><table>` + t.players.map((p, i) => `<tr><td>${esc(p.name)}${p.left ? ' <span class="muted">(left)</span>' : ''}<br>
+    ${p.left ? '' : `<button class="sec" data-act="move" data-k="${k}" data-i="${i}">⇄ Move</button> <button class="sec" data-act="remove" data-k="${k}" data-i="${i}">✕ Remove</button>`}</td><td><div class="stat">
+    <span class="ctr">⚽<button data-k="${k}" data-i="${i}" data-f="goals" data-d="-1">−</button><b>${p.goals}</b><button data-k="${k}" data-i="${i}" data-f="goals" data-d="1">+</button></span>
+    <span class="ctr">🅰️<button data-k="${k}" data-i="${i}" data-f="assists" data-d="-1">−</button><b>${p.assists}</b><button data-k="${k}" data-i="${i}" data-f="assists" data-d="1">+</button></span>
+    <span class="ctr">🧤<button data-k="${k}" data-i="${i}" data-f="cleanSheet" data-d="-1">−</button><b>${+p.cleanSheet || 0}</b><button data-k="${k}" data-i="${i}" data-f="cleanSheet" data-d="1">+</button></span>    </div></td></tr>`).join('') + '</table>' +
+        `<div class="row"><select data-addsel="${k}"><option value="">+ Add player…</option>${cands.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`;
+      $('liveA').innerHTML = side('A', game.A); $('liveB').innerHTML = side('B', game.B);
+    }
+    $('live').onclick = e => {
+      const d = e.target.dataset;
+      if (d.act) {
+        const t = game[d.k], p = t.players[+d.i];
+        if (d.act === 'move') {
+          const other = game[d.k === 'A' ? 'B' : 'A'];
+          t.players.splice(+d.i, 1); other.players.push(p);
+        } else if (p.goals || p.assists || p.cleanSheet) {
+          if (!confirm(`${p.name} has stats. Remove from the game but keep their stats on record?`)) return;
+          p.left = true;
+        } else t.players.splice(+d.i, 1);
+        persistLive(); return renderLive();
+      }
+  if (d.f) {
+    const p = game[d.k].players[+d.i];
+    p[d.f] = Math.max(0, (+p[d.f] || 0) + +d.d);
+    persistLive(); renderLive();
+  }
+};
+$('live').onchange = e => {
+  const k = e.target.dataset.addsel;
+  if (!k || !e.target.value) return;
+  const id = +e.target.value;
+  game[k].players.push({id, name: pName(id), goals: 0, assists: 0, cleanSheet: 0});
+  persistLive(); renderLive();
+};
+const persistLive = () => localStorage.setItem('liveGame', JSON.stringify(game));
+function endLive() {
+  clearInterval(timer); game = null; localStorage.removeItem('liveGame');
+  $('live').style.display = 'none'; $('setup').style.display = '';
+}
+$('cancelBtn').onclick = () => { if (confirm('Discard this game?')) endLive(); };
+$('stopBtn').onclick = async () => {
+  const ga = goals(game.A), gb = goals(game.B);
+  let winner = ga > gb ? game.A.name : gb > ga ? game.B.name : 'Draw';
+  if (!confirm(`Stop game?\n${game.A.name} ${ga} : ${gb} ${game.B.name}\nResult: ${winner === 'Draw' ? 'Draw' : winner + ' wins'}`)) return;
+  const end = Date.now();
+  await add('games', {
+    date: new Date(end).toISOString(), durationSec: Math.round((end - game.start) / 1000),
+    teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner
+  });
+  endLive(); renderHistory(); renderAll();
+  document.querySelector('[data-t=history]').click();
+};
+
+// ---------- History / Stats ----------
+async function renderHistory() {
+  const games = (await all('games')).reverse();
+  $('historyList').innerHTML = games.length ? games.map(g => {
+    const rows = t => t.players.filter(p => p.goals || p.assists || p.cleanSheet).map(p =>
+      `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.cleanSheet ? '🧤' + (+p.cleanSheet) : ''}`).join('<br>') || '<span class="muted">no stats</span>';
+    return `<div class="card" style="border:1px solid #e3e8ee">
+      <div class="row" style="justify-content:space-between"><b>${new Date(g.date).toLocaleString()}</b>
+      <span class="win">${g.winner === 'Draw' ? 'Draw' : '🏆 ' + esc(g.winner)}</span>
+      <button class="danger" data-gdel="${g.id}">Delete</button></div>
+      <div>${esc(g.teamA.name)} <b>${g.scoreA} : ${g.scoreB}</b> ${esc(g.teamB.name)} <span class="muted">(${Math.floor(g.durationSec / 60)} min)</span></div>
+      <div class="match" style="margin-top:6px"><div><b>${esc(g.teamA.name)}</b><br>${rows(g.teamA)}</div><div><b>${esc(g.teamB.name)}</b><br>${rows(g.teamB)}</div></div></div>`;
+  }).join('') : '<span class="muted">No games played yet.</span>';
+}
+$('historyList').onclick = async e => {
+  const id = +e.target.dataset.gdel; if (!id || !confirm('Delete this game?')) return;
+  await del('games', id); renderHistory();
+};
+const combos = (arr, k) => k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map(c => [x, ...c]));
+function bestGroups(dayGames, size) {
+  const m = {};
+  dayGames.forEach(g => [[g.teamA, g.scoreA, g.scoreB], [g.teamB, g.scoreB, g.scoreA]].forEach(([t, f, a]) => {
+    const names = [...new Set(t.players.map(p => p.name))].sort();
+    const ga = Object.fromEntries(t.players.map(p => [p.name, (p.goals || 0) + (p.assists || 0)]));
+    combos(names, size).forEach(c => {
+      const s = m[c.join(' + ')] ??= {key: c.join(' + '), games: 0, w: 0, d: 0, ga: 0};
+      s.games++; s.ga += c.reduce((x, n) => x + ga[n], 0);
+      if (f > a) s.w++; else if (f === a) s.d++;
+    });
+  }));
+  const pts = s => (3 * s.w + s.d) / s.games;
+  return Object.values(m).sort((a, b) => pts(b) - pts(a) || b.games - a.games || b.ga - a.ga)[0];
+}
+async function renderSessions() {
+  const games = (await all('games')).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const byDay = {};
+  games.forEach(g => (byDay[new Date(g.date).toLocaleDateString()] ??= []).push(g));
+  const days = Object.entries(byDay).reverse();
+  const group = (s, label) => s
+    ? `<div>${label}: <b>${esc(s.key)}</b> <span class="muted">— ${s.games} match${s.games > 1 ? 'es' : ''} together, ${s.w}W ${s.d}D ${s.games - s.w - s.d}L (${Math.round(100 * s.w / s.games)}% wins), G+A ${s.ga}</span></div>`
+    : `<div class="muted">${label}: not enough players on one team</div>`;
+  $('sessionList').innerHTML = days.length ? days.map(([day, gs]) => {
+    const t = {};
+    gs.forEach(g => [[g.teamA.name, g.scoreA, g.scoreB], [g.teamB.name, g.scoreB, g.scoreA]].forEach(([n, f, a]) => {
+      const s = t[n] ??= {p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0};
+      s.p++; s.gf += f; s.ga += a;
+      if (f > a) s.w++; else if (f === a) s.d++; else s.l++;
+    }));
+    const rows = Object.entries(t).sort((a, b) => b[1].w / b[1].p - a[1].w / a[1].p || (b[1].gf - b[1].ga) - (a[1].gf - a[1].ga))
+      .map(([n, s]) => `<tr><td><b>${esc(n)}</b></td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf}:${s.ga}</td><td><b>${Math.round(100 * s.w / s.p)}%</b></td></tr>`).join('');
+    return `<div class="card"><h3>📅 ${esc(day)} <span class="muted">— ${gs.length} match${gs.length > 1 ? 'es' : ''}</span></h3>
+      <table><tr><th>Team</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>Goals</th><th>Win %</th></tr>${rows}</table>
+      <div style="margin-top:10px">${group(bestGroups(gs, 2), '🤝 Best duo')}${group(bestGroups(gs, 3), '🔱 Best trio')}</div></div>`;
+  }).join('') : '<div class="card"><span class="muted">No games played yet.</span></div>';
+}
+async function computeRatings(src) {
+  const games = src || await all('games');
+  const day = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+  const days = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date)).slice(0, 5);
+  const recentDays = new Set(days);
+  const m = {};
+  games.forEach(g => {
+    const rec = recentDays.has(day(g));
+    [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
+      const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, c: 0, rg: 0, ra: 0, rc: 0, days: new Set()};
+      s.days.add(day(g));
+      const cs = +p.cleanSheet || 0;
+      s.games++; s.g += p.goals; s.a += p.assists; s.c += cs;
+      if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rc += cs; }
+    }));
+  });
+  const list = Object.entries(m).map(([name, s]) => ({name, ...s}));
+  const rate = (v, n) => n ? v / n : 0;
+  const keys = [['g', 'rg'], ['a', 'ra'], ['c', 'rc']];
+  const max = keys.map(([all, rec]) => ({
+    all: Math.max(0, ...list.map(p => rate(p[all], p.games))),
+    rec: Math.max(0, ...list.map(p => rate(p[rec], p.rGames)))}));
+  list.forEach(p => {
+    const sub = keys.map(([all, rec], i) => {
+      const a = max[i].all ? rate(p[all], p.games) / max[i].all : 0;
+      const r = max[i].rec ? rate(p[rec], p.rGames) / max[i].rec : 0;
+      return 0.4 * a + 0.6 * r;
+    });
+    const conf = 0.7 + 0.3 * Math.min(1, p.games / 5);
+    const score = (0.4 * sub[0] + 0.35 * sub[1] + 0.25 * sub[2]) * conf;
+    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.def = Math.round(40 + 59 * sub[2]);
+    p.ovr = Math.min(99, Math.round(40 + 59 * score));
+  });
+  list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
+  if (src) return {list, days};
+  const byName = Object.fromEntries(list.map(p => [p.name, p]));
+  // TOTW: top 3 by weighted last-5-days output per match
+  const formScore = p => p.rGames ? (0.4 * p.rg + 0.35 * p.ra + 0.25 * p.rc) / p.rGames : 0;
+  [...list].filter(p => formScore(p) > 0).sort((a, b) => formScore(b) - formScore(a) || b.ovr - a.ovr)
+    .slice(0, 3).forEach(p => p.totw = true);
+  // Rare: nobody is rare until at least 4 match days exist; then anyone absent from the last 4 days
+  const last4 = days.slice(0, 4);
+  if (days.length >= 4) list.forEach(p => { p.rare = !last4.some(d => p.days.has(d)); });
+  // Future Star: manual selection in Players tab
+  players.forEach(pl => { if (pl.star && byName[pl.name]) byName[pl.name].star = true; });
+  // TOTY: only after 15 January, built from the previous calendar year
+  const now = new Date(), year = now.getFullYear() - 1;
+  const active = now >= new Date(now.getFullYear(), 0, 15);
+  if (active) {
+    const yg = games.filter(g => new Date(g.date).getFullYear() === year);
+    if (yg.length) {
+      const y = (await computeRatings(yg)).list;
+      const top = y.filter(p => p.g + p.a + p.c > 0).slice(0, 5);
+      const gks = y.filter(p => !top.includes(p) && p.c > 0).sort((a, b) => b.c - a.c || b.ovr - a.ovr);
+      [...top, ...(gks[0] ? [gks[0]] : [])].forEach(p => { if (byName[p.name]) byName[p.name].toty = true; });
+    }
+  }
+  return {list, days};
+}
+async function renderRanking() {
+  const {list, days} = await computeRatings();
+  const kind = p => p.toty ? 'toty' : p.star ? 'star' : p.totw ? 'totw' : '';
+  const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
+  const label = p => p.toty ? '🏆 TOTY' : p.star ? '⭐ FUTURE STAR' : p.totw ? '📋 TOTW' : p.rare ? '✨ RARE' : '';
+  $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''}">
+    <span class="tag">${label(p)}</span><span class="rk">#${i + 1}</span><div class="ovr" style="margin-top:14px">${p.ovr}</div><div class="nm">${esc(p.name)}</div>
+    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.def}</b>DEF</span></div></div>`).join('')
+    : '<span class="muted">No games played yet.</span>';
+  $('rankTable').innerHTML = list.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th><th>CS all/L5</th></tr>` +
+    list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td><td>${p.a}/${p.ra}</td><td>${p.c}/${p.rc}</td></tr>`).join('') + '</table>' : '';
+}
+async function renderStats() {
+  const games = await all('games'), m = {};
+  games.forEach(g => [[g.teamA, 'A'], [g.teamB, 'B']].forEach(([t]) => t.players.forEach(p => {
+    const s = m[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, cs: 0};
+    s.games++; s.goals += p.goals; s.assists += p.assists; s.cs += +p.cleanSheet || 0;
+    if (g.winner === t.name) s.wins++;
+  })));
+  const list = Object.entries(m).sort((a, b) => b[1].goals - a[1].goals || b[1].assists - a[1].assists);
+  $('statsList').innerHTML = list.length ? '<table><tr><th>Player</th><th>Games</th><th>Wins</th><th>Goals</th><th>Assists</th><th>Clean sheets</th></tr>' +
+    list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.cs}</td></tr>`).join('') + '</table>'
+    : '<span class="muted">No data yet.</span>';
+}
+const dayStamp = () => new Date().toISOString().slice(0, 10);
+$('exportBtn').onclick = async () => {
+  const pl = await all('players'), nameOf = id => pl.find(p => p.id === id)?.name;
+  const data = {
+    app: 'football', version: 2, exportedAt: new Date().toISOString(),
+    players: pl.map(({id, ...p}) => p),
+    games: (await all('games')).map(({id, ...g}) => g),
+    teams: teams.map(t => t.map(nameOf).filter(Boolean)), teamNames
+  };
+  const name = `football-backup-${dayStamp()}.json`;
+  const file = new File([JSON.stringify(data, null, 1)], name, {type: 'application/json'});
+  // iOS: share sheet (Save to Files, AirDrop, Mail...); elsewhere: normal download
+  if (navigator.canShare && navigator.canShare({files: [file]})) {
+    try { await navigator.share({files: [file], title: name}); return; }
+    catch (err) { if (err.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+};
+const gameKey = g => [g.date, g.scoreA, g.scoreB, g.teamA?.name, g.teamB?.name,
+  [...(g.teamA?.players || []), ...(g.teamB?.players || [])].map(p => `${p.name}:${p.goals}:${p.assists}:${+p.cleanSheet || 0}`).sort().join(',')].join('|');
+async function importData(file, replace) {
+  const d = JSON.parse(await file.text());
+  if (!Array.isArray(d.players) || !Array.isArray(d.games)) throw new Error('bad');
+  // backups from the first version stored team members as ids
+  const oldIds = Object.fromEntries(d.players.filter(p => p.id).map(p => [p.id, p.name]));
+  const impTeams = (d.teams || []).map(t => t.map(x => typeof x === 'number' ? oldIds[x] : x).filter(Boolean));
+  if (replace) {
+    await tx('players', 'readwrite', s => s.clear()); await tx('games', 'readwrite', s => s.clear());
+    teams = []; teamNames = [];
+  }
+  await loadPlayers();
+  let addedP = 0, addedG = 0;
+  for (const p of d.players) {
+    const {id, ...rest} = p;
+    const ex = players.find(x => x.name.toLowerCase() === p.name.toLowerCase());
+    if (ex) { if (rest.star && !ex.star) { ex.star = true; await put('players', ex); } }
+    else { await add('players', rest); addedP++; await loadPlayers(); }
+  }
+  const have = new Set((await all('games')).map(gameKey));
+  for (const g of d.games) {
+    const {id, ...rest} = g;
+    if (have.has(gameKey(rest))) continue;
+    await add('games', rest); have.add(gameKey(rest)); addedG++;
+  }
+  await loadPlayers();
+  // existing teams are kept when merging; adopt imported ones only if there are none
+  if (!teams.length && impTeams.length) {
+    teams = impTeams.map(t => t.map(n => players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id).filter(Boolean));
+    teamNames = d.teamNames || [];
+    await setKV('teams', teams); await setKV('teamNames', teamNames);
+  }
+  renderAll(); renderStats(); renderHistory();
+  alert(`Import done.\nNew players: ${addedP}\nNew games: ${addedG}\nDuplicates were skipped.`);
+}
+for (const [id, replace] of [['importFile', false], ['replaceFile', true]]) {
+  $(id).onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    if (replace && !confirm('This DELETES all current data and replaces it with the backup. Continue?')) return;
+    try { await importData(f, replace); } catch { alert('Invalid backup file'); }
+  };
+}
+
+function renderAll() { refreshRatings().then(() => { renderPlayers(); renderTeams(); renderSetup(); if (game) renderLive(); }); }
+
+(async () => {
+  await openDB();
+  await loadPlayers();
+  teams = (await getKV('teams')) || [];
+  teamNames = (await getKV('teamNames')) || [];
+  await refreshRatings();
+  renderAll();
+  const saved = localStorage.getItem('liveGame');
+  if (saved) { game = JSON.parse(saved); showLive(); }
+})();
+</script>
+</body>
+</html>
