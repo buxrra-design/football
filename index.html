@@ -65,7 +65,6 @@
   .pp{width:84px;display:flex;justify-content:center}
   .pc{background:linear-gradient(160deg,#333,#000);color:#f4e6a0;border:1px solid #f4e6a0;border-radius:8px 8px 18px 18px;width:80px;padding:6px 2px;text-align:center;font-size:12px}
   .pc b{display:block;font-size:20px}
-  .pc.empty{opacity:.4;padding:14px 2px}
   .toty-pitch .pc{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff}
   .pc.gold{background:linear-gradient(160deg,#fbe9a0,#d6a82e);color:#2b2208;border-color:#fff8}
   .pc.silver{background:linear-gradient(160deg,#f1f3f6,#a9b2bd);color:#222;border-color:#fff8}
@@ -73,6 +72,14 @@
   .pc.totw{background:linear-gradient(160deg,#4a4a4f,#111114);color:#ffd33d;border-color:#ffd33d}
   .pc.toty{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff;box-shadow:0 0 10px #3aa0ff99}
   .pc.star{background:linear-gradient(160deg,#c05cff,#ff5fb0);color:#fff;border-color:#fff8;box-shadow:0 0 10px #e060ff99}
+  .pc.tcol{background:#555;color:#fff;border-color:#fff}
+  .pc.tc-Black{background:linear-gradient(160deg,#444,#000);color:#fff}
+  .pc.tc-White{background:linear-gradient(160deg,#fff,#d9dde3);color:#222}
+  .pc.tc-Blue{background:linear-gradient(160deg,#3b82f6,#1b46b0);color:#fff}
+  .pc.tc-Yellow{background:linear-gradient(160deg,#ffe45c,#e0b400);color:#2b2208}
+  .pc.tc-Red{background:linear-gradient(160deg,#ff5a5a,#b81414);color:#fff}
+  .pc.tc-Green{background:linear-gradient(160deg,#3fd067,#12803a);color:#fff}
+  .pc.tcol b{font-size:14px}
   .pc.rare{filter:saturate(1.35) brightness(1.08);box-shadow:0 0 12px #fff8}
   .pc.rare::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
   .pc{position:relative}
@@ -116,7 +123,7 @@
       <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
     <div id="teamsBal"></div>
-    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Each team is shown as a squad (GK = best goalkeeper rating, DEF = best tacklers, ATT = best scorers, MID = the rest). Chemistry lines use all past games: <b style="color:#22a84f">green</b> = usually on the same team, <b style="color:#d98a00">orange</b> = sometimes, <b style="color:#e02424">red</b> = never.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Each team is shown as a squad: the best scorers are on top, the other players are placed for the best chemistry. Chemistry lines use all past games: <b style="color:#22a84f">green</b> = usually on the same team, <b style="color:#d98a00">orange</b> = sometimes, <b style="color:#e02424">red</b> = never.</div>
     <div id="teamsView" class="teams"></div>
   </div>
 </section>
@@ -145,15 +152,15 @@
 
 <section id="sessions">
   <div class="card"><h2>Daily session summary</h2>
-  <div class="muted">One block per played date. Win % = wins ÷ matches that team played that day. Best duo/trio = players who were on the same team, ranked by points per match (win 3, draw 1), then matches together, then combined goals + assists.</div></div>
-  <div id="sessionList"></div>
+  <div class="muted">One block per played date. Teams are ranked by points (win 3, draw 1, loss 0), then goal difference, then goals scored. Win % = wins ÷ matches that team played that day. Main team = the team a player played most matches for that day. Each team is shown as a squad (main players, with chemistry lines from that day's matches); players who played only a few matches for the team are listed under it as "Also played", (x/y) = matches for this team / total matches that day. Top duo/trio = for each team colour, the 2 / 3 players with the most goals + assists scored while playing together on that team.</div></div>  <div id="sessionList"></div>
 </section>
 
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
-  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT: goals (SHO), assists (PAS), tackles (DEF), clean sheets (GK), per match, 60% all time + 40% last 5 match days. Overall = 30% SHO, 30% PAS, 20% DEF, 20% GK.<br>
-  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): not played in the last 4 match days. 📋 <b>TOTW</b> (black): same selection as TOTY (2 best scorers, best assister, 2 best tacklers, best clean sheets GK) but from the last session (most recent match day) only. ⭐ <b>Future Star</b> (purple/pink): selected in Players tab. 🏆 <b>TOTY</b> (dark blue): after 15 January, previous year's 2 best scorers, best assister, 2 best tacklers and best clean sheets GK (a player already picked is skipped, the next best takes the slot). Priority: TOTY › Future Star › TOTW › base.<br>👑 <b>Ballon d'Or</b>: only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b>: same schedule, the player with the most goals that year.</div>
+  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT, from three stats: goals per match (SHO), assists per match (PAS) and win rate (WIN: win = 1, draw = ½). Each stat = 60% all time + 40% last 5 match days (a player with no games in the last 5 match days uses his all-time value for that 40%). SHO and PAS are scaled to the best player; WIN is the win rate, pulled slightly towards 50% for players with few games. Overall = 40% SHO + 30% PAS + 30% WIN, slightly reduced for players with fewer than 5 games.<br>
+  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): not played in the last 4 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). ⭐ <b>Future Star</b> (purple/pink): selected in Players tab, or a new player without games. 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › Future Star › TOTW › base.<br>👑 <b>Ballon d'Or</b>: only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b>: same schedule, the player with the most goals that year.</div>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
+  <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="rankCards" class="cards"></div></div>
   <div class="card"><div id="rankTable"></div></div>
 </section>
@@ -198,6 +205,7 @@ const setKV = (k, value) => put('kv', {key: k, value});
 let players = [], teams = [], game = null, timer = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byName = (a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'});
 const pName = id => players.find(p => p.id === id)?.name ?? '(removed)';
 const COLORS = ['Black', 'White', 'Blue', 'Yellow', 'Red', 'Green'];
 let teamNames = [];
@@ -225,7 +233,7 @@ $('playerForm').onsubmit = async e => {
   $('playerName').value = '';
   await loadPlayers(); renderAll();
 };
-async function loadPlayers() { players = await all('players'); }
+async function loadPlayers() { players = (await all('players')).sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'})); }
 function renderPlayers() {
   $('pCount').textContent = players.length;
   const n = players.filter(isAvail).length;
@@ -259,11 +267,11 @@ $('playerList').onclick = async e => {
 };
 
 // ---------- Team balance ----------
-let ratingCache = {byName: {}, fb: {ovr: 60, sho: 60, pas: 60, def: 60, cls: 60}};
+let ratingCache = {byName: {}, fb: {ovr: 60, sho: 60, pas: 60, win: 60}};
 async function refreshRatings() {
   const {list} = await computeRatings();
   const avg = k => list.length ? Math.round(list.reduce((s, p) => s + p[k], 0) / list.length) : 60;
-  ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, p])), fb: {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), def: avg('def'), cls: avg('cls')}};
+  ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, p])), fb: {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), win: avg('win')}};
 }
 const rOf = name => ratingCache.byName[name] || ratingCache.fb;
 const equality = vals => { const mx = Math.max(...vals); return mx ? Math.round(100 * Math.min(...vals) / mx) : 100; };
@@ -272,7 +280,7 @@ const eqColor = v => v >= 90 ? '#1e8e4e' : v >= 80 ? '#d98a00' : '#c0392b';
 function balanceHtml(groups) {
   if (groups.length < 2) return '';
   const sum = (g, k) => g.names.reduce((s, n) => s + rOf(n)[k], 0);
-  const rows = [['ovr', 'Overall'], ['sho', 'SHO'], ['pas', 'PAS'], ['def', 'DEF'], ['cls', 'GK']].map(([k, title]) => {
+  const rows = [['ovr', 'Overall'], ['sho', 'SHO'], ['pas', 'PAS'], ['win', 'WIN']].map(([k, title]) => {
     const vals = groups.map(g => sum(g, k)), eq = equality(vals);
     return `<div style="display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;margin:3px 0;font-size:${k === 'ovr' ? 15 : 13}px">
       <b>${title}</b><div style="background:#e3e8ee;border-radius:6px;height:10px"><div style="width:${eq}%;height:100%;border-radius:6px;background:${eqColor(eq)}"></div></div>
@@ -370,21 +378,48 @@ $('teamsView').addEventListener('pointerdown', e => {
   document.addEventListener('pointermove', move, {passive: false});
   document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
 });
-const FORMATIONS = {1: [1, 0, 0, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [1, 1, 1, 1], 5: [2, 0, 2, 1], 6: [2, 1, 2, 1], 7: [2, 2, 2, 1], 8: [3, 2, 2, 1]}; // ATT, MID, DEF, GK
-// Place a team on a pitch: best GK rating = GK, best DEF = defenders, best SHO = attackers, rest = midfielders (by PAS)
-function teamSquad(names) {
-  const n = names.length, r = n - 1;
-  const [na, nm, nd, ng] = FORMATIONS[n] || [Math.ceil(r / 3), r - Math.ceil(r / 3) - Math.floor(r / 3), Math.floor(r / 3), 1];
-  let pool = [...names];
-  const take = (key, k) => { const s = [...pool].sort((a, b) => rOf(b)[key] - rOf(a)[key]).slice(0, k); pool = pool.filter(x => !s.includes(x)); return s; };
-  const GK = take('cls', ng), DEF = take('def', nd), ATT = take('sho', na), MID = take('pas', nm);
-  return {ATT, MID, DEF, GK};
+const FORMATIONS = {1: [1, 0, 0, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [1, 1, 1, 1], 5: [2, 0, 2, 1], 6: [2, 1, 2, 1], 7: [2, 2, 2, 1], 8: [3, 2, 2, 1]}; // rows: ATT, MID, DEF, GK (5 players = 2-2-1 from the top = 1-2-2 from the GK)
+const formationOf = n => { const r = n - 1, a = Math.ceil(r / 3); return FORMATIONS[n] || [a, r - a - Math.floor(r / 3), Math.floor(r / 3), 1]; };
+// Chemistry between two players over a set of games: share of the games of the less-active player spent on the same team
+function chemistry(games) {
+  const played = n => games.filter(g => [...g.teamA.players, ...g.teamB.players].some(p => p.name === n)).length;
+  const together = (a, b) => games.filter(g => [g.teamA, g.teamB].some(t => t.players.some(p => p.name === a) && t.players.some(p => p.name === b))).length;
+  return {together, ratio: (a, b) => together(a, b) / Math.max(1, Math.min(played(a), played(b)))};
 }
-function teamPitch(names, key) {
+// Linked positions: neighbours in a row, every player to the next row, and attackers to the 3rd row in 4-row squads
+function rowPairs(rows) {
+  rows = rows.filter(r => r.length);
+  const pairs = [];
+  rows.forEach((r, i) => {
+    for (let x = 0; x < r.length - 1; x++) pairs.push([r[x], r[x + 1]]);
+    (rows[i + 1] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
+    if (i === 0 && rows.length === 4) (rows[2] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
+  });
+  return pairs;
+}
+const permutations = a => a.length <= 1 ? [a] : a.flatMap((x, i) => permutations([...a.slice(0, i), ...a.slice(i + 1)]).map(p => [x, ...p]));
+// Squad layout: the top scorers are the attackers (top row); the other players are placed in the remaining
+// rows so that the total chemistry of the linked pairs is the highest.
+function arrangeSquad(names, st, games) {
+  const [na, nm, nd, ng] = formationOf(names.length);
+  const s = n => st(n) || {};
+  const byScore = [...names].sort((x, y) => (s(y).g || 0) - (s(x).g || 0) || (s(y).a || 0) - (s(x).a || 0) || (s(y).ovr || 0) - (s(x).ovr || 0));
+  const ATT = byScore.slice(0, na), rest = byScore.slice(na).sort((x, y) => (s(y).a || 0) - (s(x).a || 0));
+  const split = o => ({ATT, MID: o.slice(0, nm), DEF: o.slice(nm, nm + nd), GK: o.slice(nm + nd, nm + nd + ng)});
+  if (rest.length > 8) return split(rest);
+  const ch = chemistry(games);
+  const score = sq => rowPairs([sq.ATT, sq.MID, sq.DEF, sq.GK]).reduce((t, [a, b]) => t + ch.ratio(a, b), 0);
+  let best = null, bestScore = -1;
+  permutations(rest).forEach(o => { const sq = split(o), sc = score(sq); if (sc > bestScore + 1e-9) { best = sq; bestScore = sc; } });
+  return best || split(rest);
+}
+const teamSquad = names => arrangeSquad(names, n => ratingCache.byName[n], ratingCache.games || []);
+function teamPitch(names, key, games, colour) {
   if (!names.length) return '';
-  const s = teamSquad(names);
+  const s = games ? arrangeSquad(names, n => ratingCache.byName[n], games) : teamSquad(names);
   const row = arr => arr.length ? `<div class="pl">${arr.map(n => {
     const r = ratingCache.byName[n], pl = players.find(p => p.name === n) || {};
+    if (colour) return `<div class="pp"><div class="pc tcol tc-${esc(colour)}" data-name="${esc(n)}"><b>${esc(colour)}</b><span>${esc(n)}</span></div></div>`;
     const kind = !r ? 'star' : r.toty ? 'toty' : r.star ? 'star' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze';
     const badges = r && (r.bdo || r.boot) ? `<i class="pb">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</i>` : '';
     return `<div class="pp"><div class="pc ${kind} ${r && r.rare ? 'rare' : ''}" data-name="${esc(n)}" data-pid="${pl.id}">${badges}<b>${r ? r.ovr : '–'}</b><span>${esc(n)}</span></div></div>`;
@@ -403,7 +438,7 @@ function renderTeams() {
     `<option value="-1" ${cur === -1 ? 'selected' : ''}>Unassigned</option>`;
   const nameSel = i => `<select data-tname="${i}">${COLORS.map(c => `<option ${c === teamLabel(i) ? 'selected' : ''}>${c}</option>`).join('')}</select> (${teams[i].length})`;
   const box = (title, ids, cur, extra = '') => `<div class="team" data-team="${cur}"><h3>${title}</h3><ul>` +
-    ids.map(id => `<li data-pid="${id}"><span class="grip" data-pid="${id}" title="Drag to move">⠿</span><span style="flex:1">${esc(pName(id))}</span><select data-move="${id}">${opts(cur)}</select></li>`).join('') + '</ul>' + extra + '</div>';
+    [...ids].sort((x, y) => byName(pName(x), pName(y))).map(id => `<li data-pid="${id}"><span class="grip" data-pid="${id}" title="Drag to move">⠿</span><span style="flex:1">${esc(pName(id))}</span><select data-move="${id}">${opts(cur)}</select></li>`).join('') + '</ul>' + extra + '</div>';
   $('teamsView').innerHTML = teams.length
     ? teams.map((t, i) => box(nameSel(i), t, i, teamPitch(t.map(pName), 't' + i))).join('') + (free.length ? box('Unassigned', free.map(p => p.id), -1) : '')
     : '<span class="muted">No teams yet. Click “Generate random teams” or “Create custom teams”.</span>';
@@ -425,7 +460,7 @@ $('startBtn').onclick = () => {
   const a = +$('teamA').value, b = +$('teamB').value;
   if (a === b) return alert('Pick two different teams.');
   if (!teams[a].length || !teams[b].length) return alert('Both teams need at least one player.');
-  const mk = (idx) => ({name: teamLabel(idx), players: teams[idx].map(id => ({id, name: pName(id), goals: 0, assists: 0, cleanSheet: 0, tackles: 0}))});
+  const mk = (idx) => ({name: teamLabel(idx), players: teams[idx].map(id => ({id, name: pName(id), goals: 0, assists: 0}))});
   game = {start: Date.now(), A: mk(a), B: mk(b)};
   localStorage.setItem('liveGame', JSON.stringify(game));
   showLive();
@@ -447,12 +482,12 @@ function renderLive() {
   $('liveBal').innerHTML = balanceHtml([{label: game.A.name, names: activeNames(game.A)}, {label: game.B.name, names: activeNames(game.B)}]);
   const inGame = new Set([...game.A.players, ...game.B.players].map(p => p.id));
   const cands = players.filter(p => isAvail(p) && !inGame.has(p.id));
+  game.A.players.sort((x, y) => byName(x.name, y.name)); game.B.players.sort((x, y) => byName(x.name, y.name));
   const side = (k, t) => `<h3>${esc(t.name)}</h3><table>` + t.players.map((p, i) => `<tr><td>${esc(p.name)}${p.left ? ' <span class="muted">(left)</span>' : ''}<br>
     ${p.left ? '' : `<button class="sec" data-act="move" data-k="${k}" data-i="${i}">⇄ Move</button> <button class="sec" data-act="remove" data-k="${k}" data-i="${i}">✕ Remove</button>`}</td><td><div class="stat">
     <span class="ctr">⚽<button data-k="${k}" data-i="${i}" data-f="goals" data-d="-1">−</button><b>${p.goals}</b><button data-k="${k}" data-i="${i}" data-f="goals" data-d="1">+</button></span>
-    <span class="ctr">🅰️<button data-k="${k}" data-i="${i}" data-f="assists" data-d="-1">−</button><b>${p.assists}</b><button data-k="${k}" data-i="${i}" data-f="assists" data-d="1">+</button></span>
-    <span class="ctr">🧤<button data-k="${k}" data-i="${i}" data-f="cleanSheet" data-d="-1">−</button><b>${+p.cleanSheet || 0}</b><button data-k="${k}" data-i="${i}" data-f="cleanSheet" data-d="1">+</button></span>
-    <span class="ctr">🛡️<button data-k="${k}" data-i="${i}" data-f="tackles" data-d="-1">−</button><b>${+p.tackles || 0}</b><button data-k="${k}" data-i="${i}" data-f="tackles" data-d="1">+</button></span>    </div></td></tr>`).join('') + '</table>' +
+    <span class="ctr">🅰️<button data-k="${k}" data-i="${i}" data-f="assists" data-d="-1">−</button><b>${p.assists}</b><button data-k="${k}" data-i="${i}" data-f="assists" data-d="1">+</button>    </span>
+        </div></td></tr>`).join('') + '</table>' +
         `<div class="row"><select data-addsel="${k}"><option value="">+ Add player…</option>${cands.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`;
       $('liveA').innerHTML = side('A', game.A); $('liveB').innerHTML = side('B', game.B);
     }
@@ -463,7 +498,7 @@ function renderLive() {
         if (d.act === 'move') {
           const other = game[d.k === 'A' ? 'B' : 'A'];
           t.players.splice(+d.i, 1); other.players.push(p);
-        } else if (p.goals || p.assists || p.cleanSheet || p.tackles) {
+        } else if (p.goals || p.assists) {
           if (!confirm(`${p.name} has stats. Remove from the game but keep their stats on record?`)) return;
           p.left = true;
         } else t.players.splice(+d.i, 1);
@@ -479,7 +514,7 @@ $('live').onchange = e => {
   const k = e.target.dataset.addsel;
   if (!k || !e.target.value) return;
   const id = +e.target.value;
-  game[k].players.push({id, name: pName(id), goals: 0, assists: 0, cleanSheet: 0, tackles: 0});
+  game[k].players.push({id, name: pName(id), goals: 0, assists: 0});
   persistLive(); renderLive();
 };
 const persistLive = () => localStorage.setItem('liveGame', JSON.stringify(game));
@@ -503,12 +538,13 @@ $('stopBtn').onclick = async () => {
 
 // ---------- History / Stats ----------
 let editG = null;
-const STAT_FIELDS = [['goals', '⚽'], ['assists', '🅰️'], ['cleanSheet', '🧤'], ['tackles', '🛡️']];
+const STAT_FIELDS = [['goals', '⚽'], ['assists', '🅰️']];
 const pad2 = n => String(n).padStart(2, '0');
 const toLocalInput = iso => { const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
 function renderEditor() {
   const inGame = new Set([...editG.teamA.players, ...editG.teamB.players].map(p => p.name));
   const cands = players.filter(p => !inGame.has(p.name));
+  editG.teamA.players.sort((x, y) => byName(x.name, y.name)); editG.teamB.players.sort((x, y) => byName(x.name, y.name));
   const side = k => {
     const t = editG[k];
     return `<div><h3><select data-ename="${k}">${COLORS.map(c => `<option ${c === t.name ? 'selected' : ''}>${c}</option>`).join('')}${COLORS.includes(t.name) ? '' : `<option selected>${esc(t.name)}</option>`}</select></h3><table>` +
@@ -539,8 +575,8 @@ async function renderHistory() {
   if (editG) return renderEditor();
   const games = (await all('games')).reverse();
   $('historyList').innerHTML = games.length ? games.map(g => {
-    const rows = t =>     t.players.filter(p => p.goals || p.assists || p.cleanSheet || p.tackles).map(p =>
-          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.cleanSheet ? '🧤' + (+p.cleanSheet) + ' ' : ''}${p.tackles ? '🛡️' + p.tackles : ''}`).join('<br>') || '<span class="muted">no stats</span>';
+    const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists).map(p =>
+          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists : ''}`).join('<br>') || '<span class="muted">no stats</span>';
     return `<div class="card" style="border:1px solid #e3e8ee">
       <div class="row" style="justify-content:space-between"><b>${new Date(g.date).toLocaleString()}</b>
       <span class="win">${g.winner === 'Draw' ? 'Draw' : '🏆 ' + esc(g.winner)}</span>
@@ -564,7 +600,7 @@ $('historyList').onchange = e => {
   else if (d.ename) editG[d.ename].name = e.target.value;
   else if (d.eadd && e.target.value) {
     const pl = players.find(p => p.id === +e.target.value);
-    editG[d.eadd].players.push({id: pl.id, name: pl.name, goals: 0, assists: 0, cleanSheet: 0, tackles: 0});
+    editG[d.eadd].players.push({id: pl.id, name: pl.name, goals: 0, assists: 0});
     syncEditorInputs(); renderEditor();
   }
 };
@@ -578,41 +614,67 @@ function syncEditorInputs() {
   });
 }
 const combos = (arr, k) => k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map(c => [x, ...c]));
-function bestGroups(dayGames, size) {
+// best combination per team colour by combined goals + assists while playing together
+function topGA(dayGames, size) {
   const m = {};
-  dayGames.forEach(g => [[g.teamA, g.scoreA, g.scoreB], [g.teamB, g.scoreB, g.scoreA]].forEach(([t, f, a]) => {
+  dayGames.forEach(g => [g.teamA, g.teamB].forEach(t => {
     const names = [...new Set(t.players.map(p => p.name))].sort();
-    const ga = Object.fromEntries(t.players.map(p => [p.name, (p.goals || 0) + (p.assists || 0)]));
+    const ga = Object.fromEntries(t.players.map(p => [p.name, [p.goals || 0, p.assists || 0]]));
     combos(names, size).forEach(c => {
-      const s = m[c.join(' + ')] ??= {key: c.join(' + '), games: 0, w: 0, d: 0, ga: 0};
-      s.games++; s.ga += c.reduce((x, n) => x + ga[n], 0);
-      if (f > a) s.w++; else if (f === a) s.d++;
+      const s = (m[t.name] ??= {})[c.join(' + ')] ??= {key: c.join(' + '), games: 0, g: 0, a: 0};
+      s.games++; c.forEach(n => { s.g += ga[n][0]; s.a += ga[n][1]; });
     });
   }));
-  const pts = s => (3 * s.w + s.d) / s.games;
-  return Object.values(m).sort((a, b) => pts(b) - pts(a) || b.games - a.games || b.ga - a.ga)[0];
+  const best = {};
+  Object.entries(m).forEach(([team, o]) => {
+    const s = Object.values(o).filter(s => s.g + s.a > 0)
+      .sort((a, b) => (b.g + b.a) - (a.g + a.a) || b.g - a.g || a.games - b.games)[0];
+    if (s) best[team] = s;
+  });
+  return best;
 }
+let sessMode = 'rating';
 async function renderSessions() {
+  await refreshRatings();
+  const allPitch = [];
   const games = (await all('games')).sort((a, b) => new Date(a.date) - new Date(b.date));
   const byDay = {};
   games.forEach(g => (byDay[new Date(g.date).toLocaleDateString()] ??= []).push(g));
   const days = Object.entries(byDay).reverse();
-  const group = (s, label) => s
-    ? `<div>${label}: <b>${esc(s.key)}</b> <span class="muted">— ${s.games} match${s.games > 1 ? 'es' : ''} together, ${s.w}W ${s.d}D ${s.games - s.w - s.d}L (${Math.round(100 * s.w / s.games)}% wins), G+A ${s.ga}</span></div>`
-    : `<div class="muted">${label}: not enough players on one team</div>`;
-  $('sessionList').innerHTML = days.length ? days.map(([day, gs]) => {
+  const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button></div>`;
+  $('sessionList').innerHTML = toggle + (days.length ? days.map(([day, gs], di) => {
     const t = {};
     gs.forEach(g => [[g.teamA.name, g.scoreA, g.scoreB], [g.teamB.name, g.scoreB, g.scoreA]].forEach(([n, f, a]) => {
       const s = t[n] ??= {p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0};
       s.p++; s.gf += f; s.ga += a;
       if (f > a) s.w++; else if (f === a) s.d++; else s.l++;
     }));
-    const rows = Object.entries(t).sort((a, b) => b[1].w / b[1].p - a[1].w / a[1].p || (b[1].gf - b[1].ga) - (a[1].gf - a[1].ga))
-      .map(([n, s]) => `<tr><td><b>${esc(n)}</b></td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf}:${s.ga}</td><td><b>${Math.round(100 * s.w / s.p)}%</b></td></tr>`).join('');
+    const pts = s => 3 * s.w + s.d;
+    const rows = Object.entries(t).sort((a, b) => pts(b[1]) - pts(a[1]) || (b[1].gf - b[1].ga) - (a[1].gf - a[1].ga) || b[1].gf - a[1].gf || b[1].w / b[1].p - a[1].w / a[1].p)
+      .map(([n, s], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf}:${s.ga}</td><td>${s.gf - s.ga > 0 ? '+' : ''}${s.gf - s.ga}</td><td><b>${pts(s)}</b></td><td>${Math.round(100 * s.w / s.p)}%</td></tr>`).join('');
+    const duo = topGA(gs, 2), trio = topGA(gs, 3);
+    const main = sessionTeams(gs), played = {};
+    gs.forEach(g => [g.teamA, g.teamB].forEach(tm => new Set(tm.players.map(p => p.name)).forEach(n => played[n] = (played[n] || 0) + 1)));
+    const teamCnt = {};
+    gs.forEach(g => [g.teamA, g.teamB].forEach(tm => new Set(tm.players.map(p => p.name)).forEach(n => { ((teamCnt[tm.name] ??= {})[n] = (teamCnt[tm.name][n] || 0) + 1); })));
+    const pitchData = {};
+    const squadOf = (tn, di) => {
+      const all = Object.keys(teamCnt[tn] || {}), core = all.filter(p => main[p] === tn).sort(byName);
+      const others = all.filter(p => main[p] !== tn).sort(byName).map(p => `${esc(p)} <span class="muted">(${teamCnt[tn][p]}/${played[p]})</span>`);
+      const key = `s${di}_${tn}`; pitchData[key] = {games: gs};
+      return (core.length ? teamPitch(core, key, gs, sessMode === 'team' ? tn : '') : '') +
+        (others.length ? `<div style="font-size:13px">Also played: ${others.join(', ')}</div>` : '');
+    };
+    const line = (l, s) => `<div>${l}: ${s ? `<b>${esc(s.key)}</b> <span class="muted">— ${s.g} goals + ${s.a} assists = ${s.g + s.a} (${s.games} match${s.games > 1 ? 'es' : ''} together)</span>` : '<span class="muted">–</span>'}</div>`;
+    const combosHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">` + Object.keys(t).sort((a, b) => a.localeCompare(b)).map(n => `<div style="min-width:0"><h4 style="margin:6px 0 0">${esc(n)}</h4>
+      ${squadOf(n, di)}${line('🤝 Top duo', duo[n])}${line('🔱 Top trio', trio[n])}</div>`).join('') + '</div>';
+    allPitch.push(pitchData);
     return `<div class="card"><h3>📅 ${esc(day)} <span class="muted">— ${gs.length} match${gs.length > 1 ? 'es' : ''}</span></h3>
-      <table><tr><th>Team</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>Goals</th><th>Win %</th></tr>${rows}</table>
-      <div style="margin-top:10px">${group(bestGroups(gs, 2), '🤝 Best duo')}${group(bestGroups(gs, 3), '🔱 Best trio')}</div></div>`;
-  }).join('') : '<div class="card"><span class="muted">No games played yet.</span></div>';
+      <table><tr><th>#</th><th>Team</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>Goals</th><th>GD</th><th>Pts</th><th>Win %</th></tr>${rows}</table>
+      <div style="margin-top:10px">${combosHtml}</div></div>`;
+  }).join('') : '<div class="card"><span class="muted">No games played yet.</span></div>');
+  $('sessMode').onclick = () => { sessMode = sessMode === 'team' ? 'rating' : 'team'; renderSessions(); };
+  drawLinks(Object.assign({}, ...allPitch), $('sessionList'));
 }
 async function computeRatings(src) {
   const games = src || await all('games');
@@ -623,50 +685,52 @@ async function computeRatings(src) {
   games.forEach(g => {
     const rec = recentDays.has(day(g));
     [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
-      const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, c: 0, t: 0, rg: 0, ra: 0, rc: 0, rt: 0, days: new Set()};
+      const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, rw: 0, days: new Set()};
       s.days.add(day(g));
-      const cs = +p.cleanSheet || 0, tk = +p.tackles || 0;
-      s.games++; s.g += p.goals; s.a += p.assists; s.c += cs; s.t += tk;
-      if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rc += cs; s.rt += tk; }
+      const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
+      s.games++; s.g += p.goals; s.a += p.assists; s.w += w;
+      if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rw += w; }
     }));
   });
   const list = Object.entries(m).map(([name, s]) => ({name, ...s}));
   const rate = (v, n) => n ? v / n : 0;
-  const keys = [['g', 'rg'], ['a', 'ra'], ['t', 'rt'], ['c', 'rc']];
+  const keys = [['g', 'rg'], ['a', 'ra']];
   const max = keys.map(([all, rec]) => ({
     all: Math.max(0, ...list.map(p => rate(p[all], p.games))),
     rec: Math.max(0, ...list.map(p => rate(p[rec], p.rGames)))}));
+  // Each stat = 60% all time + 40% last 5 match days; without games in the last 5 match days the all-time value is used for the 40%
+  const blend = (a, r, hasRecent) => 0.6 * a + 0.4 * (hasRecent ? r : a);
   list.forEach(p => {
-    const sub = keys.map(([all, rec], i) => {
-      const a = max[i].all ? rate(p[all], p.games) / max[i].all : 0;
-      const r = max[i].rec ? rate(p[rec], p.rGames) / max[i].rec : 0;
-      return 0.6 * a + 0.4 * r;
-    });
+    const sub = keys.map(([all, rec], i) => blend(
+      max[i].all ? rate(p[all], p.games) / max[i].all : 0,
+      max[i].rec ? rate(p[rec], p.rGames) / max[i].rec : 0, p.rGames > 0));
+    // win rate is pulled towards 50% for small samples (like 2 extra drawn games), so 1 lucky win is not 100%
+    const shrink = (w, n) => (w + 1) / (n + 2);
+    const win = blend(shrink(p.w, p.games), shrink(p.rw, p.rGames), p.rGames > 0);
+    p.winPct = Math.round(100 * rate(p.w, p.games));
     const conf = 0.7 + 0.3 * Math.min(1, p.games / 5);
-    const score = (0.3 * sub[0] + 0.3 * sub[1] + 0.2 * sub[2] + 0.2 * sub[3]) * conf;
-    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.def = Math.round(40 + 59 * sub[2]); p.cls = Math.round(40 + 59 * sub[3]);
+    const score = (0.4 * sub[0] + 0.3 * sub[1] + 0.3 * win) * conf;
+    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.win = Math.round(40 + 59 * win);
     p.ovr = Math.min(99, Math.round(40 + 59 * score));
   });
   list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
   if (src) return {list, days};
   const byName = Object.fromEntries(list.map(p => [p.name, p]));
-  // Team selection shared by TOTW and TOTY: 2 best scorers, best assister, 2 best tacklers, best clean sheets GK.
-  // A player already picked is skipped, so the next best takes the slot.
-  const selectTeam = l => {
-    const picked = new Set(), slots = {GK: [], DEF: [], MID: [], ATT: []};
-    const pick = (field, n, role) => l.filter(p => p[field] > 0 && !picked.has(p)).sort((a, b) => b[field] - a[field] || b.ovr - a.ovr)
-      .slice(0, n).forEach(p => { picked.add(p); slots[role].push(p); });
-    pick('c', 1, 'GK'); pick('g', 2, 'ATT'); pick('a', 1, 'MID'); pick('t', 2, 'DEF');
-    return {picked, slots};
+  // TOTW / TOTY: the 5 best-rated players of the period, laid out as a 1-2-2 squad
+  // (top scorers up front, the others placed for the best chemistry)
+  const selectTeam = (l, gs) => {
+    const top = l.slice(0, 5);
+    const st = Object.fromEntries(top.map(p => [p.name, p]));
+    return {picked: new Set(top), rows: arrangeSquad(top.map(p => p.name), n => st[n], gs)};
   };
-  // TOTW: same selection, from the most recent match day only
+  // TOTW: from the most recent match day only
   let squad = null;
   if (days.length) {
     const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
     const lastGames = games.filter(g => dk(g) === days[0]);
-    const sel = selectTeam((await computeRatings(lastGames)).list);
+    const sel = selectTeam((await computeRatings(lastGames)).list, lastGames);
     sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].totw = true; });
-    squad = {slots: sel.slots, byName, day: lastGames[0].date, games: lastGames};
+    squad = {rows: sel.rows, byName, day: lastGames[0].date, games: lastGames};
   }
   // Rare: nobody is rare until at least 4 match days exist; then anyone absent from the last 4 days
   const last4 = days.slice(0, 4);
@@ -680,9 +744,9 @@ async function computeRatings(src) {
   if (active) {
     const yg = games.filter(g => new Date(g.date).getFullYear() === year);
     if (yg.length) {
-      const sel = selectTeam((await computeRatings(yg)).list);
+      const sel = selectTeam((await computeRatings(yg)).list, yg);
       sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].toty = true; });
-      toty = {slots: sel.slots, byName, year, games: yg};
+      toty = {rows: sel.rows, byName, year, games: yg};
     }
   }
   // Ballon d'Or: awarded 15 October from that year's games up to the award day, held until the next 15 October
@@ -691,7 +755,7 @@ async function computeRatings(src) {
   const bg = games.filter(g => { const d = new Date(g.date); return d.getFullYear() === awardYear && d <= awardEnd; });
   if (bg.length) {
     const lst = (await computeRatings(bg)).list;
-    const best = lst.find(p => p.g + p.a + p.t + p.c > 0);
+    const best = lst.find(p => p.g + p.a > 0);
     if (best && byName[best.name]) byName[best.name].bdo = true;
     // Golden Boot: same award date and period, most goals (ties: higher rating)
     const boot = [...lst].filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.ovr - a.ovr)[0];
@@ -699,13 +763,56 @@ async function computeRatings(src) {
   }
   return {list, days, squad, toty};
 }
+let totwMode = 'rating';
+// Honours standings: how many times each player won TOTW (every match day), TOTY (every finished year),
+// Ballon d'Or and Golden Boot (every year, awarded 15 October) - same rules as the current awards
+async function computeHonours() {
+  const games = await all('games'), now = new Date();
+  const H = {};
+  const add = (n, k) => { (H[n] ??= {totw: 0, toty: 0, boot: 0, bdo: 0})[k]++; };
+  const top5 = async gs => (await computeRatings(gs)).list.slice(0, 5);
+  const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+  const byDay = {};
+  games.forEach(g => (byDay[dk(g)] ??= []).push(g));
+  for (const gs of Object.values(byDay)) (await top5(gs)).forEach(p => add(p.name, 'totw'));
+  const years = [...new Set(games.map(g => new Date(g.date).getFullYear()))];
+  for (const y of years) {
+    const yg = games.filter(g => new Date(g.date).getFullYear() === y);
+    if (y < now.getFullYear() - 1 || (y === now.getFullYear() - 1 && now >= new Date(now.getFullYear(), 0, 15))) (await top5(yg)).forEach(p => add(p.name, 'toty'));
+    if (now >= new Date(y, 9, 15)) {
+      const bg = games.filter(g => new Date(g.date) <= new Date(y, 9, 15, 23, 59, 59) && new Date(g.date).getFullYear() === y);
+      if (bg.length) {
+        const lst = (await computeRatings(bg)).list;
+        const best = lst.find(p => p.g + p.a > 0); if (best) add(best.name, 'bdo');
+        const boot = [...lst].filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.ovr - a.ovr)[0]; if (boot) add(boot.name, 'boot');
+      }
+    }
+  }
+  return Object.entries(H).map(([name, h]) => ({name, ...h, total: h.totw + h.toty + h.boot + h.bdo}))
+    .sort((a, b) => b.bdo - a.bdo || b.toty - a.toty || b.boot - a.boot || b.totw - a.totw || a.name.localeCompare(b.name));
+}
+// Team colour of each player = the colour he played for in most games of the session (tie: the most recent of them)
+function sessionTeams(games) {
+  const cnt = {};
+  [...games].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(g => [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
+    const c = cnt[p.name] ??= {};
+    const e = c[t.name] ??= {n: 0, last: 0};
+    e.n++; e.last = new Date(g.date).getTime();
+  })));
+  return Object.fromEntries(Object.entries(cnt).map(([n, c]) =>
+    [n, Object.entries(c).sort((a, b) => b[1].n - a[1].n || b[1].last - a[1].last)[0][0]]));
+}
 function renderPitch(squad, title, sub, emptyMsg, cls = '') {
   if (!squad) return `<div style="flex:1 1 280px"><h3>${title}</h3><span class="muted">${emptyMsg}</span></div>`;
-  const card = p => p ? `<div class="pp"><div class="pc" data-name="${esc(p.name)}"><b>${squad.byName[p.name]?.ovr ?? ''}</b><span>${esc(p.name)}</span></div></div>` : `<div class="pp"><div class="pc empty">—</div></div>`;
-  const line = (arr, n) => `<div class="pl">${Array.from({length: n}, (_, i) => card(arr[i])).join('')}</div>`;
-  const s = squad.slots;
-  return `<div style="flex:1 1 280px"><h3>${title} <span class="muted">— ${sub}</span></h3>
-    <div class="pitch ${cls}" data-squad="${cls ? 'toty' : 'totw'}">${line(s.ATT, 2)}${line(s.MID, 1)}${line(s.DEF, 2)}${line(s.GK, 1)}</div></div>`;
+  const colour = !cls && totwMode === 'team' ? sessionTeams(squad.games) : null;
+  const card = n => colour
+    ? `<div class="pp"><div class="pc tcol tc-${esc(colour[n] || '')}" data-name="${esc(n)}"><b>${esc(colour[n] || '–')}</b><span>${esc(n)}</span></div></div>`
+    : `<div class="pp"><div class="pc" data-name="${esc(n)}"><b>${squad.byName[n]?.ovr ?? ''}</b><span>${esc(n)}</span></div></div>`;
+  const line = arr => arr.length ? `<div class="pl">${arr.map(card).join('')}</div>` : '';
+  const s = squad.rows;
+  const toggle = cls ? '' : ` <button class="sec" id="totwMode" style="font-size:12px;padding:3px 8px">${totwMode === 'team' ? 'Show rating' : 'Show team colour'}</button>`;
+  return `<div style="flex:1 1 280px"><h3>${title} <span class="muted">— ${sub}</span>${toggle}</h3>
+    <div class="pitch ${cls}" data-squad="${cls ? 'toty' : 'totw'}">${line(s.ATT)}${line(s.MID)}${line(s.DEF)}${line(s.GK)}</div></div>`;
 }
 // Chemistry lines between linked positions: green = played together often, orange = some, grey dashed = never together
 function drawLinks(data, root = document) {
@@ -715,19 +822,13 @@ function drawLinks(data, root = document) {
     const box = pitch.getBoundingClientRect();
     const rows = [...pitch.querySelectorAll('.pl')].map(r => [...r.querySelectorAll('.pc[data-name]')]);
     const center = el => { const r = el.getBoundingClientRect(); return [r.left - box.left + r.width / 2 - 2, r.top - box.top + r.height / 2 - 2]; };
-    const played = n => sq.games.filter(g => [...g.teamA.players, ...g.teamB.players].some(p => p.name === n)).length;
-    const together = (a, b) => sq.games.filter(g => [g.teamA, g.teamB].some(t => t.players.some(p => p.name === a) && t.players.some(p => p.name === b))).length;
-    const pairs = [];
-    rows.forEach((r, i) => {
-      for (let x = 0; x < r.length - 1; x++) pairs.push([r[x], r[x + 1]]);
-      (rows[i + 1] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
-      if (i === 0 && rows.length === 4) (rows[2] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
-    });
+    const ch = chemistry(sq.games);
+    const pairs = rowPairs(rows);
     const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', 'links'); svg.setAttribute('width', box.width); svg.setAttribute('height', box.height);
     pairs.forEach(([a, b]) => {
-      const na = a.dataset.name, nb = b.dataset.name, t = together(na, nb), m = Math.max(1, Math.min(played(na), played(nb)));
-      const ratio = t / m, ln = document.createElementNS(NS, 'line'), [x1, y1] = center(a), [x2, y2] = center(b);
+      const na = a.dataset.name, nb = b.dataset.name, t = ch.together(na, nb), ratio = ch.ratio(na, nb);
+      const ln = document.createElementNS(NS, 'line'), [x1, y1] = center(a), [x2, y2] = center(b);
       ln.setAttribute('x1', x1); ln.setAttribute('y1', y1); ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
       ln.setAttribute('stroke', t === 0 ? '#e02424' : ratio >= 0.5 ? '#22e06b' : '#ffb020');
       ln.setAttribute('stroke-width', t === 0 ? 3 : ratio >= 0.5 ? 5 : 3);
@@ -742,33 +843,40 @@ async function renderRanking() {
   $('rankPitch').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:16px">` +
     renderPitch(squad, '📋 Team of the Week', squad ? new Date(squad.day).toLocaleDateString() : '', 'No games played yet.') +
     renderPitch(toty, '🏆 Team of the Year', toty ? toty.year : '', 'Available after 15 January, based on the previous year\'s games.', 'toty-pitch') + `</div>
-    <div class="muted" style="font-size:12px">2-1-2-1: ATT = 2 best scorers, MID = best assister, DEF = 2 best tacklers, GK = best clean sheets. TOTW = last session, TOTY = previous year. Empty slot = nobody with that stat.<br>
+    <div class="muted" style="font-size:12px">1-2-2: the 5 best-rated players. The 2 top scorers play up front, the other 3 are placed for the best chemistry. TOTW = last session, TOTY = previous year.<br>
     Chemistry lines: <b style="color:#22a84f">green</b> = usually on the same team that period, <b style="color:#d98a00">orange</b> = sometimes, <b style="color:#e02424">red</b> = never.</div>`;
   drawLinks({totw: squad, toty});
+  const hon = await computeHonours();
+  $('honours').innerHTML = `<h3 style="margin-top:0">🏅 Honours standings</h3>` + (hon.length
+    ? `<table style="font-size:13px"><tr><th>#</th><th>Player</th><th title="Ballon d'Or">👑</th><th title="Team of the Year">🏆 TOTY</th><th title="Golden Boot">👟</th><th title="Team of the Week">📋 TOTW</th><th>Total</th></tr>` +
+      hon.map((h, i) => `<tr><td>${i + 1}</td><td>${esc(h.name)}</td><td>${h.bdo || '–'}</td><td>${h.toty || '–'}</td><td>${h.boot || '–'}</td><td>${h.totw || '–'}</td><td><b>${h.total}</b></td></tr>`).join('') + '</table>'
+      + `<div class="muted" style="font-size:12px;margin-top:6px">Counts every award won: TOTW on each match day, TOTY for each finished year (after 15 January), Ballon d'Or and Golden Boot for each year (awarded 15 October). Sorted by 👑, then 🏆, 👟, 📋.</div>`
+    : '<span class="muted">No awards yet.</span>');
+  const tb = $('totwMode'); if (tb) tb.onclick = () => { totwMode = totwMode === 'team' ? 'rating' : 'team'; renderRanking(); };
   const kind = p => p.toty ? 'toty' : p.star ? 'star' : p.totw ? 'totw' : '';
   const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
   const label = p => p.toty ? '🏆 TOTY' : p.star ? '⭐ FUTURE STAR' : p.totw ? '📋 TOTW' : p.rare ? '✨ RARE' : '';
   const newcomers = players.filter(pl => !list.some(p => p.name === pl.name));
   const newCard = p => `<div class="fut star"><span class="tag">⭐ FUTURE STAR</span><span class="rk">#–</span><div class="ovr" style="margin-top:14px">–</div><div class="nm">${esc(p.name)}</div>
-    <div class="sub"><span><b>–</b>SHO</span><span><b>–</b>PAS</span><span><b>–</b>DEF</span><span><b>–</b>GK</span></div></div>`;
+    <div class="sub"><span><b>–</b>SHO</span><span><b>–</b>PAS</span><span><b>–</b>WIN</span></div></div>`;
   $('rankCards').innerHTML = list.length || newcomers.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''}">
     <span class="tag">${label(p)}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}<span class="rk">#${i + 1}</span><div class="ovr" style="margin-top:14px">${p.ovr}</div><div class="nm">${esc(p.name)}</div>
-    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.def}</b>DEF</span><span><b>${p.cls}</b>GK</span></div></div>`).join('') + newcomers.map(newCard).join('')
+    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.win}</b>WIN</span></div></div>`).join('') + newcomers.map(newCard).join('')
     : '<span class="muted">No games played yet.</span>';
-  $('rankTable').innerHTML = list.length || newcomers.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted. ⭐ = new player without games (no rating yet)</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th><th>Tackles all/L5</th><th>CS all/L5</th></tr>` +
-    list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td><td>${p.a}/${p.ra}</td><td>${p.t}/${p.rt}</td><td>${p.c}/${p.rc}</td></tr>`).join('') +
-    newcomers.map(p => `<tr><td>–</td><td>${esc(p.name)} ⭐</td><td><b>–</b></td><td>0/0</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>`).join('') + '</table>' : '';
+  $('rankTable').innerHTML = list.length || newcomers.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted. ⭐ = new player without games (no rating yet)</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th><th>Win %</th></tr>` +
+    list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td></tr>`).join('') +
+        newcomers.map(p => `<tr><td>–</td><td>${esc(p.name)} ⭐</td><td><b>–</b></td><td>0/0</td><td>–</td><td>–</td><td>–</td></tr>`).join('') + '</table>' : '';
 }
 async function renderStats() {
   const games = await all('games'), m = {};
   games.forEach(g => [[g.teamA, 'A'], [g.teamB, 'B']].forEach(([t]) => t.players.forEach(p => {
-    const s = m[p.name] ??=     {games: 0, wins: 0, goals: 0, assists: 0, cs: 0, tk: 0};
-        s.games++; s.goals += p.goals; s.assists += p.assists; s.cs += +p.cleanSheet || 0; s.tk += +p.tackles || 0;
+    const s = m[p.name] ??=     {games: 0, wins: 0, goals: 0, assists: 0};
+        s.games++; s.goals += p.goals; s.assists += p.assists;
     if (g.winner === t.name) s.wins++;
   })));
-  const list = Object.entries(m).sort((a, b) => b[1].goals - a[1].goals || b[1].assists - a[1].assists);
-  $('statsList').innerHTML = list.length ? '<table><tr><th>Player</th><th>Games</th><th>Wins</th><th>Goals</th>  <th>Assists</th><th>Tackles</th><th>Clean sheets</th></tr>' +
-      list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.tk}</td><td>${s.cs}</td></tr>`).join('') + '</table>'
+  const list = Object.entries(m).sort((a, b) => byName(a[0], b[0]));
+  $('statsList').innerHTML = list.length ? '<table><tr><th>Player</th><th>Games</th><th>Wins</th>  <th>Goals</th><th>Assists</th><th>Win %</th></tr>' +
+        list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>'
     : '<span class="muted">No data yet.</span>';
 }
 const dayStamp = () => new Date().toISOString().slice(0, 10);
@@ -792,7 +900,7 @@ $('exportBtn').onclick = async () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 };
 const gameKey = g => [g.date, g.scoreA, g.scoreB, g.teamA?.name, g.teamB?.name,
-  [...(g.teamA?.players || []), ...(g.teamB?.players || [])].map(p => `${p.name}:${p.goals}:${p.assists}:${+p.cleanSheet || 0}:${+p.tackles || 0}`).sort().join(',')].join('|');
+  [...(g.teamA?.players || []), ...(g.teamB?.players || [])].map(p => `${p.name}:${p.goals}:${p.assists}`).sort().join(',')].join('|');
 async function importData(file, replace) {
   const d = JSON.parse(await file.text());
   if (!Array.isArray(d.players) || !Array.isArray(d.games)) throw new Error('bad');
