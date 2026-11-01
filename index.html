@@ -23,11 +23,13 @@
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
   table{border-collapse:collapse;width:100%}
   th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e3e8ee}
-  .teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
   .team{border:1px solid #d5dbe3;border-radius:8px;padding:10px}
   .team li{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}
   .grip{cursor:grab;touch-action:none;user-select:none;padding:2px 6px;color:#6b7686;font-size:18px}
-  #teamsView .pc{cursor:grab;touch-action:none;user-select:none}
+  #teamsView .pc,#teamsView .fc{cursor:grab;touch-action:none;user-select:none}
+  .nostats .fut .sub,.nostats .fut .ln{display:none}
+  .nostats .fut .nm{top:67%;font-size:12.5cqw}
   .team.over{outline:3px dashed #128a4a;background:#eaf7ef}
   .ghost{position:fixed;transform:translate(-50%,-120%);background:#111;color:#ffd75e;padding:6px 12px;border-radius:8px;pointer-events:none;z-index:99;font-weight:600;box-shadow:0 4px 12px #0006}
   .team ul{list-style:none;padding:0;margin:0}
@@ -40,30 +42,70 @@
   .muted{color:#667}
   .win{color:#0b6b3a;font-weight:700}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  .fut{border-radius:14px 14px 40px 40px;padding:12px 10px 16px;text-align:center;color:#2b2208;box-shadow:0 2px 6px #0004;position:relative}
-  .fut.gold{background:linear-gradient(160deg,#fbe9a0,#d6a82e)}
-  .fut.silver{background:linear-gradient(160deg,#f1f3f6,#a9b2bd);color:#222}
-  .fut.bronze{background:linear-gradient(160deg,#e8b98a,#a8683a);color:#2d1606}
-  .fut .ovr{font-size:38px;font-weight:800;line-height:1}
-  .fut .rk{position:absolute;top:8px;right:10px;font-size:12px;font-weight:700}
-  .fut .nm{font-weight:700;margin:6px 0;border-bottom:1px solid #0003;padding-bottom:6px;overflow:hidden;text-overflow:ellipsis}
-  .fut .sub{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:12px}
-  .fut .sub b{display:block;font-size:18px}
-  .fut.rare{position:relative;overflow:hidden;filter:saturate(1.35) brightness(1.08);box-shadow:0 0 14px #fff8,0 2px 6px #0004;border:2px solid #fff9}
-  .fut.rare::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
+  :root{--shape:polygon(0% 9%,2% 6%,8% 4.2%,25% 2.6%,40% 1%,50% 0%,60% 1%,75% 2.6%,92% 4.2%,98% 6%,100% 9%,100% 76%,97% 84%,88% 91%,74% 96.5%,62% 99%,56% 99.8%,50% 100%,44% 99.8%,38% 99%,26% 96.5%,12% 91%,3% 84%,0% 76%)}
+  /* FC Ultimate Team style card: shaped rim (.fut) + shaped face (.face); everything inside scales with the card width (cqw) */
+  .fut{--r1:#fff1a8;--r2:#b88a1c;--f1:#f6dc7a;--f2:#c99a2a;--tx:#3a2800;--ac:#3a2800;--sil:#0003;--ln:#3a280055;
+    container-type:inline-size;aspect-ratio:5/7;position:relative;clip-path:var(--shape);background:linear-gradient(160deg,var(--r1),var(--r2));color:var(--tx);text-align:center}
+  .fut .face{position:absolute;inset:2.2cqw;clip-path:var(--shape);overflow:hidden;
+    background:radial-gradient(circle at 30% 14%,#fff7,transparent 55%),repeating-linear-gradient(115deg,#ffffff14 0 5cqw,transparent 5cqw 11cqw),linear-gradient(165deg,var(--f1),var(--f2))}
+  .fut .lt{position:absolute;left:11%;top:12%;width:24%;text-align:center}
+  .fut .ovr{font-size:15cqw;font-weight:800;line-height:1;color:var(--ac)}
+  .fut .tag{display:block;margin-top:1.5cqw;padding-bottom:1.5cqw;font-size:5.2cqw;font-weight:800;letter-spacing:.03em;white-space:nowrap;position:static;text-align:center}
+  .fut .bdo{display:block;margin-top:1.5cqw;font-size:8cqw;line-height:1.1}
+  .fut .rk{position:absolute;top:9%;right:11%;font-size:5.5cqw;font-weight:700;opacity:.75}
+  .fut .av{position:absolute;left:50%;transform:translateX(-50%);top:20%;width:68%;height:52%;z-index:1}
+  .fut .lt,.fut .rk,.fut .nm,.fut .ln,.fut .sub{z-index:2}
+  .fut .av svg,.fut .av img{display:block;width:100%;height:100%}
+  .fut .av img{object-fit:cover;object-position:50% 15%;-webkit-mask-image:linear-gradient(#000 68%,transparent);mask-image:linear-gradient(#000 68%,transparent)}
+  .fut .av img.cut{object-fit:contain;object-position:50% 100%;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent);filter:drop-shadow(0 2px 3px #0006)}
+  .thumb{display:inline-block;width:30px;height:30px;vertical-align:middle;margin-right:8px;border-radius:50%;overflow:hidden;background:#dde3ea}
+  .thumb svg,.thumb img{width:100%;height:100%;display:block;object-fit:cover}
+  .thumb img.cut{object-position:50% 0}
+  .thumb i{display:block;width:100%;height:100%;--sil:#0004;background:radial-gradient(circle at 50% 35%,var(--sil) 0 22%,transparent 23%),radial-gradient(ellipse at 50% 112%,var(--sil) 0 50%,transparent 51%)}
+  .frow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:6px 0;font-size:13px}
+  .frow>span{min-width:70px;color:#556}
+  .sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #99a;padding:0;cursor:pointer}
+  .sw.on{box-shadow:0 0 0 2px #0b6b3a}
+  .fut .av i{transform:translateY(-14%);display:block;width:100%;height:100%;background:radial-gradient(circle at 50% 27%,var(--sil) 0 19%,transparent 20%),radial-gradient(ellipse at 50% 108%,var(--sil) 0 46%,transparent 47%)}
+  .fut .nm{position:absolute;left:5%;right:5%;top:61%;font-size:8cqw;font-weight:800;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;padding:0}
+  .fut .ln{position:absolute;left:18%;right:18%;top:72%;height:1px;background:var(--ln)}
+  .fut .sub{position:absolute;left:12%;right:12%;top:75%;display:grid;grid-template-columns:1fr 1fr 1fr;font-size:5cqw;font-weight:700}
+  .fut .sub span{display:flex;justify-content:center;align-items:baseline;gap:1cqw;border-left:1px solid var(--ln)}
+  .fut .sub span:first-child{border-left:0}
+  .fut .sub b{display:inline;font-size:8.5cqw;font-weight:800}
+  .fut.silver{--r1:#f4f7fa;--r2:#7f8a97;--f1:#e6eaef;--f2:#9aa4b0;--tx:#26303a;--ac:#26303a;--ln:#26303a55}
+  .fut.bronze{--r1:#f0c79e;--r2:#7a4a22;--f1:#d99d6a;--f2:#935a2c;--tx:#3b2008;--ac:#3b2008;--ln:#3b200855}
+  .fut.tcf{--r1:#fff;--r2:#777;--f1:#666;--f2:#333;--tx:#fff;--ac:#fff;--sil:#fff3}
+  .fut.tcf .nm{top:66%}
+  .fut.tcf.tc-Black{--r1:#bbb;--r2:#222;--f1:#444;--f2:#000}
+  .fut.tcf.tc-White{--r1:#fff;--r2:#9aa;--f1:#fff;--f2:#d9dde3;--tx:#222;--ac:#222;--sil:#0002}
+  .fut.tcf.tc-Blue{--r1:#bcd6ff;--r2:#173e94;--f1:#3b82f6;--f2:#1b46b0}
+  .fut.tcf.tc-Yellow{--r1:#fff6b0;--r2:#a88400;--f1:#ffe45c;--f2:#e0b400;--tx:#2b2208;--ac:#2b2208;--sil:#0002}
+  .fut.tcf.tc-Red{--r1:#ffc0c0;--r2:#8f0f0f;--f1:#ff5a5a;--f2:#b81414}
+  .fut.tcf.tc-Green{--r1:#c2f5d0;--r2:#0d6630;--f1:#3fd067;--f2:#12803a}
+  .fut.rare{filter:saturate(1.35) brightness(1.08)}
+  .fut::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0}
+  .fut.rare::after,.fut.bdoc::after,.fut.bootc::after,.fut.bothc::after{opacity:1;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite}
   @keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
-  .fut.totw{background:linear-gradient(160deg,#4a4a4f,#111114);color:#fff;border:2px solid #ffd33d}
-  .fut.totw .ovr{color:#ffd33d}
-  .fut.toty{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#fff;border:2px solid #7fd0ff;box-shadow:0 0 14px #3aa0ff99}
-  .fut.toty .ovr{color:#9fe0ff}
-  .fut.star{background:linear-gradient(160deg,#c05cff,#ff5fb0);color:#fff;box-shadow:0 0 12px #e060ff99}
-  .fut .tag{position:absolute;top:8px;left:10px;font-size:11px;font-weight:700;text-align:left}
-  .fut .bdo{position:absolute;bottom:8px;left:0;right:0;font-size:18px;text-shadow:0 1px 3px #0006}
-  .pitch{position:relative;background:repeating-linear-gradient(0deg,#2e8b3d 0 48px,#359a45 48px 96px);border:2px solid #fff;border-radius:10px;padding:14px 6px;display:flex;flex-direction:column;gap:14px;margin:8px 0;max-width:420px}
+  .fut.totw{--r1:#ffe27a;--r2:#a37a10;--f1:#34343a;--f2:#0b0b0e;--tx:#fff;--ac:#ffd33d;--sil:#fff2;--ln:#ffd33d77}
+  .fut.toty{--r1:#bfeaff;--r2:#2f78c8;--f1:#2458c8;--f2:#071a4d;--tx:#fff;--ac:#9fe0ff;--sil:#fff2;--ln:#9fe0ff77}
+  /* Ballon d'Or: gold foil */
+  .fut.bdoc{--r1:#fff;--r2:#b87a00;--f1:#fffbe0;--f2:#d99a00;--tx:#3a2800;--ac:#3a2800;--ln:#3a280066;filter:drop-shadow(0 0 0 transparent)}
+  /* Golden Boot: fiery orange-red foil */
+  .fut.bootc{--r1:#ffd27a;--r2:#7a0b12;--f1:#ffb800;--f2:#c1121f;--tx:#fff;--ac:#fff;--sil:#0003;--ln:#ffffff77}
+  .fut.bootc .nm,.fut.bootc .ovr{text-shadow:0 1px 3px #0008}
+  /* Both: gold-to-fire foil with a slowly rotating light */
+  .fut.bothc{--r1:#fff;--r2:#9a2a00;--f1:#fffbe0;--f2:#e03a00;--tx:#3a2800;--ac:#3a2800;--ln:#3a280066}
+  .fut.bothc .face{background:radial-gradient(circle at 30% 14%,#fff7,transparent 55%),linear-gradient(135deg,#fffbe0 0%,#ffd84a 35%,#ff9d00 60%,#e03a00 100%)}
+  .fut.bothc .face::before{content:"";position:absolute;left:-50%;top:-50%;width:200%;height:200%;background:repeating-conic-gradient(#fff3 0 8deg,transparent 8deg 30deg);animation:spin 14s linear infinite;pointer-events:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pitch{container-type:inline-size;position:relative;background:repeating-linear-gradient(0deg,#2e8b3d 0 48px,#359a45 48px 96px);border:2px solid #fff;border-radius:10px;padding:14px 6px;display:flex;flex-direction:column;gap:14px;margin:8px 0;max-width:460px}
   .pl{display:flex;justify-content:space-around;position:relative;z-index:1}
   .pitch .links{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-  .pp{width:84px;display:flex;justify-content:center}
-  .pc{background:linear-gradient(160deg,#333,#000);color:#f4e6a0;border:1px solid #f4e6a0;border-radius:8px 8px 18px 18px;width:80px;padding:6px 2px;text-align:center;font-size:12px}
+  .pp{width:min(108px,29cqw);display:flex;justify-content:center}
+  .pp>.fut{width:100%}
+  .pp{filter:drop-shadow(0 0 1px #fffc) drop-shadow(0 2px 3px #0006)}
+  .pc{background:linear-gradient(160deg,#333,#000);color:#f4e6a0;clip-path:var(--shape);width:76px;min-height:98px;padding:17px 4px 16px;display:flex;flex-direction:column;justify-content:center;text-align:center;font-size:11px;font-weight:700}
   .pc b{display:block;font-size:20px}
   .toty-pitch .pc{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff}
   .pc.gold{background:linear-gradient(160deg,#fbe9a0,#d6a82e);color:#2b2208;border-color:#fff8}
@@ -71,7 +113,6 @@
   .pc.bronze{background:linear-gradient(160deg,#e8b98a,#a8683a);color:#2d1606;border-color:#fff8}
   .pc.totw{background:linear-gradient(160deg,#4a4a4f,#111114);color:#ffd33d;border-color:#ffd33d}
   .pc.toty{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff;box-shadow:0 0 10px #3aa0ff99}
-  .pc.star{background:linear-gradient(160deg,#c05cff,#ff5fb0);color:#fff;border-color:#fff8;box-shadow:0 0 10px #e060ff99}
   .pc.tcol{background:#555;color:#fff;border-color:#fff}
   .pc.tc-Black{background:linear-gradient(160deg,#444,#000);color:#fff}
   .pc.tc-White{background:linear-gradient(160deg,#fff,#d9dde3);color:#222}
@@ -80,10 +121,14 @@
   .pc.tc-Red{background:linear-gradient(160deg,#ff5a5a,#b81414);color:#fff}
   .pc.tc-Green{background:linear-gradient(160deg,#3fd067,#12803a);color:#fff}
   .pc.tcol b{font-size:14px}
-  .pc.rare{filter:saturate(1.35) brightness(1.08);box-shadow:0 0 12px #fff8}
-  .pc.rare::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
+  .pc.rare{filter:saturate(1.35) brightness(1.08)}
+  .pc.rare::after,.pc.bdoc::after,.pc.bootc::after,.pc.bothc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
   .pc{position:relative}
-  .pc .pb{position:absolute;top:-9px;right:-4px;font-style:normal;font-size:14px;text-shadow:0 1px 2px #0008}
+  .pc.bdoc{background:linear-gradient(160deg,#fffbe0,#ffd84a 45%,#c98a00);color:#3a2800}
+  .pc.bootc{background:linear-gradient(150deg,#ffb800,#ff6a00 50%,#c1121f);color:#fff}
+  .pc.bothc{background:linear-gradient(135deg,#fffbe0 0%,#ffd84a 35%,#ff9d00 60%,#e03a00 100%);color:#3a2800}
+  .pc.bdoc .pb,.pc.bootc .pb,.pc.bothc .pb{top:6px;right:9px;font-size:10px}
+  .pc .pb{position:absolute;top:4px;right:9px;font-style:normal;font-size:10px;text-shadow:0 1px 2px #0008}
   .timer{text-align:center;font-size:22px;font-variant-numeric:tabular-nums}
 </style>
 </head>
@@ -98,6 +143,7 @@
   <button data-t="ranking">Ranking</button>
   <button data-t="stats">Totals</button>
 </nav>
+<div id="backupBar" style="display:none;background:#fff3cd;color:#664d03;padding:8px 14px;font-size:14px;align-items:center;gap:10px;flex-wrap:wrap"><span id="backupMsg"></span> <button id="backupNow" style="padding:3px 10px">⬆ Export backup now</button></div>
 <main>
 
 <section id="players" class="active">
@@ -121,6 +167,8 @@
       <button id="genTeams">Generate random teams</button>
       <button id="customTeams" class="sec">Create custom teams</button>
       <button id="teamsMode" class="sec">Hide rating (show team colour)</button>
+      <button id="teamsStats" class="sec">Hide stats</button>
+      <button id="teamsShot" class="sec shot" data-shot="teamsView" data-file="football-teams">📷 Screenshot</button>
       <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
     <div id="teamsBal"></div>
@@ -142,6 +190,9 @@
     <div class="timer">⏱ <span id="clock">00:00</span></div>
     <div class="score"><span id="nameA"></span> <span id="scoreA">0</span> : <span id="scoreB">0</span> <span id="nameB"></span></div>
     <div class="row" style="justify-content:center"><button id="stopBtn" class="danger">Stop Game</button><button id="cancelBtn" class="sec">Cancel (don't save)</button></div>
+    <div class="row" style="justify-content:center"><button id="undoBtn" class="sec" disabled>↶ Undo last</button></div>
+    <div class="muted" style="text-align:center;font-size:12px">🧤 = goalkeeper of the team, ⭐ = man of the match (one per game)</div>
+    <div id="motmSug" style="text-align:center;margin:6px 0"></div>
     <div id="liveBal"></div>
     <div class="match"><div id="liveA"></div><div id="liveB"></div></div>
   </div>
@@ -158,10 +209,11 @@
 
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
-  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT, from three stats: goals per match (SHO), assists per match (PAS) and team impact (WIN: 60% win rate with win = 1, draw = ½, plus 40% goal difference per match of the player's team). Each stat = 60% all time + 40% last 5 match days (a player with no games in the last 5 match days uses his all-time value for that 40%). SHO and PAS are scaled to the best player; WIN is the team impact, pulled slightly towards the middle for players with few games. Overall = 80% attack (goals + 0.7 × assists per match, so a goal counts a bit more than an assist) + 20% WIN, slightly reduced for players with fewer than 5 games.<br>
-  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): not played in the last 4 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). ⭐ <b>Future Star</b> (purple/pink): selected in Players tab, or a new player without games. 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › Future Star › TOTW › base.<br>👑 <b>Ballon d'Or</b>: only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b>: same schedule, the player with the most goals that year.</div>
+  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT, from three stats: goals per match (SHO), assists per match (PAS) and team impact (WIN: 60% win rate with win = 1, draw = ½, plus 40% goal difference per match of the player's team). Each stat = 60% all time + 40% last 5 match days (a player with no games in the last 5 match days uses his all-time value for that 40%). SHO and PAS are scaled to the best player; WIN is the team impact, pulled slightly towards the middle for players with few games and adjusted per match for how strong the opponents were compared with the player's teammates (beating a stronger team counts more). Overall = 80% attack (goals + 0.7 × assists per match, so a goal counts a bit more than an assist; goals in close matches count a little more than in blowouts; players with few matches are pulled towards the group average) + 20% WIN (with man-of-the-match votes recorded: 72% attack + 20% WIN + 8% man of the match; a player who played in goal gets up to 40% of the rating from goals conceded while in goal), slightly reduced for players with fewer than 5 games (shown as provisional). Tap a card to see the breakdown and the change since the last session.<br>
+  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): played at least 50% of the last 5 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year. Tap a card for the rating breakdown.</div>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
+  <div id="rankDetail" class="card" style="border:1px solid #e3e8ee;display:none"></div>
   <div id="rankCards" class="cards"></div></div>
   <div class="card"><div id="rankTable"></div></div>
 </section>
@@ -175,6 +227,15 @@
 </section>
 </main>
 
+<dialog id="faceDlg" style="border:0;border-radius:12px;padding:16px;max-width:360px;width:92vw">
+  <h3 style="margin:0 0 8px">Player photo</h3>
+  <div id="fePrev"></div>
+  <div class="row" style="margin:10px 0;justify-content:center">
+    <label class="sec" style="cursor:pointer;padding:7px 10px;border:1px solid #bbc4d0;border-radius:6px">📷 Upload photo <input type="file" id="feFile" accept="image/*" hidden></label>
+    <button type="button" id="feRemove" class="sec">Remove photo</button>
+  </div>
+  <div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" id="feCancel" class="sec">Cancel</button><button type="button" id="feSave">Save</button></div>
+</dialog>
 <script>
 // ---------- IndexedDB ----------
 const DB_NAME = 'footballApp';
@@ -203,7 +264,7 @@ const getKV = async k => (await tx('kv', 'readonly', st => st.get(k)))?.value;
 const setKV = (k, value) => put('kv', {key: k, value});
 
 // ---------- State ----------
-let players = [], teams = [], game = null, timer = null;
+let players = [], teams = [], layouts = [], game = null, timer = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byName = (a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'});
@@ -240,19 +301,18 @@ function renderPlayers() {
   const n = players.filter(isAvail).length;
   $('playerList').innerHTML = players.length ?
     `<div class="row"><b>${n} available</b><button class="sec" data-all="1">All available</button><button class="sec" data-all="0">None available</button></div>
-    <table><tr><th>Available</th><th>Name</th><th>Future Star</th><th></th></tr>` + players.map(p =>
+    <table><tr><th>Available</th><th>Name</th><th></th></tr>` + players.map(p =>
     `<tr><td style="width:80px"><input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}></td>
-    <td class="${isAvail(p) ? '' : 'muted'}">${esc(p.name)}</td>
-    <td><input type="checkbox" data-star="${p.id}" ${p.star ? 'checked' : ''}></td>
-    <td style="width:90px"><button class="danger" data-del="${p.id}">Delete</button></td></tr>`).join('') + '</table>'
+    <td class="${isAvail(p) ? '' : 'muted'}"><span class="thumb">${faceFor(p.name, p)}</span>${esc(p.name)}</td>
+    <td style="width:190px;white-space:nowrap"><button class="sec" data-face="${p.id}">📷 Photo</button> <button class="danger" data-del="${p.id}">Delete</button></td></tr>`).join('') + '</table>'
     : '<span class="muted">No players yet.</span>';
 }
 const isAvail = p => p.available !== false;
 $('playerList').onchange = async e => {
   const d = e.target.dataset;
-  const field = d.avail ? 'avail' : d.star ? 'star' : null; if (!field) return;
+  const field = d.avail ? 'avail' : null; if (!field) return;
   const p = players.find(x => x.id === +d[field]);
-  if (field === 'avail') p.available = e.target.checked; else p[field] = e.target.checked;
+  p.available = e.target.checked;
   await put('players', p); renderAll();
 };
 $('playerList').onclick = async e => {
@@ -260,7 +320,9 @@ $('playerList').onclick = async e => {
     for (const p of players) { p.available = e.target.dataset.all === '1'; await put('players', p); }
     return renderAll();
   }
-  const id = +e.target.dataset.del; if (!id) return;
+  const id = +e.target.dataset.del;
+  if (e.target.dataset.face) return openFaceEditor(+e.target.dataset.face);
+  if (!id) return;
   if (!confirm('Delete ' + pName(id) + '? Past game records keep their stats.')) return;
   await del('players', id);
   teams = teams.map(t => t.filter(x => x !== id)); await setKV('teams', teams);
@@ -332,12 +394,13 @@ $('genTeams').onclick = async () => {
   teams = Array.from({length: n}, () => []);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   avail.forEach((p, i) => teams[pick.asg[i]].push(p.id));
+  layouts = []; await setKV('layouts', layouts);
   await setKV('teams', teams); renderAll();
 };
 $('customTeams').onclick = async () => {
   const n = +$('teamCount').value;
   if (teams.some(t => t.length) && !confirm('Replace the current teams with empty custom teams?')) return;
-  teams = Array.from({length: n}, () => []);
+  teams = Array.from({length: n}, () => []); layouts = []; await setKV('layouts', layouts);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   await setKV('teams', teams); renderAll();
 };
@@ -354,27 +417,36 @@ $('teamsView').onchange = async e => {
   const to = +e.target.value;
   teams = teams.map(t => t.filter(x => x !== pid));
   if (to >= 0) teams[to].push(pid);
-  await setKV('teams', teams); renderAll();
+  layouts = [];
+  await setKV('teams', teams); await setKV('layouts', layouts); renderAll();
 };
 // Drag & drop (pointer events, works with mouse and touch): drop on a team = move, drop on a player = swap
 async function dropPlayer(pid, target) {
   const tb = target.closest('.team[data-team]'); if (!tb) return;
   const to = +tb.dataset.team, other = +target.closest('[data-pid]')?.dataset.pid || 0;
   const from = teams.findIndex(t => t.includes(pid));
+  const flat = i => layoutSquad(i) ? layouts[i].slice() : squadFlat(teamSquad(teams[i].map(pName))).map(n => players.find(p => p.name === n)?.id);
   if (other && other !== pid) {
     const oi = teams.findIndex(t => t.includes(other));
-    if (from === oi) return;
-    if (from >= 0) teams[from][teams[from].indexOf(pid)] = other;
-    if (oi >= 0) teams[oi][teams[oi].indexOf(other)] = pid;
+    if (from === oi) {
+      if (from < 0) return;
+      const L = flat(from), a = L.indexOf(pid), b = L.indexOf(other);
+      L[a] = other; L[b] = pid; layouts[from] = L;
+    } else {
+      const lf = from >= 0 ? flat(from) : null, lo = oi >= 0 ? flat(oi) : null;
+      if (from >= 0) { teams[from][teams[from].indexOf(pid)] = other; lf[lf.indexOf(pid)] = other; layouts[from] = lf; }
+      if (oi >= 0) { teams[oi][teams[oi].indexOf(other)] = pid; lo[lo.indexOf(other)] = pid; layouts[oi] = lo; }
+    }
   } else {
     if (from === to) return;
     teams = teams.map(t => t.filter(x => x !== pid));
     if (to >= 0) teams[to].push(pid);
+    layouts = [];
   }
-  await setKV('teams', teams); renderAll();
+  await setKV('teams', teams); await setKV('layouts', layouts); renderAll();
 }
 $('teamsView').addEventListener('pointerdown', e => {
-  const src = e.target.closest('.pc[data-pid], .grip[data-pid]'); if (!src || e.button > 0) return;
+  const src = e.target.closest('.pc[data-pid], .fc[data-pid], .grip[data-pid]'); if (!src || e.button > 0) return;
   const pid = +src.dataset.pid, x0 = e.clientX, y0 = e.clientY;
   let ghost = null, mark = null;
   const move = ev => {
@@ -449,15 +521,94 @@ function arrangeSquad(names, st, games) {
 const teamSquad = names => arrangeSquad(names, n => ratingCache.byName[n], ratingCache.games || []);
 let teamsMode = 'rating';
 $('teamsMode').onclick = () => { teamsMode = teamsMode === 'team' ? 'rating' : 'team'; renderTeams(); };
+let teamsStats = true;
+$('teamsShot').onclick = () => screenshotCard($('teamsShot'));
+$('teamsStats').onclick = () => { teamsStats = !teamsStats; renderTeams(); };
+const awardFx = r => !r ? '' : r.bdo && r.boot ? 'bothc' : r.bdo ? 'bdoc' : r.boot ? 'bootc' : '';
+// Full FC-style card used on the squad pitches (Teams, Sessions, TOTW, TOTY)
+function fcFut(n, r, pid, kindOverride, face) {
+  const kind = kindOverride || (!r ? 'bronze' : r.toty ? 'toty' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze');
+  const label = !r ? '' : r.toty ? 'TOTY' : r.totw ? 'TOTW' : r.rare ? '✨ RARE' : '';
+  const ic = r && (r.bdo || r.boot) ? `<span class="bdo">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</span>` : '';
+  return `<div class="fut fc ${kind} ${r && r.rare ? 'rare' : ''} ${awardFx(r)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
+    <div class="lt"><div class="ovr">${r ? r.ovr : '–'}</div><span class="tag">${label || '&nbsp;'}</span>${ic}</div>
+    <div class="av">${face || faceHtml(n)}</div><div class="nm">${esc(n)}</div><i class="ln"></i>
+    <div class="sub"><span><b>${r ? r.sho : '–'}</b>SHO</span><span><b>${r ? r.pas : '–'}</b>PAS</span><span><b>${r ? r.win : '–'}</b>WIN</span></div></div></div>`;
+}
+const fcCard = (n, r, pid, kindOverride) => `<div class="pp">${fcFut(n, r, pid, kindOverride)}</div>`;
+function fcColour(n, colour, pid) {
+  return `<div class="pp"><div class="fut fc tcf tc-${esc(colour)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
+    <div class="lt"><div class="ovr" style="font-size:9cqw">${esc(colour || '–')}</div></div>
+    <div class="av">${faceHtml(n)}</div><div class="nm">${esc(n)}</div></div></div></div>`;
+}
+
+// ---------- Player photos: uploaded photo, or the default silhouette ----------
+const faceFor = (name, p) => p && p.photo ? `<img class="ph${/^data:image\/(png|webp)/.test(p.photo) ? ' cut' : ''}" src="${p.photo}" alt="">` : '<i></i>';
+const faceHtml = name => faceFor(name, players.find(x => x.name === name));
+// Photo editor (Players tab)
+let fe = null;
+function renderFaceEditor() {
+  $('fePrev').innerHTML = `<div style="width:150px;margin:0 auto">${fcFut(fe.name, ratingCache.byName[fe.name], 0, null, faceFor(fe.name, fe))}</div>`;
+}
+function openFaceEditor(id) {
+  const p = players.find(x => x.id === id); if (!p) return;
+  fe = {id, name: p.name, photo: p.photo || null};
+  renderFaceEditor(); $('faceDlg').showModal();
+}
+$('feRemove').onclick = () => { fe.photo = null; renderFaceEditor(); };
+$('feCancel').onclick = () => $('faceDlg').close();
+$('feFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const img = new Image();
+  try { await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = URL.createObjectURL(f); }); } catch (err) { return alert('Could not read this image.'); }
+  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+  const probe = document.createElement('canvas'); probe.width = W; probe.height = H;
+  const px = probe.getContext('2d', {willReadFrequently: true}); px.drawImage(img, 0, 0);
+  URL.revokeObjectURL(img.src);
+  const data = px.getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1, clear = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const a = data[(y * W + x) * 4 + 3];
+    if (a < 250) clear++;
+    if (a > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  }
+  if (x1 >= 0 && clear > W * H * 0.003) {
+    // Transparent cut-out: trim empty margins, keep alpha, fit into a portrait box
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, k = Math.min(1, 400 / bh, 320 / bw);
+    const cv = document.createElement('canvas'); cv.width = Math.round(bw * k); cv.height = Math.round(bh * k);
+    cv.getContext('2d').drawImage(probe, x0, y0, bw, bh, 0, 0, cv.width, cv.height);
+    fe.photo = cv.toDataURL('image/webp', 0.9);
+    if (!fe.photo.startsWith('data:image/webp')) fe.photo = cv.toDataURL('image/png');
+  } else {
+    const S = 240, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const side = Math.min(W, H), sx = (W - side) / 2, sy = Math.max(0, (H - side) * 0.25);
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, S, S);
+    cx.drawImage(probe, sx, sy, side, side, 0, 0, S, S);
+    fe.photo = cv.toDataURL('image/jpeg', 0.85);
+  }
+  renderFaceEditor();
+};
+$('feSave').onclick = async () => {
+  const p = players.find(x => x.id === fe.id); if (!p) return;
+  if (fe.photo) p.photo = fe.photo; else delete p.photo;
+  delete p.avatar;
+  await put('players', p); $('faceDlg').close(); await loadPlayers(); renderAll();
+};
+const squadFlat = s => [...s.ATT, ...s.MID, ...s.DEF, ...s.GK];
+function layoutSquad(i, names) {
+  const L = layouts[i], ids = teams[i] || [];
+  if (!L || L.length !== ids.length || !L.every(x => ids.includes(x))) return null;
+  const [na, nm, nd, ng] = formationOf(L.length), n = L.map(pName);
+  return {ATT: n.slice(0, na), MID: n.slice(na, na + nm), DEF: n.slice(na + nm, na + nm + nd), GK: n.slice(na + nm + nd, na + nm + nd + ng)};
+}
 function teamPitch(names, key, games, colour) {
   if (!names.length) return '';
-  const s = games ? arrangeSquad(names, n => ratingCache.byName[n], games) : teamSquad(names);
+  const m = !games && /^t\d+$/.test(key) ? layoutSquad(+key.slice(1)) : null;
+  const s = m || (games ? arrangeSquad(names, n => ratingCache.byName[n], games) : teamSquad(names));
   const row = arr => arr.length ? `<div class="pl">${arr.map(n => {
     const r = ratingCache.byName[n], pl = players.find(p => p.name === n) || {};
-    if (colour) return `<div class="pp"><div class="pc tcol tc-${esc(colour)}" data-name="${esc(n)}" data-pid="${pl.id}"><b>${esc(colour)}</b><span>${esc(n)}</span></div></div>`;
-    const kind = !r ? 'star' : r.toty ? 'toty' : r.star ? 'star' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze';
-    const badges = r && (r.bdo || r.boot) ? `<i class="pb">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</i>` : '';
-    return `<div class="pp"><div class="pc ${kind} ${r && r.rare ? 'rare' : ''}" data-name="${esc(n)}" data-pid="${pl.id}">${badges}<b>${r ? r.ovr : '–'}</b><span>${esc(n)}</span></div></div>`;
+    if (colour) return fcColour(n, colour, pl.id);
+    return fcCard(n, r, pl.id);
   }).join('')}</div>` : '';
   return `<div class="pitch" data-squad="${key}">${row(s.ATT)}${row(s.MID)}${row(s.DEF)}${row(s.GK)}</div>`;
 }
@@ -478,6 +629,8 @@ function renderTeams() {
     ? teams.map((t, i) => box(nameSel(i), t, i, teamPitch(t.map(pName), 't' + i, undefined, teamsMode === 'team' ? teamLabel(i) : ''))).join('') + (free.length ? box('Unassigned', free.map(p => p.id), -1) : '')
     : '<span class="muted">No teams yet. Click “Generate random teams” or “Create custom teams”.</span>';
   $('teamsMode').textContent = teamsMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)';
+  $('teamsStats').textContent = teamsStats ? 'Hide stats' : 'Show stats';
+  $('teamsView').classList.toggle('nostats', !teamsStats);
   $('teamsBal').innerHTML = balanceHtml(teams.map((t, i) => ({label: teamLabel(i), names: t.map(pName)})));
   $('teamCount').value = teams.length >= 2 ? teams.length : $('teamCount').value;
   if ($('teams').classList.contains('active')) drawTeamLinks();
@@ -516,22 +669,47 @@ function renderLive() {
   $('nameA').textContent = game.A.name; $('nameB').textContent = game.B.name;
   $('scoreA').textContent = goals(game.A); $('scoreB').textContent = goals(game.B);
   $('liveBal').innerHTML = balanceHtml([{label: game.A.name, names: activeNames(game.A)}, {label: game.B.name, names: activeNames(game.B)}]);
+  const last = game.log?.[game.log.length - 1];
+  $('undoBtn').disabled = !last;
+  const sug = suggestMotm();
+  $('motmSug').innerHTML = game.motm ? `⭐ Man of the match: <b>${esc(game.motm)}</b>` : sug
+    ? `⭐ Suggested man of the match: <b>${esc(sug.name)}</b> <span class="muted">(${sug.goals}⚽ ${sug.assists}🅰️${sug.win ? ', winning team' : ''})</span> <button id="motmAccept" style="padding:3px 10px">✔ Accept</button>` : '';
+  $('undoBtn').textContent = last ? `↶ Undo: ${last.name} ${last.f === 'goals' ? '⚽' : '🅰️'}${last.d > 0 ? '+' : '−'}1` : '↶ Undo last';
   const inGame = new Set([...game.A.players, ...game.B.players].map(p => p.id));
   const cands = players.filter(p => isAvail(p) && !inGame.has(p.id));
   game.A.players.sort((x, y) => byName(x.name, y.name)); game.B.players.sort((x, y) => byName(x.name, y.name));
   const side = (k, t) => `<h3>${esc(t.name)}</h3><table>` + t.players.map((p, i) => `<tr><td>${esc(p.name)}${p.left ? ' <span class="muted">(left)</span>' : ''}<br>
-    ${p.left ? '' : `<button class="sec" data-act="move" data-k="${k}" data-i="${i}">⇄ Move</button> <button class="sec" data-act="remove" data-k="${k}" data-i="${i}">✕ Remove</button>`}</td><td><div class="stat">
+    ${p.left ? '' : `<button class="sec" data-act="move" data-k="${k}" data-i="${i}">⇄ Move</button> <button class="sec" data-act="remove" data-k="${k}" data-i="${i}">✕ Remove</button>
+    <button class="${p.gk ? '' : 'sec'}" title="Goalkeeper" data-act="gk" data-k="${k}" data-i="${i}">🧤</button> <button class="${game.motm === p.name ? '' : 'sec'}" title="Man of the match" data-act="motm" data-k="${k}" data-i="${i}">⭐</button>`}</td><td><div class="stat">
     <span class="ctr">⚽<button data-k="${k}" data-i="${i}" data-f="goals" data-d="-1">−</button><b>${p.goals}</b><button data-k="${k}" data-i="${i}" data-f="goals" data-d="1">+</button></span>
     <span class="ctr">🅰️<button data-k="${k}" data-i="${i}" data-f="assists" data-d="-1">−</button><b>${p.assists}</b><button data-k="${k}" data-i="${i}" data-f="assists" data-d="1">+</button>    </span>
         </div></td></tr>`).join('') + '</table>' +
         `<div class="row"><select data-addsel="${k}"><option value="">+ Add player…</option>${cands.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`;
       $('liveA').innerHTML = side('A', game.A); $('liveB').innerHTML = side('B', game.B);
     }
-    $('live').onclick = e => {
+    // Suggested man of the match: goals + 0.7 x assists, plus a bonus for the winning team (half a goal) or a draw (quarter)
+function suggestMotm() {
+  const ga = goals(game.A), gb = goals(game.B);
+  let best = null;
+  [[game.A, ga, gb], [game.B, gb, ga]].forEach(([t, f, a]) => t.players.forEach(p => {
+    const win = f > a;
+    const s = p.goals + 0.7 * p.assists;
+    if (s <= 0) return;
+    const sc = s + (win ? 0.5 : f === a ? 0.25 : 0);
+    if (!best || sc > best.sc) best = {name: p.name, goals: p.goals, assists: p.assists, win, sc};
+  }));
+  return best;
+}
+$('live').onclick = e => {
+  if (e.target.id === 'motmAccept') { game.motm = suggestMotm().name; persistLive(); return renderLive(); }
       const d = e.target.dataset;
       if (d.act) {
         const t = game[d.k], p = t.players[+d.i];
-        if (d.act === 'move') {
+        if (d.act === 'gk') {
+          const on = !p.gk; t.players.forEach(x => delete x.gk); if (on) p.gk = true;
+        } else if (d.act === 'motm') {
+          if (game.motm === p.name) delete game.motm; else game.motm = p.name;
+        } else if (d.act === 'move') {
           const other = game[d.k === 'A' ? 'B' : 'A'];
           t.players.splice(+d.i, 1); other.players.push(p);
         } else if (p.goals || p.assists) {
@@ -542,9 +720,17 @@ function renderLive() {
       }
   if (d.f) {
     const p = game[d.k].players[+d.i];
-    p[d.f] = Math.max(0, (+p[d.f] || 0) + +d.d);
+    const before = +p[d.f] || 0;
+    p[d.f] = Math.max(0, before + +d.d);
+    if (p[d.f] !== before) (game.log ??= []).push({name: p.name, f: d.f, d: p[d.f] - before});
     persistLive(); renderLive();
   }
+};
+$('undoBtn').onclick = () => {
+  const e = game.log?.pop(); if (!e) return;
+  const p = [...game.A.players, ...game.B.players].find(x => x.name === e.name);
+  if (p) p[e.f] = Math.max(0, (+p[e.f] || 0) - e.d);
+  persistLive(); renderLive();
 };
 $('live').onchange = e => {
   const k = e.target.dataset.addsel;
@@ -566,7 +752,7 @@ $('stopBtn').onclick = async () => {
   const end = Date.now();
   await add('games', {
     date: new Date(end).toISOString(), durationSec: Math.round((end - game.start) / 1000),
-    teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner
+    teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner, ...(game.motm ? {motm: game.motm} : {})
   });
   endLive(); renderHistory(); renderAll();
   document.querySelector('[data-t=history]').click();
@@ -583,7 +769,8 @@ function renderEditor() {
   editG.teamA.players.sort((x, y) => byName(x.name, y.name)); editG.teamB.players.sort((x, y) => byName(x.name, y.name));
   const side = k => {
     const t = editG[k];
-    return `<div><h3><select data-ename="${k}">${COLORS.map(c => `<option ${c === t.name ? 'selected' : ''}>${c}</option>`).join('')}${COLORS.includes(t.name) ? '' : `<option selected>${esc(t.name)}</option>`}</select></h3><table>` +
+    const gkSel = `<select data-egk="${k}"><option value="">🧤 Goalkeeper…</option>${t.players.map(p => `<option ${p.gk ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
+    return `<div><h3><select data-ename="${k}">${COLORS.map(c => `<option ${c === t.name ? 'selected' : ''}>${c}</option>`).join('')}${COLORS.includes(t.name) ? '' : `<option selected>${esc(t.name)}</option>`}</select> ${gkSel}</h3><table>` +
       t.players.map((p, i) => `<tr><td>${esc(p.name)}<br><button class="sec" data-erem="${k}" data-i="${i}">✕ Remove</button></td><td><div class="stat">` +
         STAT_FIELDS.map(([f, ic]) => `<span class="ctr">${ic}<input type="number" min="0" step="1" style="width:56px" data-k="${k}" data-i="${i}" data-f="${f}" value="${+p[f] || 0}"></span>`).join('') +
         `</div></td></tr>`).join('') + `</table>
@@ -593,6 +780,7 @@ function renderEditor() {
     <div class="row"><label>Date &amp; time <input type="datetime-local" id="eDate" value="${toLocalInput(editG.date)}"></label>
     <label>Duration (min) <input type="number" min="0" id="eDur" style="width:70px" value="${Math.round(editG.durationSec / 60)}"></label></div>
     <div class="muted">Score and winner are calculated from the goals entered.</div>
+    <div class="row"><label>⭐ Man of the match <select data-emotm="1"><option value="">–</option>${[...editG.teamA.players, ...editG.teamB.players].map(p => `<option ${editG.motm === p.name ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label></div>
     <div class="match" style="margin-top:8px">${side('teamA')}${side('teamB')}</div>
     <div class="row" style="margin-top:10px"><button id="eSave">Save changes</button><button class="sec" id="eCancel">Cancel</button></div></div>`;
 }
@@ -603,6 +791,7 @@ async function saveEdit() {
   if (isNaN(d)) return alert('Enter a valid date and time.');
   g.date = d.toISOString(); g.durationSec = Math.max(0, Math.round(+$('eDur').value || 0)) * 60;
   g.scoreA = goals(g.teamA); g.scoreB = goals(g.teamB);
+  if (g.motm && ![...g.teamA.players, ...g.teamB.players].some(p => p.name === g.motm)) delete g.motm;
   g.winner = g.scoreA > g.scoreB ? g.teamA.name : g.scoreB > g.scoreA ? g.teamB.name : 'Draw';
   await put('games', g);
   editG = null; renderHistory(); renderAll();
@@ -611,8 +800,8 @@ async function renderHistory() {
   if (editG) return renderEditor();
   const games = (await all('games')).reverse();
   $('historyList').innerHTML = games.length ? games.map(g => {
-    const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists).map(p =>
-          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists : ''}`).join('<br>') || '<span class="muted">no stats</span>';
+    const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists || p.gk || g.motm === p.name).map(p =>
+          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.gk ? '🧤 ' : ''}${g.motm === p.name ? '⭐' : ''}`).join('<br>') || '<span class="muted">no stats</span>';
     return `<div class="card" style="border:1px solid #e3e8ee">
       <div class="row" style="justify-content:space-between"><b>${new Date(g.date).toLocaleString()}</b>
       <span class="win">${g.winner === 'Draw' ? 'Draw' : '🏆 ' + esc(g.winner)}</span>
@@ -634,6 +823,8 @@ $('historyList').onchange = e => {
   const d = e.target.dataset; if (!editG) return;
   if (d.f) editG[d.k].players[+d.i][d.f] = Math.max(0, Math.floor(+e.target.value || 0));
   else if (d.ename) editG[d.ename].name = e.target.value;
+  else if (d.egk) { editG[d.egk].players.forEach(p => { if (p.name === e.target.value) p.gk = true; else delete p.gk; }); }
+  else if (d.emotm) { if (e.target.value) editG.motm = e.target.value; else delete editG.motm; }
   else if (d.eadd && e.target.value) {
     const pl = players.find(p => p.id === +e.target.value);
     editG[d.eadd].players.push({id: pl.id, name: pl.name, goals: 0, assists: 0});
@@ -696,7 +887,7 @@ async function screenshotCard(btn) {
   const ctx = cv.getContext('2d'); ctx.fillStyle = bg; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.scale(scale, scale); ctx.drawImage(img, 0, 0);
   const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-  const name = `football-session-${btn.dataset.day.replace(/[^\w]+/g, '-')}${noTotw ? '-no-totw' : ''}.png`;
+  const name = btn.dataset.file ? `${btn.dataset.file}-${new Date().toISOString().slice(0, 10)}.png` : `football-session-${btn.dataset.day.replace(/[^\w]+/g, '-')}${noTotw ? '-no-totw' : ''}.png`;
   const file = new File([blob], name, {type: 'image/png'});
   if (navigator.canShare && navigator.canShare({files: [file]})) {
     try { await navigator.share({files: [file], title: name}); return; }
@@ -761,49 +952,79 @@ async function computeRatings(src) {
   const day = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const days = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date)).slice(0, 5);
   const recentDays = new Set(days);
-  const m = {};
-  games.forEach(g => {
-    const rec = recentDays.has(day(g));
-    [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
-      const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, rw: 0, gd: 0, rgd: 0, days: new Set()};
-      s.days.add(day(g));
-      const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
-      const gd = t === g.teamA ? g.scoreA - g.scoreB : g.scoreB - g.scoreA;
-      s.games++; s.g += p.goals; s.a += p.assists; s.w += w; s.gd += gd;
-      if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rw += w; s.rgd += gd; }
-    }));
-  });
-  const list = Object.entries(m).map(([name, s]) => ({name, ...s}));
+  // strength: name -> first-pass rating (or null). Used to judge each match against the quality of teammates and opponents.
+  const build = strength => {
+    const m = {};
+    games.forEach(g => {
+      const rec = recentDays.has(day(g));
+      const margin = Math.abs(g.scoreA - g.scoreB);
+      const aw = margin <= 1 ? 1.15 : margin >= 4 ? 0.85 : 1; // goals and assists in close matches count a bit more than in blowouts
+      const avg = (t, skip) => {
+        const v = t.players.filter(x => x.name !== skip && strength?.[x.name] != null).map(x => strength[x.name]);
+        return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+      };
+      [[g.teamA, g.teamB], [g.teamB, g.teamA]].forEach(([t, o]) => t.players.forEach(p => {
+        const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, rw: 0, gd: 0, rgd: 0, ti: 0, rti: 0, att: 0, ratt: 0, gkG: 0, gkS: 0, conc: 0, mg: 0, motm: 0, days: new Set()};
+        s.days.add(day(g));
+        if (p.gk) { const c = t === g.teamA ? g.scoreB : g.scoreA; s.gkG++; s.conc += c; s.gkS += Math.max(0, 1 - c / 4); }
+        if (g.motm) { s.mg++; if (g.motm === p.name) s.motm++; }
+        const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
+        const gd = t === g.teamA ? g.scoreA - g.scoreB : g.scoreB - g.scoreA;
+        // match impact = 60% result + 40% goal difference (capped at +-3), then adjusted for opponent strength vs teammates' strength
+        let ti = 0.6 * w + 0.4 * (0.5 + Math.max(-3, Math.min(3, gd)) / 6);
+        const mine = avg(t, p.name), opp = avg(o);
+        if (mine != null && opp != null) ti += Math.max(-0.12, Math.min(0.12, (opp - mine) * 0.005));
+        ti = Math.max(0, Math.min(1, ti));
+        const att = (p.goals + 0.7 * p.assists) * aw;
+        s.games++; s.g += p.goals; s.a += p.assists; s.w += w; s.gd += gd; s.ti += ti; s.att += att;
+        if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rw += w; s.rgd += gd; s.rti += ti; s.ratt += att; }
+      }));
+    });
+    return m;
+  };
   const rate = (v, n) => n ? v / n : 0;
   const keys = [['g', 'rg'], ['a', 'ra']];
+  const scoreList = strength => {
+  const list = Object.entries(build(strength)).map(([name, s]) => ({name, ...s}));
   const max = keys.map(([all, rec]) => ({
     all: Math.max(0, ...list.map(p => rate(p[all], p.games))),
     rec: Math.max(0, ...list.map(p => rate(p[rec], p.rGames)))}));
-  const attOf = (g, a, n) => n ? (g + 0.7 * a) / n : 0;
-  const maxAtt = {all: Math.max(0, ...list.map(p => attOf(p.g, p.a, p.games))), rec: Math.max(0, ...list.map(p => attOf(p.rg, p.ra, p.rGames)))};
+  // attack per match (goals + 0.7 x assists, close matches weigh more) is pulled towards the group average for small samples
+  const K = 2, tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.games, t[2] + p.ratt, t[3] + p.rGames], [0, 0, 0, 0]);
+  const mean = {all: rate(tot[0], tot[1]), rec: rate(tot[2], tot[3])};
+  const attOf = (v, n, mu) => n ? (v + K * mu) / (n + K) : 0;
+  const maxAtt = {all: Math.max(0, ...list.map(p => attOf(p.att, p.games, mean.all))), rec: Math.max(0, ...list.map(p => attOf(p.ratt, p.rGames, mean.rec)))};
   // Each stat = 60% all time + 40% last 5 match days; without games in the last 5 match days the all-time value is used for the 40%
   const blend = (a, r, hasRecent) => 0.6 * a + 0.4 * (hasRecent ? r : a);
   list.forEach(p => {
     const sub = keys.map(([all, rec], i) => blend(
       max[i].all ? rate(p[all], p.games) / max[i].all : 0,
       max[i].rec ? rate(p[rec], p.rGames) / max[i].rec : 0, p.rGames > 0));
-    // win rate is pulled towards 50% for small samples (like 2 extra drawn games), so 1 lucky win is not 100%
-    const shrink = (w, n) => (w + 1) / (n + 2);
-    // team impact = 60% win rate + 40% goal difference per match (-3..+3 mapped to 0..1, also pulled towards the middle)
-    const gdScore = (d, n) => Math.max(0, Math.min(1, 0.5 + (d / (n + 2)) / 6));
-    const teamImpact = (w, d, n) => 0.6 * shrink(w, n) + 0.4 * gdScore(d, n);
-    const win = blend(teamImpact(p.w, p.gd, p.games), teamImpact(p.rw, p.rgd, p.rGames), p.rGames > 0);
+    // match impact is pulled towards the middle for small samples (like 2 extra average matches), so 1 lucky win is not 100%
+    const impact = (ti, n) => (ti + 1) / (n + 2);
+    const win = blend(impact(p.ti, p.games), impact(p.rti, p.rGames), p.rGames > 0);
     p.winPct = Math.round(100 * rate(p.w, p.games));
     const conf = 0.7 + 0.3 * Math.min(1, p.games / 5);
     // attack = goals + 0.7 x assists per match, scaled to the best player; SHO / PAS are only shown on the card
     const att = blend(
-      maxAtt.all ? attOf(p.g, p.a, p.games) / maxAtt.all : 0,
-      maxAtt.rec ? attOf(p.rg, p.ra, p.rGames) / maxAtt.rec : 0, p.rGames > 0);
-    const score = (0.8 * att + 0.2 * win) * conf;
+      maxAtt.all ? attOf(p.att, p.games, mean.all) / maxAtt.all : 0,
+      maxAtt.rec ? attOf(p.ratt, p.rGames, mean.rec) / maxAtt.rec : 0, p.rGames > 0);
+    // man of the match (only when votes exist) and goalkeeper performance (only for players who played in goal)
+    const hasMotm = games.some(g => g.motm);
+    const motmScore = Math.min(1, 4 * p.motm / (p.mg + 2));
+    let score = ((hasMotm ? 0.72 : 0.8) * att + 0.2 * win + (hasMotm ? 0.08 * motmScore : 0)) * conf;
+    p.gks = p.gkG ? (p.gkS + 1) / (p.gkG + 2) : null;
+    if (p.gkG) { const share = 0.4 * Math.min(1, p.gkG / p.games); score = score * (1 - share) + p.gks * share * conf; }
+    p.attIdx = Math.round(100 * att); p.motmScore = hasMotm ? Math.round(100 * motmScore) : null; p.prov = p.games < 5;
     p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.win = Math.round(40 + 59 * win);
     p.ovr = Math.min(99, Math.round(40 + 59 * score));
   });
   list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
+  return list;
+  };
+  // pass 1 = plain ratings; pass 2 re-scores every match against the pass-1 strength of teammates and opponents
+  let list = scoreList(null);
+  list = scoreList(Object.fromEntries(list.map(p => [p.name, p.ovr])));
   if (src) return {list, days};
   const byName = Object.fromEntries(list.map(p => [p.name, p]));
   // TOTW / TOTY: the 5 best-rated players of the period, laid out as a 1-2-2 squad
@@ -822,11 +1043,8 @@ async function computeRatings(src) {
     sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].totw = true; });
     squad = {rows: sel.rows, byName, day: lastGames[0].date, games: lastGames, all: games};
   }
-  // Rare: nobody is rare until at least 4 match days exist; then anyone absent from the last 4 days
-  const last4 = days.slice(0, 4);
-  if (days.length >= 4) list.forEach(p => { p.rare = !last4.some(d => p.days.has(d)); });
-  // Future Star: manual selection in Players tab
-  players.forEach(pl => { if (pl.star && byName[pl.name]) byName[pl.name].star = true; });
+  // Rare (shiny): played at least 50% of the last 5 match days (needs at least 2 match days)
+  if (days.length >= 2) list.forEach(p => { p.rare = [...p.days].filter(d => days.includes(d)).length >= days.length / 2; });
   // TOTY: only after 15 January, built from the previous calendar year
   const now = new Date(), year = now.getFullYear() - 1;
   let toty = null;
@@ -896,8 +1114,8 @@ function renderPitch(squad, title, sub, emptyMsg, cls = '', key = '') {
   if (!squad) return `<div style="flex:1 1 280px"><h3>${title}</h3><span class="muted">${emptyMsg}</span></div>`;
   const colour = key ? (sessMode === 'team' ? sessionTeams(squad.games) : null) : !cls && totwMode === 'team' ? sessionTeams(squad.games) : null;
   const card = n => colour
-    ? `<div class="pp"><div class="pc tcol tc-${esc(colour[n] || '')}" data-name="${esc(n)}"><b>${esc(colour[n] || '–')}</b><span>${esc(n)}</span></div></div>`
-    : `<div class="pp"><div class="pc" data-name="${esc(n)}"><b>${squad.byName[n]?.ovr ?? ''}</b><span>${esc(n)}</span></div></div>`;
+    ? fcColour(n, colour[n] || '')
+    : fcCard(n, squad.byName[n], 0, cls ? 'toty' : 'totw');
   const line = arr => arr.length ? `<div class="pl">${arr.map(card).join('')}</div>` : '';
   const s = squad.rows;
   const toggle = cls || key ? '' : ` <button class="sec" id="totwMode" style="font-size:12px;padding:3px 8px">${totwMode === 'team' ? 'Show rating' : 'Show team colour'}</button>`;
@@ -910,7 +1128,7 @@ function drawLinks(data, root = document) {
     const sq = data[pitch.dataset.squad]; if (!sq) return;
     pitch.querySelector('.links')?.remove();
     const box = pitch.getBoundingClientRect();
-    const rows = [...pitch.querySelectorAll('.pl')].map(r => [...r.querySelectorAll('.pc[data-name]')]);
+    const rows = [...pitch.querySelectorAll('.pl')].map(r => [...r.querySelectorAll('.pc[data-name], .fc[data-name]')]);
     const center = el => { const r = el.getBoundingClientRect(); return [r.left - box.left + r.width / 2 - 2, r.top - box.top + r.height / 2 - 2]; };
     const ch = chemistry(sq.all || sq.games);
     const pairs = rowPairs(rows);
@@ -944,19 +1162,25 @@ async function renderRanking() {
       + `<div class="muted" style="font-size:12px;margin-top:6px">Counts every award won: TOTW on each match day, TOTY for each finished year (after 15 January), Ballon d'Or and Golden Boot for each year (awarded 15 October). Sorted by 👑, then 🏆, 👟, 📋.</div>`
     : '<span class="muted">No awards yet.</span>');
   const tb = $('totwMode'); if (tb) tb.onclick = () => { totwMode = totwMode === 'team' ? 'rating' : 'team'; renderRanking(); };
-  const kind = p => p.toty ? 'toty' : p.star ? 'star' : p.totw ? 'totw' : '';
+  // change since the previous session: ratings computed without the latest match day
+  const dKey = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+  const allG = await all('games'), before = days.length ? allG.filter(g => dKey(g) !== days[0]) : [];
+  const prev = before.length && before.length < allG.length ? Object.fromEntries((await computeRatings(before)).list.map(p => [p.name, p.ovr])) : {};
+  const delta = p => prev[p.name] == null ? null : p.ovr - prev[p.name];
+  const dTxt = p => { const d = delta(p); return d == null ? 'new' : d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : '＝ 0'; };
+  window.rankInfo = {list, dTxt};
+  const kind = p => p.toty ? 'toty' : p.totw ? 'totw' : '';
   const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
-  const label = p => p.toty ? '🏆 TOTY' : p.star ? '⭐ FUTURE STAR' : p.totw ? '📋 TOTW' : p.rare ? '✨ RARE' : '';
-  const newcomers = players.filter(pl => !list.some(p => p.name === pl.name));
-  const newCard = p => `<div class="fut star"><span class="tag">⭐ FUTURE STAR</span><span class="rk">#–</span><div class="ovr" style="margin-top:14px">–</div><div class="nm">${esc(p.name)}</div>
-    <div class="sub"><span><b>–</b>SHO</span><span><b>–</b>PAS</span><span><b>–</b>WIN</span></div></div>`;
-  $('rankCards').innerHTML = list.length || newcomers.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''}">
-    <span class="tag">${label(p)}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}<span class="rk">#${i + 1}</span><div class="ovr" style="margin-top:14px">${p.ovr}</div><div class="nm">${esc(p.name)}</div>
-    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.win}</b>WIN</span></div></div>`).join('') + newcomers.map(newCard).join('')
+  const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : p.rare ? '✨ RARE' : '';
+  const fx = awardFx;
+  $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''} ${fx(p)}" data-name="${esc(p.name)}" style="cursor:pointer"><div class="face">
+    <div class="lt"><div class="ovr">${p.ovr}</div><span class="tag">${label(p) || '&nbsp;'}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}</div>
+    <span class="rk">#${i + 1}</span>    <div class="av">${faceHtml(p.name)}</div>
+    <div class="nm">${esc(p.name)}${p.prov ? ' <span title="Fewer than 5 games: provisional rating" style="font-size:.8em">⏳</span>' : ''}</div><i class="ln"></i>
+    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.win}</b>WIN</span></div></div></div>`).join('')
     : '<span class="muted">No games played yet.</span>';
-  $('rankTable').innerHTML = list.length || newcomers.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted. ⭐ = new player without games (no rating yet)</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th><th>Win %</th></tr>` +
-    list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td></tr>`).join('') +
-        newcomers.map(p => `<tr><td>–</td><td>${esc(p.name)} ⭐</td><td><b>–</b></td><td>0/0</td><td>–</td><td>–</td><td>–</td></tr>`).join('') + '</table>' : '';
+  $('rankTable').innerHTML = list.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted.</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th>  <th>Win %</th><th title="Change since the previous session">Δ</th></tr>` +
+      list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.prov ? ' ⏳' : ''}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td><td>${dTxt(p)}</td></tr>`).join('') + '</table>' : '';
 }
 async function renderStats() {
   const games = await all('games'), m = {};
@@ -983,12 +1207,37 @@ $('exportBtn').onclick = async () => {
   const file = new File([JSON.stringify(data, null, 1)], name, {type: 'application/json'});
   // iOS: share sheet (Save to Files, AirDrop, Mail...); elsewhere: normal download
   if (navigator.canShare && navigator.canShare({files: [file]})) {
-    try { await navigator.share({files: [file], title: name}); return; }
+    try { await navigator.share({files: [file], title: name}); markBackup(); return; }
     catch (err) { if (err.name === 'AbortError') return; }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(file); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  markBackup();
+};
+// Reminder bar: shown while there are matches saved after the last export
+const markBackup = () => { localStorage.setItem('lastBackup', Date.now()); updateBackupBar(); };
+async function updateBackupBar() {
+  const last = +localStorage.getItem('lastBackup') || 0;
+  const n = (await all('games')).filter(g => +new Date(g.date) > last).length;
+  $('backupBar').style.display = n ? 'flex' : 'none';
+  $('backupMsg').textContent = `💾 ${n} match${n > 1 ? 'es' : ''} not backed up yet. Your data only lives in this browser.`;
+}
+$('backupNow').onclick = () => $('exportBtn').click();
+$('rankCards').onclick = e => {
+  const c = e.target.closest('.fut[data-name]'); if (!c || !window.rankInfo) return;
+  const p = window.rankInfo.list.find(x => x.name === c.dataset.name); if (!p) return;
+  const r = (v, n) => n ? (v / n).toFixed(2) : '–';
+  const box = $('rankDetail');
+  box.style.display = '';
+  box.innerHTML = `<h3 style="margin:0 0 6px">${esc(p.name)} — ${p.ovr} <span class="muted">(${window.rankInfo.dTxt(p)} since the previous session)</span>${p.prov ? ' <span class="muted">⏳ provisional: fewer than 5 games</span>' : ''}</h3>
+    <table style="font-size:13px"><tr><td>Attack index (goals + 0.7 × assists per match, vs the best player)</td><td><b>${p.attIdx}</b>/100</td></tr>
+    <tr><td>Goals / assists per match</td><td>${r(p.g, p.games)} / ${r(p.a, p.games)} (${p.g} + ${p.a} in ${p.games} games)</td></tr>
+    <tr><td>Team impact (results, goal difference, opponent strength)</td><td><b>${p.win}</b> (win rate ${p.winPct}%)</td></tr>
+    <tr><td>Form (last 5 match days)</td><td>${p.rGames} games, ${p.rg} goals, ${p.ra} assists</td></tr>
+    <tr><td>Man of the match</td><td>${p.motmScore == null ? 'no votes yet' : `${p.motm} of ${p.mg} games (score ${p.motmScore}/100)`}</td></tr>
+    <tr><td>Goalkeeper</td><td>${p.gkG ? `${p.gkG} games in goal, ${r(p.conc, p.gkG)} conceded per game` : '–'}</td></tr></table>`;
+  box.scrollIntoView({block: 'nearest'});
 };
 const gameKey = g => [g.date, g.scoreA, g.scoreB, g.teamA?.name, g.teamB?.name,
   [...(g.teamA?.players || []), ...(g.teamB?.players || [])].map(p => `${p.name}:${p.goals}:${p.assists}`).sort().join(',')].join('|');
@@ -1007,7 +1256,7 @@ async function importData(file, replace) {
   for (const p of d.players) {
     const {id, ...rest} = p;
     const ex = players.find(x => x.name.toLowerCase() === p.name.toLowerCase());
-    if (ex) { if (rest.star && !ex.star) { ex.star = true; await put('players', ex); } }
+    if (ex) { if (p.photo && !ex.photo) { ex.photo = p.photo; await put('players', ex); } }
     else { await add('players', rest); addedP++; await loadPlayers(); }
   }
   const have = new Set((await all('games')).map(gameKey));
@@ -1034,12 +1283,13 @@ for (const [id, replace] of [['importFile', false], ['replaceFile', true]]) {
   };
 }
 
-function renderAll() { refreshRatings().then(() => { renderPlayers(); renderTeams(); renderSetup(); if (game) renderLive(); }); }
+function renderAll() { updateBackupBar(); refreshRatings().then(() => { renderPlayers(); renderTeams(); renderSetup(); if (game) renderLive(); }); }
 
 (async () => {
   await openDB();
   await loadPlayers();
   teams = (await getKV('teams')) || [];
+  layouts = (await getKV('layouts')) || [];
   teamNames = (await getKV('teamNames')) || [];
   await refreshRatings();
   renderAll();
