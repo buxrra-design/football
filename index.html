@@ -27,13 +27,15 @@
   .team{border:1px solid #d5dbe3;border-radius:8px;padding:10px}
   .team li{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}
   .grip{cursor:grab;touch-action:none;user-select:none;padding:2px 6px;color:#6b7686;font-size:18px}
-  #teamsView .pc,#teamsView .fc{cursor:grab;touch-action:none;user-select:none}
+  #teamsView .pc,#teamsView .fc{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
   .nostats .fut .sub,.nostats .fut .ln{display:none}
   .nostats .fut .nm{top:67%;font-size:12.5cqw}
+  .nophoto .fut .av{display:none}
   .team.over{outline:3px dashed #128a4a;background:#eaf7ef}
   .ghost{position:fixed;transform:translate(-50%,-120%);background:#111;color:#ffd75e;padding:6px 12px;border-radius:8px;pointer-events:none;z-index:99;font-weight:600;box-shadow:0 4px 12px #0006}
   .team ul{list-style:none;padding:0;margin:0}
   .match{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .lcard .pp{width:120px}
   @media(max-width:700px){.match{grid-template-columns:1fr}}
   .score{font-size:40px;text-align:center;font-weight:700;margin:8px 0}
   .stat{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -62,8 +64,6 @@
   .thumb svg,.thumb img{width:100%;height:100%;display:block;object-fit:cover}
   .thumb img.cut{object-position:50% 0}
   .thumb i{display:block;width:100%;height:100%;--sil:#0004;background:radial-gradient(circle at 50% 35%,var(--sil) 0 22%,transparent 23%),radial-gradient(ellipse at 50% 112%,var(--sil) 0 50%,transparent 51%)}
-  .frow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:6px 0;font-size:13px}
-  .frow>span{min-width:70px;color:#556}
   .sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #99a;padding:0;cursor:pointer}
   .sw.on{box-shadow:0 0 0 2px #0b6b3a}
   .fut .av i{transform:translateY(-14%);display:block;width:100%;height:100%;background:radial-gradient(circle at 50% 27%,var(--sil) 0 19%,transparent 20%),radial-gradient(ellipse at 50% 108%,var(--sil) 0 46%,transparent 47%)}
@@ -105,30 +105,6 @@
   .pp{width:min(108px,29cqw);display:flex;justify-content:center}
   .pp>.fut{width:100%}
   .pp{filter:drop-shadow(0 0 1px #fffc) drop-shadow(0 2px 3px #0006)}
-  .pc{background:linear-gradient(160deg,#333,#000);color:#f4e6a0;clip-path:var(--shape);width:76px;min-height:98px;padding:17px 4px 16px;display:flex;flex-direction:column;justify-content:center;text-align:center;font-size:11px;font-weight:700}
-  .pc b{display:block;font-size:20px}
-  .toty-pitch .pc{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff}
-  .pc.gold{background:linear-gradient(160deg,#fbe9a0,#d6a82e);color:#2b2208;border-color:#fff8}
-  .pc.silver{background:linear-gradient(160deg,#f1f3f6,#a9b2bd);color:#222;border-color:#fff8}
-  .pc.bronze{background:linear-gradient(160deg,#e8b98a,#a8683a);color:#2d1606;border-color:#fff8}
-  .pc.totw{background:linear-gradient(160deg,#4a4a4f,#111114);color:#ffd33d;border-color:#ffd33d}
-  .pc.toty{background:linear-gradient(160deg,#1f4fb0,#0a1a4d);color:#9fe0ff;border-color:#7fd0ff;box-shadow:0 0 10px #3aa0ff99}
-  .pc.tcol{background:#555;color:#fff;border-color:#fff}
-  .pc.tc-Black{background:linear-gradient(160deg,#444,#000);color:#fff}
-  .pc.tc-White{background:linear-gradient(160deg,#fff,#d9dde3);color:#222}
-  .pc.tc-Blue{background:linear-gradient(160deg,#3b82f6,#1b46b0);color:#fff}
-  .pc.tc-Yellow{background:linear-gradient(160deg,#ffe45c,#e0b400);color:#2b2208}
-  .pc.tc-Red{background:linear-gradient(160deg,#ff5a5a,#b81414);color:#fff}
-  .pc.tc-Green{background:linear-gradient(160deg,#3fd067,#12803a);color:#fff}
-  .pc.tcol b{font-size:14px}
-  .pc.rare{filter:saturate(1.35) brightness(1.08)}
-  .pc.rare::after,.pc.bdoc::after,.pc.bootc::after,.pc.bothc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite;pointer-events:none}
-  .pc{position:relative}
-  .pc.bdoc{background:linear-gradient(160deg,#fffbe0,#ffd84a 45%,#c98a00);color:#3a2800}
-  .pc.bootc{background:linear-gradient(150deg,#ffb800,#ff6a00 50%,#c1121f);color:#fff}
-  .pc.bothc{background:linear-gradient(135deg,#fffbe0 0%,#ffd84a 35%,#ff9d00 60%,#e03a00 100%);color:#3a2800}
-  .pc.bdoc .pb,.pc.bootc .pb,.pc.bothc .pb{top:6px;right:9px;font-size:10px}
-  .pc .pb{position:absolute;top:4px;right:9px;font-style:normal;font-size:10px;text-shadow:0 1px 2px #0008}
   .timer{text-align:center;font-size:22px;font-variant-numeric:tabular-nums}
 </style>
 </head>
@@ -185,6 +161,7 @@
       <button id="startBtn">Start Game</button>
     </div>
     <div class="muted" id="setupMsg"></div>
+    <div id="preMatch" style="margin-top:10px"></div>
   </div>
   <div class="card" id="live" style="display:none">
     <div class="timer">⏱ <span id="clock">00:00</span></div>
@@ -193,6 +170,7 @@
     <div class="row" style="justify-content:center"><button id="undoBtn" class="sec" disabled>↶ Undo last</button></div>
     <div class="muted" style="text-align:center;font-size:12px">🧤 = goalkeeper of the team, ⭐ = man of the match (one per game)</div>
     <div id="motmSug" style="text-align:center;margin:6px 0"></div>
+    <div id="liveInsights"></div>
     <div id="liveBal"></div>
     <div class="match"><div id="liveA"></div><div id="liveB"></div></div>
   </div>
@@ -210,7 +188,7 @@
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
   <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT, from three stats: goals per match (SHO), assists per match (PAS) and team impact (WIN: 60% win rate with win = 1, draw = ½, plus 40% goal difference per match of the player's team). Each stat = 60% all time + 40% last 5 match days (a player with no games in the last 5 match days uses his all-time value for that 40%). SHO and PAS are scaled to the best player; WIN is the team impact, pulled slightly towards the middle for players with few games and adjusted per match for how strong the opponents were compared with the player's teammates (beating a stronger team counts more). Overall = 80% attack (goals + 0.7 × assists per match, so a goal counts a bit more than an assist; goals in close matches count a little more than in blowouts; players with few matches are pulled towards the group average) + 20% WIN (with man-of-the-match votes recorded: 72% attack + 20% WIN + 8% man of the match; a player who played in goal gets up to 40% of the rating from goals conceded while in goal), slightly reduced for players with fewer than 5 games (shown as provisional). Tap a card to see the breakdown and the change since the last session.<br>
-  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. ✨ <b>Rare</b> (shiny): played at least 50% of the last 5 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year. Tap a card for the rating breakdown.</div>
+  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. <b>Rare</b> (shiny): played at least 50% of the last 5 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year. Tap a card for the rating breakdown.</div>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="rankDetail" class="card" style="border:1px solid #e3e8ee;display:none"></div>
@@ -254,7 +232,7 @@ const openDB = () => new Promise((res, rej) => {
 const tx = (store, mode, fn) => new Promise((res, rej) => {
   const t = db.transaction(store, mode), s = t.objectStore(store), req = fn(s);
   t.oncomplete = () => res(req && req.result);
-  t.onerror = () => rej(t.error);
+  t.onerror = t.onabort = () => rej(t.error);
 });
 const all = s => tx(s, 'readonly', st => st.getAll());
 const put = (s, v) => tx(s, 'readwrite', st => st.put(v));
@@ -335,6 +313,20 @@ async function refreshRatings() {
   const {list} = await computeRatings();
   const avg = k => list.length ? Math.round(list.reduce((s, p) => s + p[k], 0) / list.length) : 60;
   ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, p])), fb: {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), win: avg('win')}};
+  ratingCache.fit = await walkForwardFit(ratingCache.games);
+}
+// Honest backtest data for the win-probability model: every game is judged with the ratings that existed BEFORE it
+// (the most recent 40 games, at least 1 earlier game needed), so a result never explains its own rating.
+async function walkForwardFit(games) {
+  const gs = [...games].filter(g => g.teamA?.players?.length && g.teamB?.players?.length).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const rows = [];
+  for (let i = Math.max(1, gs.length - 40); i < gs.length; i++) {
+    const g = gs[i], prior = (await computeRatings(gs.slice(0, i))).list;
+    const by = Object.fromEntries(prior.map(p => [p.name, p.ovr])), fb = prior.length ? prior.reduce((s, p) => s + p.ovr, 0) / prior.length : 60;
+    const pow = t => Math.max(1, t.players.reduce((s, p) => s + (by[p.name] ?? fb), 0));
+    rows.push({pa: pow(g.teamA), pb: pow(g.teamB), res: g.winner === 'Draw' ? 'd' : g.winner === g.teamA.name ? 'a' : 'b'});
+  }
+  return rows;
 }
 const rOf = name => ratingCache.byName[name] || ratingCache.fb;
 const equality = vals => { const mx = Math.max(...vals); return mx ? Math.round(100 * Math.min(...vals) / mx) : 100; };
@@ -445,13 +437,23 @@ async function dropPlayer(pid, target) {
   }
   await setKV('teams', teams); await setKV('layouts', layouts); renderAll();
 }
+$('teamsView').addEventListener('contextmenu', e => { if (e.target.closest('.pc, .fc')) e.preventDefault(); });
 $('teamsView').addEventListener('pointerdown', e => {
   const src = e.target.closest('.pc[data-pid], .fc[data-pid], .grip[data-pid]'); if (!src || e.button > 0) return;
   const pid = +src.dataset.pid, x0 = e.clientX, y0 = e.clientY;
-  let ghost = null, mark = null;
+  // touch: a card needs a short press-and-hold before it drags, so a normal swipe still scrolls the page
+  const hold = e.pointerType === 'touch' && !src.classList.contains('grip');
+  let ghost = null, mark = null, armed = !hold, timer = null, cancelled = false;
+  const stopTouch = ev => { if (armed && ghost) ev.preventDefault(); };
+  if (hold) {
+    timer = setTimeout(() => { armed = true; navigator.vibrate?.(15); }, 280);
+    document.addEventListener('touchmove', stopTouch, {passive: false});
+  }
   const move = ev => {
+    if (!armed) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 8) { cancelled = true; clearTimeout(timer); } return; }
+    if (cancelled) return;
     if (!ghost) {
-      if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return;
+      if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6 && !hold) return;
       ghost = document.createElement('div'); ghost.className = 'ghost'; ghost.textContent = pName(pid);
       document.body.appendChild(ghost);
     }
@@ -461,6 +463,7 @@ $('teamsView').addEventListener('pointerdown', e => {
     if (mark !== el) { mark?.classList.remove('over'); mark = el; mark?.classList.add('over'); }
   };
   const up = ev => {
+    clearTimeout(timer); document.removeEventListener('touchmove', stopTouch);
     document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
     document.removeEventListener('pointercancel', up);
     mark?.classList.remove('over');
@@ -483,7 +486,6 @@ function chemistry(games) {
     const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
     combos(names, 2).forEach(([a, b]) => { const s = st[a + '|' + b] ??= {n: 0, w: 0}; s.n++; s.w += w; });
   }));
-  const get = (a, b) => st[a < b ? a + '|' + b : b + '|' + a];
   const sorted = (a, b) => a < b ? [a, b] : [b, a];
   return {
     together: (a, b) => (st[sorted(a, b).join('|')] || {n: 0}).n,
@@ -528,7 +530,7 @@ const awardFx = r => !r ? '' : r.bdo && r.boot ? 'bothc' : r.bdo ? 'bdoc' : r.bo
 // Full FC-style card used on the squad pitches (Teams, Sessions, TOTW, TOTY)
 function fcFut(n, r, pid, kindOverride, face) {
   const kind = kindOverride || (!r ? 'bronze' : r.toty ? 'toty' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze');
-  const label = !r ? '' : r.toty ? 'TOTY' : r.totw ? 'TOTW' : r.rare ? '✨ RARE' : '';
+  const label = !r ? '' : r.toty ? 'TOTY' : r.totw ? 'TOTW' : r.rare ? 'RARE' : '';
   const ic = r && (r.bdo || r.boot) ? `<span class="bdo">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</span>` : '';
   return `<div class="fut fc ${kind} ${r && r.rare ? 'rare' : ''} ${awardFx(r)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
     <div class="lt"><div class="ovr">${r ? r.ovr : '–'}</div><span class="tag">${label || '&nbsp;'}</span>${ic}</div>
@@ -561,9 +563,11 @@ $('feFile').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   const img = new Image();
   try { await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = URL.createObjectURL(f); }); } catch (err) { return alert('Could not read this image.'); }
-  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+  // huge phone photos are scaled down first so the pixel scan cannot run out of memory
+  const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height, sc = Math.min(1, 1600 / Math.max(W0, H0));
+  const W = Math.max(1, Math.round(W0 * sc)), H = Math.max(1, Math.round(H0 * sc));
   const probe = document.createElement('canvas'); probe.width = W; probe.height = H;
-  const px = probe.getContext('2d', {willReadFrequently: true}); px.drawImage(img, 0, 0);
+  const px = probe.getContext('2d', {willReadFrequently: true}); px.drawImage(img, 0, 0, W, H);
   URL.revokeObjectURL(img.src);
   const data = px.getImageData(0, 0, W, H).data;
   let x0 = W, y0 = H, x1 = -1, y1 = -1, clear = 0;
@@ -644,22 +648,34 @@ function renderSetup() {
   $('teamA').value = a || 0; $('teamB').value = b || (teams.length > 1 ? 1 : 0);
   $('setupMsg').textContent = teams.length < 2 ? 'Create default teams first (Teams tab).' : '';
   $('startBtn').disabled = teams.length < 2;
+  renderPreMatch();
+}
+$('teamA').onchange = $('teamB').onchange = () => renderPreMatch();
+function renderPreMatch() {
+  const a = +$('teamA').value, b = +$('teamB').value;
+  if (teams.length < 2 || a === b || !teams[a]?.length || !teams[b]?.length) { $('preMatch').innerHTML = ''; return; }
+  const mk = i => ({name: teamLabel(i), players: teams[i].map(id => ({name: pName(id)}))});
+  const A = mk(a), B = mk(b), w = winProb(teamPow(A), teamPow(B), 0, 0, MATCH_MIN);
+  $('preMatch').innerHTML = `<b>🔮 Pre-match prediction</b>` + probBar(A.name, B.name, w) +
+    `<div class="muted" style="font-size:12px">Expected score ${w.ea.toFixed(1)} : ${w.eb.toFixed(1)} (${MATCH_MIN}-minute match, based on player ratings)</div>`;
 }
 $('startBtn').onclick = () => {
   const a = +$('teamA').value, b = +$('teamB').value;
   if (a === b) return alert('Pick two different teams.');
   if (!teams[a].length || !teams[b].length) return alert('Both teams need at least one player.');
   const mk = (idx) => ({name: teamLabel(idx), players: teams[idx].map(id => ({id, name: pName(id), goals: 0, assists: 0}))});
-  game = {start: Date.now(), A: mk(a), B: mk(b)};
+  game = {start: Date.now(), A: mk(a), B: mk(b)}; liveSel = null;
   localStorage.setItem('liveGame', JSON.stringify(game));
   showLive();
 };
 function showLive() {
   $('setup').style.display = 'none'; $('live').style.display = '';
   clearInterval(timer);
+  let lastIns = 0;
   const tick = () => {
     const s = Math.floor((Date.now() - game.start) / 1000);
     $('clock').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    if (s - lastIns >= 5) { lastIns = s; renderInsights(); }
   };
   tick(); timer = setInterval(tick, 1000);
   renderLive();
@@ -668,6 +684,7 @@ const goals = t => t.players.reduce((s, p) => s + p.goals, 0);
 function renderLive() {
   $('nameA').textContent = game.A.name; $('nameB').textContent = game.B.name;
   $('scoreA').textContent = goals(game.A); $('scoreB').textContent = goals(game.B);
+  renderInsights();
   $('liveBal').innerHTML = balanceHtml([{label: game.A.name, names: activeNames(game.A)}, {label: game.B.name, names: activeNames(game.B)}]);
   const last = game.log?.[game.log.length - 1];
   $('undoBtn').disabled = !last;
@@ -700,7 +717,194 @@ function suggestMotm() {
   }));
   return best;
 }
+// ---------- Live insights: win probability, momentum, timeline, top performers ----------
+const MATCH_MIN = 8;
+const teamPow = t => Math.max(1, t.players.filter(p => !p.left).reduce((s, p) => s + rOf(p.name).ovr, 0));
+function avgGoalsPerGame() {
+  const gs = ratingCache.games || [];
+  if (!gs.length) return 6;
+  const tot = gs.reduce((s, g) => s + [...g.teamA.players, ...g.teamB.players].reduce((x, p) => x + (p.goals || 0), 0), 0);
+  return Math.max(2, tot / gs.length);
+}
+// Calibration: pick the strength exponent k that best explains the recorded results (log-likelihood, with a prior
+// pulling towards k = 4 so that a few games cannot give extreme values). Cached per loaded games list.
+let modelCache = null;
+function model() {
+  const gs = ratingCache.games || [];
+  if (modelCache && modelCache.src === gs && modelCache.rb === ratingCache.byName) return modelCache;
+  const rows = ratingCache.fit || [];
+  const goalsPG = avgGoalsPerGame();
+  let best = {k: 4, ll: -Infinity};
+  if (rows.length >= 4) {
+    [1, 2, 3, 4, 5, 6, 8, 10, 12].forEach(k => {
+      const ll = rows.reduce((s, r) => s + Math.log(Math.max(1e-6, rawWin(r.pa, r.pb, 0, 0, MATCH_MIN, k, goalsPG)[r.res])), 0) - 1.5 * Math.log(k / 4) ** 2;
+      if (ll > best.ll) best = {k, ll};
+    });
+  }
+  const dec = rows.filter(r => r.res !== 'd' && r.pa !== r.pb);
+  const acc = dec.length ? dec.filter(r => (r.pa > r.pb) === (r.res === 'a')).length / dec.length : null;
+  return modelCache = {src: gs, rb: ratingCache.byName, k: best.k, n: rows.length, acc, goalsPG};
+}
+const pois = (l, n = 16) => { const r = [Math.exp(-l)]; for (let i = 1; i < n; i++) r.push(r[i - 1] * l / i); return r; };
+function rawWin(powA, powB, sA, sB, remMin, k, goalsPG) {
+  const share = powA ** k / (powA ** k + powB ** k);
+  const lt = goalsPG / MATCH_MIN * Math.max(remMin, 0.5), la = lt * share, lb = lt - la;
+  const pa = pois(la), pb = pois(lb);
+  let a = 0, d = 0, b = 0;
+  pa.forEach((x, i) => pb.forEach((y, j) => { const df = sA + i - sB - j; if (df > 0) a += x * y; else if (df === 0) d += x * y; else b += x * y; }));
+  const s = a + d + b;
+  return {a: a / s, d: d / s, b: b / s, ea: sA + la, eb: sB + lb};
+}
+// Poisson model: the team strength share (power^k) splits the average goal rate of the remaining time
+function winProb(powA, powB, sA, sB, remMin) {
+  const m = model();
+  return rawWin(powA, powB, sA, sB, remMin, m.k, m.goalsPG);
+}
+function probBar(nA, nB, w) {
+  const pc = v => Math.round(v * 100);
+  const seg = (v, c) => `<div style="width:${v * 100}%;background:${c}"></div>`;
+  return `<div style="display:flex;height:16px;border-radius:8px;overflow:hidden;margin:6px 0 2px">${seg(w.a, '#3b82f6')}${seg(w.d, '#9aa5b1')}${seg(w.b, '#e0662c')}</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#2563eb"><b>${esc(nA)} ${pc(w.a)}%</b></span><span class="muted">Draw ${pc(w.d)}%</span><span style="color:#d4561f"><b>${esc(nB)} ${pc(w.b)}%</b></span></div>`;
+}
+// Goal timeline rebuilt from the log (a "−" removes the latest matching event)
+function liveEvents() {
+  const ev = [];
+  (game.log || []).forEach(l => {
+    if (l.d > 0) { for (let i = 0; i < l.d; i++) ev.push({name: l.name, f: l.f, t: l.t || 0, k: l.k || (game.A.players.some(p => p.name === l.name) ? 'A' : 'B')}); }
+    else for (let i = 0; i < -l.d; i++) { const j = ev.map(e => e.name + e.f).lastIndexOf(l.name + l.f); if (j >= 0) ev.splice(j, 1); }
+  });
+  return ev;
+}
+const eqA = w => w.a + w.d / 2;
+let liveSel = null;
+// All live numbers in one place (also used for the saved post-match summary)
+function liveData() {
+  const elapsed = (Date.now() - game.start) / 1000, total = MATCH_MIN * 60, axis = Math.max(total, elapsed);
+  const pa = teamPow(game.A), pb = teamPow(game.B), sA = goals(game.A), sB = goals(game.B);
+  const rem = MATCH_MIN - elapsed / 60;
+  const w = winProb(pa, pb, sA, sB, rem), pre = winProb(pa, pb, 0, 0, MATCH_MIN);
+  const ev = liveEvents();
+  let a = 0, b = 0, last = 0, leadA = 0, leadB = 0, level = 0;
+  const pts = [[0, pre]], lead = dt => { if (a > b) leadA += dt; else if (b > a) leadB += dt; else level += dt; };
+  ev.forEach(e => {
+    if (e.f !== 'goals') return;
+    const t = e.t / 1000, rm = MATCH_MIN - t / 60, before = eqA(winProb(pa, pb, a, b, rm));
+    lead(Math.max(0, t - last)); last = Math.max(last, t);
+    e.k === 'A' ? a++ : b++;
+    const after = winProb(pa, pb, a, b, rm);
+    e.sw = e.k === 'A' ? eqA(after) - before : before - eqA(after);
+    pts.push([t, after]);
+  });
+  lead(Math.max(0, elapsed - last));
+  pts.push([elapsed, w]);
+  const gev = ev.filter(e => e.f === 'goals');
+  const turning = gev.reduce((m, e) => !m || e.sw > m.sw ? e : m, null);
+  const gvTeam = k => { const g = gev.filter(e => e.k === k); return g.length ? g.reduce((s, e) => s + 1 + 4 * Math.max(0.05, e.sw), 0) / g.length : 1.6; };
+  const conceded = k => k === 'A' ? sB : sA;
+  const rate = [['A', game.A], ['B', game.B]].flatMap(([k, t]) => t.players.map(p => {
+    const items = [];
+    gev.filter(e => e.name === p.name).forEach(e => items.push({ic: '⚽', pts: 1 + 4 * Math.max(0.05, e.sw), note: `+${Math.round(e.sw * 100)}% win equity`}));
+    ev.filter(e => e.f === 'assists' && e.name === p.name).forEach(() => items.push({ic: '🅰️', pts: 0.6 * gvTeam(k), note: 'assist'}));
+    if (p.gk) items.push(conceded(k) === 0 ? {ic: '🧤', pts: 1, note: 'clean sheet'} : {ic: '🧤', pts: -Math.min(1, 0.25 * conceded(k)), note: `${conceded(k)} conceded`});
+    const res = (k === 'A' ? sA - sB : sB - sA), bonus = res > 0 ? 0.4 : res < 0 ? -0.2 : 0;
+    if (!items.length) return null;
+    return {name: p.name, k, g: p.goals, a: p.assists, gk: !!p.gk, items, bonus, r: Math.max(3, Math.min(10, 6 + items.reduce((s, i) => s + i.pts, 0) + bonus))};
+  }).filter(Boolean)).sort((x, y) => y.r - x.r);
+  return {elapsed, total, axis, pa, pb, sA, sB, rem, w, pre, ev, gev, pts, leadA, leadB, level, turning, rate};
+}
+// Teammates with stats who have a strong record together (from the match history)
+function duoFlags(d) {
+  const ch = chemistry(ratingCache.games || []), out = [];
+  [['A', game.A], ['B', game.B]].forEach(([k, t]) => {
+    const act = d.rate.filter(r => r.k === k).map(r => r.name);
+    combos(act, 2).forEach(([x, y]) => { const n = ch.together(x, y), r = ch.ratio(x, y); if (n >= 2 && r >= 0.6) out.push({x, y, n, r, k}); });
+  });
+  return out;
+}
+const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+// Flashscore-style momentum: one bar per minute, up = team A in control, down = team B
+function momentumSvg(d) {
+  const n = Math.max(MATCH_MIN, Math.ceil(d.axis / 60)), W = 300, bw = W / n, cy = 50;
+  const eqAt = t => { let v = eqA(d.pts[0][1]); d.pts.forEach(([pt, p], i) => { if (i < d.pts.length - 1 && pt <= t) v = eqA(p); }); return v; };
+  let out = `<line x1="0" x2="${W}" y1="${cy}" y2="${cy}" stroke="#b8c0cc"/>`;
+  for (let i = 0; i < n; i++) {
+    const t0 = i * 60; if (t0 > d.elapsed) break;
+    const v = eqAt(Math.min(d.elapsed, t0 + 30)) - 0.5, h = Math.max(1.5, Math.abs(v) * 2 * 36), x = i * bw + bw * 0.15;
+    out += `<rect x="${x.toFixed(1)}" y="${(v >= 0 ? cy - h : cy).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${v >= 0 ? '#3b82f6' : '#e0662c'}" opacity=".85"/>`;
+    out += `<text x="${(i * bw + bw / 2).toFixed(1)}" y="98" font-size="7" fill="#7a8594" text-anchor="middle">${i + 1}'</text>`;
+  }
+  d.gev.forEach(e => {
+    const x = Math.min(W - 6, Math.max(6, W * (e.t / 1000) / (n * 60)));
+    out += `<text x="${x.toFixed(1)}" y="${e.k === 'A' ? 9 : 90}" font-size="9" text-anchor="middle">⚽</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} 102" style="width:100%;height:120px;background:#f6f8fb;border-radius:6px;margin-top:6px">${out}</svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#667"><span style="color:#2563eb">▲ ${esc(game.A.name)}</span><span style="color:#d4561f">▼ ${esc(game.B.name)}</span></div>`;
+}
+// Flashscore-style timeline: team A left, team B right, minute in the middle; assist shown under the goal
+function timelineHtml(d) {
+  if (!d.ev.length) return '<div class="muted" style="font-size:13px">No events yet</div>';
+  const as = d.ev.filter(e => e.f === 'assists').map(e => ({...e, used: false}));
+  const rows = [];
+  d.ev.filter(e => e.f === 'goals').forEach(g => {
+    let best = null;
+    as.forEach(a => { if (!a.used && a.k === g.k && Math.abs(a.t - g.t) <= 20000 && (!best || Math.abs(a.t - g.t) < Math.abs(best.t - g.t))) best = a; });
+    if (best) best.used = true;
+    rows.push({t: g.t, k: g.k, ic: '⚽', name: g.name, sub: best ? '🅰️ ' + best.name : '', sw: g.sw, hot: g === d.turning && d.gev.length > 1});
+  });
+  as.filter(a => !a.used).forEach(a => rows.push({t: a.t, k: a.k, ic: '🅰️', name: a.name, sub: '', sw: null}));
+  rows.sort((x, y) => x.t - y.t);
+  const cell = (r, k) => r.k !== k ? '<div></div>' : `<div style="text-align:${k === 'A' ? 'right' : 'left'}"><div style="font-weight:600">${k === 'A' ? '' : r.ic + ' '}${esc(r.name)}${k === 'A' ? ' ' + r.ic : ''}${r.hot ? ' 🔥' : ''}</div>${r.sub ? `<div class="muted" style="font-size:11px">${esc(r.sub)}</div>` : ''}${r.sw != null ? `<div style="font-size:11px;color:${k === 'A' ? '#2563eb' : '#d4561f'}">${r.sw >= 0 ? '+' : ''}${Math.round(r.sw * 100)}% win chance</div>` : ''}</div>`;
+  return `<div style="display:grid;grid-template-columns:1fr 46px 1fr;align-items:center;font-size:12px;font-weight:700;padding-bottom:4px;border-bottom:1px solid #e3e7ed"><div style="text-align:right;color:#2563eb">${esc(game.A.name)}</div><div style="text-align:center">${d.sA}-${d.sB}</div><div style="color:#d4561f">${esc(game.B.name)}</div></div>` +
+    rows.map(r => `<div style="display:grid;grid-template-columns:1fr 46px 1fr;gap:4px;align-items:start;padding:6px 0;border-bottom:1px solid #eef1f5;font-size:13px">${cell(r, 'A')}<div style="text-align:center"><span style="background:#eef1f5;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700">${Math.floor(r.t / 60000) + 1}'</span></div>${cell(r, 'B')}</div>`).join('');
+}
+const ratingColor = r => r >= 8 ? '#1e9be9' : r >= 7 ? '#2aa84a' : r >= 6 ? '#f0a30a' : '#e0443a';
+function renderInsights() {
+  if (!game) return;
+  const el = $('liveInsights'); if (!el) return;
+  const d = liveData(), w = d.w, rem = d.rem;
+  const tp = d.rate.length ? d.rate.slice(0, 5).map((p, i) => `<div data-lp="${esc(p.name)}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #eef1f5;font-size:13px">
+      <span style="min-width:34px;text-align:center;border-radius:6px;padding:3px 0;font-weight:800;color:#fff;background:${ratingColor(p.r)};${i === 0 ? 'box-shadow:0 0 0 2px #fff,0 0 0 4px ' + ratingColor(p.r) : ''}">${p.r.toFixed(1)}</span>
+      <span style="width:4px;align-self:stretch;border-radius:2px;background:${p.k === 'A' ? '#3b82f6' : '#e0662c'}"></span>
+      <span style="flex:1"><b>${esc(p.name)}</b><br><span class="muted" style="font-size:11px">${esc(p.k === 'A' ? game.A.name : game.B.name)}</span></span>
+      <span class="muted">${p.g ? p.g + '⚽ ' : ''}${p.a ? p.a + '🅰️ ' : ''}${p.gk ? '🧤' : ''}</span></div>`).join('') : '<span class="muted">No stats yet</span>';
+  const sel = d.rate.find(r => r.name === liveSel) || d.rate[0];
+  const card = sel ? (() => {
+    const pl = players.find(p => p.name === sel.name) || {}, r = ratingCache.byName[sel.name];
+    return `<div style="display:flex;gap:12px;align-items:center;margin-top:8px"><div class="lcard">${fcCard(sel.name, r, pl.id)}</div>
+      <div style="font-size:13px"><div style="font-size:22px;font-weight:800">${sel.r.toFixed(1)} <span class="muted" style="font-size:12px;font-weight:400">match rating${r ? ` · season ${r.ovr}` : ''}</span></div>
+      ${sel.items.map(i => `<div>${i.ic} <b>${i.pts >= 0 ? '+' : ''}${i.pts.toFixed(1)}</b> <span class="muted">${i.note}</span></div>`).join('')}
+      <div class="muted">Base 6.0${sel.bonus ? ` · ${sel.bonus > 0 ? 'winning' : 'losing'} team ${sel.bonus > 0 ? '+' : ''}${sel.bonus}` : ''}</div></div></div>`;
+  })() : '';
+  const duos = duoFlags(d).map(x => `<div style="font-size:13px">🔗 <b>${esc(x.x)} &amp; ${esc(x.y)}</b> <span class="muted">are combining again — ${Math.round(x.r * 100)}% win rate together (${x.n} games)</span></div>`).join('');
+  const tpText = d.turning && d.gev.length > 1 ? `<div style="font-size:13px;margin-top:4px">🔥 <b>Turning point:</b> ${mmss(d.turning.t / 1000)} ${esc(d.turning.name)} (${Math.round(d.turning.sw * 100)}% swing)</div>` : '';
+  const f = Math.max(0, Math.round(rem * 10) / 10), m = model();
+  el.innerHTML = `<div style="border:1px solid #d5dbe3;border-radius:8px;padding:8px 12px;margin-bottom:10px">
+    <b>📈 Live win chances</b> <span class="muted" style="font-size:12px">(${rem > 0 ? f + ' min left of ' + MATCH_MIN : 'overtime'}; expected final ${w.ea.toFixed(1)} : ${w.eb.toFixed(1)})</span>
+    ${probBar(game.A.name, game.B.name, w)}
+    <div class="muted" style="font-size:11px">${m.n >= 4 ? `Model fitted on ${m.n} of your games (backtested on ratings from before each game; strength exponent ${m.k}${m.acc != null ? `; favourite won ${Math.round(m.acc * 100)}% of decided games` : ''})` : 'Default model (needs 4+ recorded games to fit)'}</div>
+    <div style="margin-top:8px"><b>Momentum</b> <span class="muted" style="font-size:12px">(bars per minute: up = ${esc(game.A.name)} favoured, down = ${esc(game.B.name)} · ⚽ = goals)</span></div>${momentumSvg(d)}
+    <div class="muted" style="font-size:12px">Leading time: ${esc(game.A.name)} ${mmss(d.leadA)} · level ${mmss(d.level)} · ${esc(game.B.name)} ${mmss(d.leadB)}</div>${tpText}
+    <div style="margin-top:10px"><b>Timeline</b></div><div>${timelineHtml(d)}</div>
+    <div style="margin-top:10px"><b>⭐ Top performers</b> <span class="muted" style="font-size:12px">tap a name for the card</span><div>${tp}</div>${card}</div>${duos ? `<div style="margin-top:8px">${duos}</div>` : ''}</div>`;
+}
+// Compact summary saved with the game when it is stopped
+function matchSummary() {
+  const d = liveData(), fav = Math.abs(d.pre.a - d.pre.b) > 0.05 ? (d.pre.a > d.pre.b ? 'A' : 'B') : null;
+  const res = d.sA > d.sB ? 'A' : d.sB > d.sA ? 'B' : 'D';
+  return {
+    fp: d.sA + ':' + d.sB,
+    pre: {a: +d.pre.a.toFixed(3), d: +d.pre.d.toFixed(3), b: +d.pre.b.toFixed(3)},
+    pts: d.pts.map(([t, p]) => [Math.round(t), +eqA(p).toFixed(3)]),
+    goals: d.gev.map(e => ({name: e.name, k: e.k, t: Math.round(e.t / 1000), sw: +e.sw.toFixed(3)})),
+    turning: d.turning ? {name: d.turning.name, t: Math.round(d.turning.t / 1000), sw: +d.turning.sw.toFixed(3)} : null,
+    top: d.rate.slice(0, 3).map(r => ({name: r.name, r: +r.r.toFixed(1), g: r.g, a: r.a})),
+    lead: [Math.round(d.leadA), Math.round(d.level), Math.round(d.leadB)],
+    upset: !!fav && res !== 'D' && res !== fav
+  };
+}
 $('live').onclick = e => {
+  const lp = e.target.closest('[data-lp]');
+  if (lp) { liveSel = lp.dataset.lp; return renderInsights(); }
   if (e.target.id === 'motmAccept') { game.motm = suggestMotm().name; persistLive(); return renderLive(); }
       const d = e.target.dataset;
       if (d.act) {
@@ -722,7 +926,7 @@ $('live').onclick = e => {
     const p = game[d.k].players[+d.i];
     const before = +p[d.f] || 0;
     p[d.f] = Math.max(0, before + +d.d);
-    if (p[d.f] !== before) (game.log ??= []).push({name: p.name, f: d.f, d: p[d.f] - before});
+    if (p[d.f] !== before) (game.log ??= []).push({name: p.name, f: d.f, d: p[d.f] - before, t: Date.now() - game.start, k: d.k});
     persistLive(); renderLive();
   }
 };
@@ -745,15 +949,21 @@ function endLive() {
   $('live').style.display = 'none'; $('setup').style.display = '';
 }
 $('cancelBtn').onclick = () => { if (confirm('Discard this game?')) endLive(); };
+let stopping = false;
 $('stopBtn').onclick = async () => {
+  if (stopping) return;
   const ga = goals(game.A), gb = goals(game.B);
   let winner = ga > gb ? game.A.name : gb > ga ? game.B.name : 'Draw';
   if (!confirm(`Stop game?\n${game.A.name} ${ga} : ${gb} ${game.B.name}\nResult: ${winner === 'Draw' ? 'Draw' : winner + ' wins'}`)) return;
-  const end = Date.now();
-  await add('games', {
-    date: new Date(end).toISOString(), durationSec: Math.round((end - game.start) / 1000),
-    teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner, ...(game.motm ? {motm: game.motm} : {})
-  });
+  stopping = true;
+  const end = Date.now(), insight = matchSummary();
+  try {
+    await add('games', {
+      date: new Date(end).toISOString(), durationSec: Math.round((end - game.start) / 1000),
+      teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner, insight, ...(game.motm ? {motm: game.motm} : {})
+    });
+  } catch { stopping = false; return alert('Could not save the game. It is still running, try again.'); }
+  stopping = false;
   endLive(); renderHistory(); renderAll();
   document.querySelector('[data-t=history]').click();
 };
@@ -807,10 +1017,24 @@ async function renderHistory() {
       <span class="win">${g.winner === 'Draw' ? 'Draw' : '🏆 ' + esc(g.winner)}</span>
       <span><button class="sec" data-gedit="${g.id}">✏️ Edit</button> <button class="danger" data-gdel="${g.id}">Delete</button></span></div>
       <div>${esc(g.teamA.name)} <b>${g.scoreA} : ${g.scoreB}</b> ${esc(g.teamB.name)} <span class="muted">(${Math.floor(g.durationSec / 60)} min)</span></div>
-      <div class="match" style="margin-top:6px"><div><b>${esc(g.teamA.name)}</b><br>${rows(g.teamA)}</div><div><b>${esc(g.teamB.name)}</b><br>${rows(g.teamB)}</div></div></div>`;
+      <div class="match" style="margin-top:6px"><div><b>${esc(g.teamA.name)}</b><br>${rows(g.teamA)}</div>      <div><b>${esc(g.teamB.name)}</b><br>${rows(g.teamB)}</div></div>${histInsight(g)}</div>`;
   }).join('') : '<span class="muted">No games played yet.</span>';
 }
-$('historyList').onclick = async e => {
+      function histInsight(g) {
+        const s = g.insight; if (!s || s.fp !== g.scoreA + ':' + g.scoreB) return ''; // hidden once the score was edited
+        const pc = v => Math.round(v * 100) + '%', mm = t => String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+        const tot = Math.max(1, s.pts[s.pts.length - 1][0], MATCH_MIN * 60), X = t => 300 * Math.min(1, t / tot);
+        let path = '';
+        s.pts.forEach(([t, p], i) => { path += (i ? `L${X(t).toFixed(1)},${(70 - 60 * s.pts[i - 1][1]).toFixed(1)} ` : 'M') + `${X(t).toFixed(1)},${(70 - 60 * p).toFixed(1)} `; });
+        const dots = s.goals.map(e => `<circle cx="${X(e.t).toFixed(1)}" cy="5" r="3" fill="${e.k === 'A' ? '#3b82f6' : '#e0662c'}"/>`).join('');
+        return `<details style="margin-top:8px"><summary style="cursor:pointer"><b>📈 Match summary</b>${s.upset ? ' <span style="color:#c0392b">⚡ Upset!</span>' : ''}</summary>
+          <div style="font-size:13px;margin-top:4px">Pre-match chances: ${esc(g.teamA.name)} ${pc(s.pre.a)} · draw ${pc(s.pre.d)} · ${esc(g.teamB.name)} ${pc(s.pre.b)}</div>
+          <svg viewBox="0 0 300 76" style="width:100%;max-width:420px;height:80px;background:#f6f8fb;border-radius:6px"><line x1="0" x2="300" y1="40" y2="40" stroke="#c5ccd6" stroke-dasharray="3"/><path d="${path}" fill="none" stroke="#1b2430" stroke-width="1.6"/>${dots}</svg>
+          ${s.turning && s.goals.length > 1 ? `<div style="font-size:13px">🔥 Turning point: ${mm(s.turning.t)} ${esc(s.turning.name)} (${Math.round(s.turning.sw * 100)}% swing)</div>` : ''}
+          ${s.top.length ? `<div style="font-size:13px">⭐ Best live ratings: ${s.top.map(p => `<b>${p.r.toFixed(1)}</b> ${esc(p.name)}`).join(' · ')}</div>` : ''}
+          <div class="muted" style="font-size:12px">Leading time: ${esc(g.teamA.name)} ${mm(s.lead[0])} · level ${mm(s.lead[1])} · ${esc(g.teamB.name)} ${mm(s.lead[2])}</div></details>`;
+      }
+      $('historyList').onclick = async e => {
   const d = e.target.dataset;
   if (d.gedit) { editG = structuredClone((await all('games')).find(g => g.id === +d.gedit)); return renderHistory(); }
   if (d.erem) { syncEditorInputs(); editG[d.erem].players.splice(+d.i, 1); return renderEditor(); }
@@ -897,7 +1121,7 @@ async function screenshotCard(btn) {
   a.href = URL.createObjectURL(file); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
-let sessMode = 'rating';
+let sessMode = 'rating', sessNoPhoto = false;
 async function renderSessions() {
   await refreshRatings();
   const allPitch = [];
@@ -905,7 +1129,7 @@ async function renderSessions() {
   const byDay = {};
   games.forEach(g => (byDay[new Date(g.date).toLocaleDateString()] ??= []).push(g));
   const days = Object.entries(byDay).reverse();
-  const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button></div>`;
+  const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button>${sessMode === 'team' ? ` <button class="sec" id="sessPhoto" style="font-size:12px;padding:3px 8px">${sessNoPhoto ? 'Show photos' : 'Hide photos'}</button>` : ''}</div>`;
   const sessHtml = await Promise.all(days.map(async ([day, gs], di) => {
     const t = {};
     gs.forEach(g => [[g.teamA.name, g.scoreA, g.scoreB], [g.teamB.name, g.scoreB, g.scoreA]].forEach(([n, f, a]) => {
@@ -944,6 +1168,8 @@ async function renderSessions() {
   }));
   $('sessionList').innerHTML = toggle + (days.length ? sessHtml.join('') : '<div class="card"><span class="muted">No games played yet.</span></div>');
   $('sessMode').onclick = () => { sessMode = sessMode === 'team' ? 'rating' : 'team'; renderSessions(); };
+  if ($('sessPhoto')) $('sessPhoto').onclick = () => { sessNoPhoto = !sessNoPhoto; renderSessions(); };
+  $('sessionList').classList.toggle('nophoto', sessMode === 'team' && sessNoPhoto);
   $('sessionList').querySelectorAll('.shot').forEach(b => b.onclick = () => screenshotCard(b));
   drawLinks(Object.assign({}, ...allPitch), $('sessionList'));
 }
@@ -1171,7 +1397,7 @@ async function renderRanking() {
   window.rankInfo = {list, dTxt};
   const kind = p => p.toty ? 'toty' : p.totw ? 'totw' : '';
   const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
-  const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : p.rare ? '✨ RARE' : '';
+  const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : p.rare ? 'RARE' : '';
   const fx = awardFx;
   $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''} ${fx(p)}" data-name="${esc(p.name)}" style="cursor:pointer"><div class="face">
     <div class="lt"><div class="ovr">${p.ovr}</div><span class="tag">${label(p) || '&nbsp;'}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}</div>
@@ -1201,7 +1427,8 @@ $('exportBtn').onclick = async () => {
     app: 'football', version: 2, exportedAt: new Date().toISOString(),
     players: pl.map(({id, ...p}) => p),
     games: (await all('games')).map(({id, ...g}) => g),
-    teams: teams.map(t => t.map(nameOf).filter(Boolean)), teamNames
+    teams: teams.map(t => t.map(nameOf).filter(Boolean)), teamNames,
+    layouts: layouts.map(l => (l || []).map(nameOf).filter(Boolean))
   };
   const name = `football-backup-${dayStamp()}.json`;
   const file = new File([JSON.stringify(data, null, 1)], name, {type: 'application/json'});
@@ -1249,7 +1476,8 @@ async function importData(file, replace) {
   const impTeams = (d.teams || []).map(t => t.map(x => typeof x === 'number' ? oldIds[x] : x).filter(Boolean));
   if (replace) {
     await tx('players', 'readwrite', s => s.clear()); await tx('games', 'readwrite', s => s.clear());
-    teams = []; teamNames = [];
+    teams = []; teamNames = []; layouts = [];
+    await setKV('teams', teams); await setKV('teamNames', teamNames); await setKV('layouts', layouts);
   }
   await loadPlayers();
   let addedP = 0, addedG = 0;
@@ -1270,6 +1498,9 @@ async function importData(file, replace) {
   if (!teams.length && impTeams.length) {
     teams = impTeams.map(t => t.map(n => players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id).filter(Boolean));
     teamNames = d.teamNames || [];
+    const idOf = n => players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id;
+    layouts = (d.layouts || []).map(l => (l || []).map(idOf).filter(Boolean));
+    await setKV('layouts', layouts);
     await setKV('teams', teams); await setKV('teamNames', teamNames);
   }
   renderAll(); renderStats(); renderHistory();
@@ -1283,6 +1514,17 @@ for (const [id, replace] of [['importFile', false], ['replaceFile', true]]) {
   };
 }
 
+// chemistry lines are drawn at a fixed pixel size, so redraw them when the width changes (e.g. phone rotation)
+let lastW = innerWidth, resizeT;
+addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => {
+    if (innerWidth === lastW) return; lastW = innerWidth;
+    if ($('teams').classList.contains('active')) drawTeamLinks();
+    else if ($('ranking').classList.contains('active')) renderRanking();
+    else if ($('sessions').classList.contains('active')) renderSessions();
+  }, 250);
+});
 function renderAll() { updateBackupBar(); refreshRatings().then(() => { renderPlayers(); renderTeams(); renderSetup(); if (game) renderLive(); }); }
 
 (async () => {
