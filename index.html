@@ -24,13 +24,29 @@
   table{border-collapse:collapse;width:100%}
   th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #e3e8ee}
   .teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+  .teams.three{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .teams.three .team[data-team="-1"]{grid-column:1/-1}
+  .teams.three .team{padding:6px}
+  .teams.three .pitch{padding:10px 2px;gap:10px}
+  .teams.three .team li select{width:68px;min-width:0;font-size:12px;padding:2px}
+  .teams.three .team li span:not(.grip){min-width:0;font-size:13px}
+  .teams.three.nophoto .pp{width:min(96px,92%)}
+  .teams.three.nophoto .fut{height:44px}
+  .teams.three.nophoto .fut .lt{top:5px}
+  .teams.three.nophoto .fut .nm{top:24px;font-size:9px}
   .team{border:1px solid #d5dbe3;border-radius:8px;padding:10px}
   .team li{display:flex;justify-content:space-between;align-items:center;margin:4px 0;gap:6px}
   .grip{cursor:grab;touch-action:none;user-select:none;padding:2px 6px;color:#6b7686;font-size:18px}
   #teamsView .pc,#teamsView .fc{cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-  .nostats .fut .sub,.nostats .fut .ln{display:none}
-  .nostats .fut .nm{top:67%;font-size:12.5cqw}
-  .nophoto .fut .av{display:none}
+  .nophoto .pp{width:96px;filter:none}
+  .nophoto .pitch{gap:10px;padding:12px 4px}
+  .nophoto .fut{aspect-ratio:auto;height:52px;clip-path:none;border-radius:10px}
+  .nophoto .fut .face{inset:1.5px;clip-path:none;border-radius:9px;background:linear-gradient(165deg,var(--f1),var(--f2))}
+  .nophoto .fut .face::before{display:none}
+  .nophoto .fut .av,.nophoto .fut .rk,.nophoto .fut .ln,.nophoto .fut .sub{display:none}
+  .nophoto .fut .lt{left:0;top:7px;width:100%}
+  .nophoto .fut .ovr{font-size:14px!important}
+  .nophoto .fut .nm{top:28px;font-size:10px;left:3px;right:3px;text-transform:none;font-weight:600;letter-spacing:0}
   .team.over{outline:3px dashed #128a4a;background:#eaf7ef}
   .ghost{position:fixed;transform:translate(-50%,-120%);background:#111;color:#ffd75e;padding:6px 12px;border-radius:8px;pointer-events:none;z-index:99;font-weight:600;box-shadow:0 4px 12px #0006}
   .team ul{list-style:none;padding:0;margin:0}
@@ -143,7 +159,6 @@
       <button id="genTeams">Generate random teams</button>
       <button id="customTeams" class="sec">Create custom teams</button>
       <button id="teamsMode" class="sec">Hide rating (show team colour)</button>
-      <button id="teamsStats" class="sec">Hide stats</button>
       <button id="teamsShot" class="sec shot" data-shot="teamsView" data-file="football-teams">📷 Screenshot</button>
       <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
@@ -329,8 +344,36 @@ async function walkForwardFit(games) {
   return rows;
 }
 const rOf = name => ratingCache.byName[name] || ratingCache.fb;
-const equality = vals => { const mx = Math.max(...vals); return mx ? Math.round(100 * Math.min(...vals) / mx) : 100; };
-const eqColor = v => v >= 90 ? '#1e8e4e' : v >= 80 ? '#d98a00' : '#c0392b';
+// Equality: 100% = identical totals, 0% = the weaker side is 15% or more below the stronger one
+const equality = vals => { const mx = Math.max(...vals); return mx ? Math.max(0, Math.round(100 * (1 - (1 - Math.min(...vals) / mx) / 0.15))) : 100; };
+const eqColor = v => v >= 80 ? '#1e8e4e' : v >= 55 ? '#d98a00' : '#c0392b';
+const BAL_KEYS = ['ovr', 'sho', 'pas', 'win'], BAL_W = {ovr: 0.4, sho: 0.2, pas: 0.2, win: 0.2};
+// Weighted imbalance of the team totals (same measure that generation minimises)
+function balCost(tot) {
+  return BAL_KEYS.reduce((c, k, j) => { const v = tot.map(t => t[j]), mx = Math.max(...v); return c + BAL_W[k] * (mx ? 1 - Math.min(...v) / mx : 0); }, 0);
+}
+// Best single player swaps between two teams that make the teams more equal
+function swapSuggestions() {
+  if (teams.length < 2) return {cur: 100, list: []};
+  const vec = id => BAL_KEYS.map(k => rOf(pName(id))[k]);
+  const tot = teams.map(t => t.reduce((s, id) => s.map((x, j) => x + vec(id)[j]), [0, 0, 0, 0]));
+  const overall = tt => equality(tt.map(t => t[0]));
+  const cur = balCost(tot), out = [];
+  for (let a = 0; a < teams.length; a++) for (let b = a + 1; b < teams.length; b++) teams[a].forEach(x => teams[b].forEach(y => {
+    const vx = vec(x), vy = vec(y), t2 = tot.map(t => [...t]);
+    vx.forEach((v, j) => { t2[a][j] += vy[j] - v; t2[b][j] += v - vy[j]; });
+    const c = balCost(t2);
+    if (c < cur - 0.002) out.push({a, b, x, y, c, from: overall(tot), to: overall(t2)});
+  }));
+  out.sort((p, q) => p.c - q.c);
+  return {cur: overall(tot), list: out.slice(0, 3)};
+}
+function swapHtml() {
+  const {cur, list} = swapSuggestions();
+  if (cur >= 80 || !list.length) return '';
+  return `<div style="border:1px solid #f0d9a8;background:#fff8e6;border-radius:8px;padding:8px 12px;margin-bottom:10px"><b>🔁 Swap suggestions</b> <span class="muted" style="font-size:12px">(teams look unbalanced: overall equality ${cur}%)</span>` +
+    list.map(s => `<div style="display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px;flex-wrap:wrap"><span style="flex:1;min-width:200px"><b>${esc(pName(s.x))}</b> (${esc(teamLabel(s.a))}) ⇄ <b>${esc(pName(s.y))}</b> (${esc(teamLabel(s.b))}) <span class="muted">→ overall ${s.from}% → <b style="color:${eqColor(s.to)}">${s.to}%</b></span></span><button class="sec" data-swap="${s.a}|${s.x}|${s.b}|${s.y}" style="font-size:12px;padding:3px 8px">Apply</button></div>`).join('') + '</div>';
+}
 // groups: [{label, names}] -> equality % based on summed player ratings
 function balanceHtml(groups) {
   if (groups.length < 2) return '';
@@ -355,7 +398,7 @@ $('genTeams').onclick = async () => {
   const by = Object.fromEntries(list.map(p => [p.name, p]));
   const avg = k => list.length ? list.reduce((s, p) => s + p[k], 0) / list.length : 60;
   const fb = {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), win: avg('win')};
-  const KEYS = ['ovr', 'sho', 'pas', 'win'], W = {ovr: 0.4, sho: 0.2, pas: 0.2, win: 0.2};
+  const KEYS = BAL_KEYS, W = BAL_W;
   const pv = avail.map(p => KEYS.map(k => (by[p.name] || fb)[k]));
   // cost = weighted sum of the inequality (1 - min/max) of the team totals, the same measure as the equality panel
   const cost = asg => {
@@ -395,6 +438,13 @@ $('customTeams').onclick = async () => {
   teams = Array.from({length: n}, () => []); layouts = []; await setKV('layouts', layouts);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   await setKV('teams', teams); renderAll();
+};
+$('teamsBal').onclick = async e => {
+  const b = e.target.closest('[data-swap]'); if (!b) return;
+  const [ta, x, tb, y] = b.dataset.swap.split('|').map(Number);
+  if (!teams[ta]?.includes(x) || !teams[tb]?.includes(y)) return renderTeams();
+  teams[ta][teams[ta].indexOf(x)] = y; teams[tb][teams[tb].indexOf(y)] = x;
+  layouts = []; await setKV('layouts', layouts); await setKV('teams', teams); renderAll();
 };
 $('teamsView').onchange = async e => {
   if (e.target.dataset.tname !== undefined) {
@@ -475,7 +525,7 @@ $('teamsView').addEventListener('pointerdown', e => {
   document.addEventListener('pointermove', move, {passive: false});
   document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
 });
-const FORMATIONS = {1: [1, 0, 0, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [1, 1, 1, 1], 5: [2, 0, 2, 1], 6: [2, 1, 2, 1], 7: [2, 2, 2, 1], 8: [3, 2, 2, 1]}; // rows: ATT, MID, DEF, GK (5 players = 2-2-1 from the top = 1-2-2 from the GK)
+const FORMATIONS = {1: [1, 0, 0, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [2, 0, 2, 0], 5: [2, 0, 2, 1], 6: [2, 1, 2, 1], 7: [2, 2, 2, 1], 8: [3, 2, 2, 1]}; // rows: ATT, MID, DEF, GK (5 players = 2-2-1 from the top = 1-2-2 from the GK)
 const formationOf = n => { const r = n - 1, a = Math.ceil(r / 3); return FORMATIONS[n] || [a, r - a - Math.floor(r / 3), Math.floor(r / 3), 1]; };
 // Chemistry between two players = their all-time record when playing on the same team (win 1, draw ½, smoothed
 // with 2 neutral games). Never together = no chemistry (red). `ratio` is 0..1, green >= 0.55, orange >= 0.4, red below.
@@ -523,9 +573,7 @@ function arrangeSquad(names, st, games) {
 const teamSquad = names => arrangeSquad(names, n => ratingCache.byName[n], ratingCache.games || []);
 let teamsMode = 'rating';
 $('teamsMode').onclick = () => { teamsMode = teamsMode === 'team' ? 'rating' : 'team'; renderTeams(); };
-let teamsStats = true;
 $('teamsShot').onclick = () => screenshotCard($('teamsShot'));
-$('teamsStats').onclick = () => { teamsStats = !teamsStats; renderTeams(); };
 const awardFx = r => !r ? '' : r.bdo && r.boot ? 'bothc' : r.bdo ? 'bdoc' : r.boot ? 'bootc' : '';
 // Full FC-style card used on the squad pitches (Teams, Sessions, TOTW, TOTY)
 function fcFut(n, r, pid, kindOverride, face) {
@@ -633,9 +681,9 @@ function renderTeams() {
     ? teams.map((t, i) => box(nameSel(i), t, i, teamPitch(t.map(pName), 't' + i, undefined, teamsMode === 'team' ? teamLabel(i) : ''))).join('') + (free.length ? box('Unassigned', free.map(p => p.id), -1) : '')
     : '<span class="muted">No teams yet. Click “Generate random teams” or “Create custom teams”.</span>';
   $('teamsMode').textContent = teamsMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)';
-  $('teamsStats').textContent = teamsStats ? 'Hide stats' : 'Show stats';
-  $('teamsView').classList.toggle('nostats', !teamsStats);
-  $('teamsBal').innerHTML = balanceHtml(teams.map((t, i) => ({label: teamLabel(i), names: t.map(pName)})));
+  $('teamsView').classList.toggle('three', teams.length === 3);
+  $('teamsView').classList.toggle('nophoto', teamsMode === 'team');
+  $('teamsBal').innerHTML = balanceHtml(teams.map((t, i) => ({label: teamLabel(i), names: t.map(pName)}))) + swapHtml();
   $('teamCount').value = teams.length >= 2 ? teams.length : $('teamCount').value;
   if ($('teams').classList.contains('active')) drawTeamLinks();
 }
@@ -1121,7 +1169,7 @@ async function screenshotCard(btn) {
   a.href = URL.createObjectURL(file); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
-let sessMode = 'rating', sessNoPhoto = false;
+let sessMode = 'rating';
 async function renderSessions() {
   await refreshRatings();
   const allPitch = [];
@@ -1129,7 +1177,7 @@ async function renderSessions() {
   const byDay = {};
   games.forEach(g => (byDay[new Date(g.date).toLocaleDateString()] ??= []).push(g));
   const days = Object.entries(byDay).reverse();
-  const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button>${sessMode === 'team' ? ` <button class="sec" id="sessPhoto" style="font-size:12px;padding:3px 8px">${sessNoPhoto ? 'Show photos' : 'Hide photos'}</button>` : ''}</div>`;
+  const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button></div>`;
   const sessHtml = await Promise.all(days.map(async ([day, gs], di) => {
     const t = {};
     gs.forEach(g => [[g.teamA.name, g.scoreA, g.scoreB], [g.teamB.name, g.scoreB, g.scoreA]].forEach(([n, f, a]) => {
@@ -1168,8 +1216,7 @@ async function renderSessions() {
   }));
   $('sessionList').innerHTML = toggle + (days.length ? sessHtml.join('') : '<div class="card"><span class="muted">No games played yet.</span></div>');
   $('sessMode').onclick = () => { sessMode = sessMode === 'team' ? 'rating' : 'team'; renderSessions(); };
-  if ($('sessPhoto')) $('sessPhoto').onclick = () => { sessNoPhoto = !sessNoPhoto; renderSessions(); };
-  $('sessionList').classList.toggle('nophoto', sessMode === 'team' && sessNoPhoto);
+  $('sessionList').classList.toggle('nophoto', sessMode === 'team');
   $('sessionList').querySelectorAll('.shot').forEach(b => b.onclick = () => screenshotCard(b));
   drawLinks(Object.assign({}, ...allPitch), $('sessionList'));
 }
