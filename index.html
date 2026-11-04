@@ -100,6 +100,7 @@
   .fut.tcf.tc-Red{--r1:#ffc0c0;--r2:#8f0f0f;--f1:#ff5a5a;--f2:#b81414}
   .fut.tcf.tc-Green{--r1:#c2f5d0;--r2:#0d6630;--f1:#3fd067;--f2:#12803a}
   .fut.rare{filter:saturate(1.35) brightness(1.08)}
+  .fut.guest,.fut.guest.rare{filter:saturate(.45) brightness(.8);opacity:.85}
   .fut::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0}
   .fut.rare::after,.fut.bdoc::after,.fut.bootc::after,.fut.bothc::after{opacity:1;background:linear-gradient(115deg,transparent 30%,#fff9 50%,transparent 70%);background-size:250% 100%;animation:shine 3s infinite}
   @keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
@@ -163,7 +164,7 @@
       <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
     <div id="teamsBal"></div>
-    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Each team is shown as a squad: the best scorers are on top, the other players are placed for the best chemistry. Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Team equality compares the summed ratings (100% = identical, 0% = weaker side 15% or more below); below 80% the app suggests swaps with an Apply button. Each team is shown as a squad: the best scorers are on top, likely defenders (auto-detected from the ranking stats) are preferred in the back row, and the other players are placed for the best chemistry. Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>
     <div id="teamsView" class="teams"></div>
   </div>
 </section>
@@ -197,13 +198,20 @@
 
 <section id="sessions">
   <div class="card"><h2>Daily session summary</h2>
-  <div class="muted">One block per played date. Teams are ranked by points (win 3, draw 1, loss 0), then goal difference, then goals scored. Win % = wins ÷ matches that team played that day. Main team = the team a player played most matches for that day. Each team is shown as a squad (main players, with chemistry lines from all-time results); players who played only a few matches for the team are listed under it as "Also played", (x/y) = matches for this team / total matches that day. Top duo/trio = for each team colour, the 2 / 3 players with the most goals + assists scored while playing together on that team.</div></div>  <div id="sessionList"></div>
+  <div class="muted">One block per played date; tap "Session summary" to collapse or expand it (the newest is open). Teams are ranked by points (win 3, draw 1, loss 0), then goal difference, then goals scored. Win % = wins ÷ matches that team played that day. Main team = the team a player played most matches for that day. Each team is shown as a squad (main players, with chemistry lines from all-time results). A team with fewer main players than the biggest team borrows its top outside contributor as a shaded <b>Guest GK</b> card in goal (caption: his matches for the team out of the team's matches); other players who played only a few matches for the team are listed under it as "Also played", (x/y) = matches for this team / total matches that day. Top duo/trio = for each team colour, the 2 / 3 players with the most goals + assists scored while playing together on that team. "Player stats this session" lists games, wins, goals, assists, clean sheets (🧤 = goalkeeper's team conceded 0), man of the match and win % per player; click a column header to sort. The stats table and the "Session summary" label are not included in screenshots.</div></div>  <div id="sessionList"></div>
 </section>
 
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
-  <div class="muted" style="margin-bottom:10px">Rating 40–99 like FUT, from three stats: goals per match (SHO), assists per match (PAS) and team impact (WIN: 60% win rate with win = 1, draw = ½, plus 40% goal difference per match of the player's team). Each stat = 60% all time + 40% last 5 match days (a player with no games in the last 5 match days uses his all-time value for that 40%). SHO and PAS are scaled to the best player; WIN is the team impact, pulled slightly towards the middle for players with few games and adjusted per match for how strong the opponents were compared with the player's teammates (beating a stronger team counts more). Overall = 80% attack (goals + 0.7 × assists per match, so a goal counts a bit more than an assist; goals in close matches count a little more than in blowouts; players with few matches are pulled towards the group average) + 20% WIN (with man-of-the-match votes recorded: 72% attack + 20% WIN + 8% man of the match; a player who played in goal gets up to 40% of the rating from goals conceded while in goal), slightly reduced for players with fewer than 5 games (shown as provisional). Tap a card to see the breakdown and the change since the last session.<br>
-  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. <b>Rare</b> (shiny): played at least 50% of the last 5 match days. 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year. Tap a card for the rating breakdown.</div>
+  <div class="muted" style="margin-bottom:10px"><b>How the rating works</b> (40–99, like FUT). Every match counts with a recency weight: a match from the latest session counts fully, and the weight halves every 8 sessions back (no hard cut-off, so form counts more but nothing jumps when a session drops out).<br>
+  <b>Overall = 55% attack + 22% impact + 13% result + 10% defence</b>. With man-of-the-match votes recorded: 50% attack + 20% impact + 12% result + 10% defence + 8% man of the match. The total is slightly reduced for players with fewer than 5 games (⏳ provisional). A player who played in goal gets up to 40% of the rating from goals conceded while in goal.<br>
+  • <b>Attack</b>: goals + 0.7 × assists per match, scaled to the best player. Goals in close matches (margin ≤ 1) count a bit more than in blowouts (margin ≥ 4). Players with few matches are pulled towards the group average.<br>
+  • <b>Impact</b>: ridge regression over every team-match. It estimates how many more goals a team scores, and how many fewer it concedes, when this player is on the pitch, after removing his teammates' share. Because teams are mixed every session, players can be told apart; the estimate is pulled towards neutral for few matches (±0.6 goals per match = full scale).<br>
+  • <b>Result</b>: 60% result (win 1, draw ½) + 40% goal difference per match (capped at ±3) of the player's team, adjusted per match for how strong the opponents were compared with his teammates, and pulled towards the middle for small samples.<br>
+  • <b>Defence (DEF)</b>: 50% defensive impact (the ridge estimate of goals conceded with him on the pitch), 20% clean-sheet rate, 15% goals conceded per match against the group average, 15% goalkeeper record (only for players who played in goal; otherwise that share goes to the other three). Every part is recency-weighted and pulled towards the group average for few matches.<br>
+  • <b>Card stats</b>: SHO = goals per match, PAS = assists per match (both recency-weighted, scaled to the best player), DEF = the defence rating above. Team generation, the equality panel and swap suggestions balance Overall (40%), SHO, PAS, DEF (20%) and Impact (10%).<br>
+  • <b>🛡 Likely defender</b> (automatic, shown in the breakdown): at least 6 games, a low attack share and a better-than-average defensive impact. Likely defenders are preferred in the back row of squads. Tap a card to see the full breakdown and the change since the last session.<br>
+  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. <b>Rare</b> (shiny card): played at least 50% of the last 5 match days (needs 2+ match days). 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. TOTW, TOTY and the awards use the plain average of the matches in their period, without the recency weights. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year.<br>Table columns: Games = all / last 5 match days, Goals and Assists = all / last 5 match days, Δ = rating change since the previous session.</div>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="rankDetail" class="card" style="border:1px solid #e3e8ee;display:none"></div>
@@ -323,11 +331,11 @@ $('playerList').onclick = async e => {
 };
 
 // ---------- Team balance ----------
-let ratingCache = {byName: {}, fb: {ovr: 60, sho: 60, pas: 60, win: 60}};
+let ratingCache = {byName: {}, fb: {ovr: 60, sho: 60, pas: 60, def: 60, imp: 50}};
 async function refreshRatings() {
   const {list} = await computeRatings();
   const avg = k => list.length ? Math.round(list.reduce((s, p) => s + p[k], 0) / list.length) : 60;
-  ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, p])), fb: {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), win: avg('win')}};
+  ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, {...p, imp: p.impIdx}])), fb: {ovr: avg('ovr'), sho: avg('sho'),   pas: avg('pas'), def: avg('def'), imp: avg('impIdx')}};
   ratingCache.fit = await walkForwardFit(ratingCache.games);
 }
 // Honest backtest data for the win-probability model: every game is judged with the ratings that existed BEFORE it
@@ -347,7 +355,7 @@ const rOf = name => ratingCache.byName[name] || ratingCache.fb;
 // Equality: 100% = identical totals, 0% = the weaker side is 15% or more below the stronger one
 const equality = vals => { const mx = Math.max(...vals); return mx ? Math.max(0, Math.round(100 * (1 - (1 - Math.min(...vals) / mx) / 0.15))) : 100; };
 const eqColor = v => v >= 80 ? '#1e8e4e' : v >= 55 ? '#d98a00' : '#c0392b';
-const BAL_KEYS = ['ovr', 'sho', 'pas', 'win'], BAL_W = {ovr: 0.4, sho: 0.2, pas: 0.2, win: 0.2};
+const BAL_KEYS = ['ovr', 'sho', 'pas', 'def', 'imp'], BAL_W = {ovr: 0.4, sho: 0.15, pas: 0.15, def: 0.2, imp: 0.1};
 // Weighted imbalance of the team totals (same measure that generation minimises)
 function balCost(tot) {
   return BAL_KEYS.reduce((c, k, j) => { const v = tot.map(t => t[j]), mx = Math.max(...v); return c + BAL_W[k] * (mx ? 1 - Math.min(...v) / mx : 0); }, 0);
@@ -356,7 +364,7 @@ function balCost(tot) {
 function swapSuggestions() {
   if (teams.length < 2) return {cur: 100, list: []};
   const vec = id => BAL_KEYS.map(k => rOf(pName(id))[k]);
-  const tot = teams.map(t => t.reduce((s, id) => s.map((x, j) => x + vec(id)[j]), [0, 0, 0, 0]));
+  const tot = teams.map(t => t.reduce((s, id) => s.map((x, j) => x + vec(id)[j]), BAL_KEYS.map(() => 0)));
   const overall = tt => equality(tt.map(t => t[0]));
   const cur = balCost(tot), out = [];
   for (let a = 0; a < teams.length; a++) for (let b = a + 1; b < teams.length; b++) teams[a].forEach(x => teams[b].forEach(y => {
@@ -378,7 +386,7 @@ function swapHtml() {
 function balanceHtml(groups) {
   if (groups.length < 2) return '';
   const sum = (g, k) => g.names.reduce((s, n) => s + rOf(n)[k], 0);
-  const rows = [['ovr', 'Overall'], ['sho', 'SHO'], ['pas', 'PAS'], ['win', 'WIN']].map(([k, title]) => {
+  const rows = [['ovr', 'Overall'], ['sho', 'SHO'], ['pas', 'PAS'], ['def', 'DEF'], ['imp', 'Impact']].map(([k, title]) => {
     const vals = groups.map(g => sum(g, k)), eq = equality(vals);
     return `<div style="display:grid;grid-template-columns:70px 1fr 48px;gap:8px;align-items:center;margin:3px 0;font-size:${k === 'ovr' ? 15 : 13}px">
       <b>${title}</b><div style="background:#e3e8ee;border-radius:6px;height:10px"><div style="width:${eq}%;height:100%;border-radius:6px;background:${eqColor(eq)}"></div></div>
@@ -394,43 +402,66 @@ $('genTeams').onclick = async () => {
   const n = +$('teamCount').value;
   const avail = players.filter(isAvail);
   if (avail.length < n) return alert(`Mark at least ${n} players as available (Players tab).`);
+  const gb = $('genTeams'), gl = gb.textContent; gb.disabled = true; gb.textContent = '⏳ Generating…';
+  await new Promise(r => setTimeout(r, 30));
   const {list} = await computeRatings();
   const by = Object.fromEntries(list.map(p => [p.name, p]));
   const avg = k => list.length ? list.reduce((s, p) => s + p[k], 0) / list.length : 60;
-  const fb = {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), win: avg('win')};
+  const fb = {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), def: avg('def'), imp: avg('impIdx')};
   const KEYS = BAL_KEYS, W = BAL_W;
-  const pv = avail.map(p => KEYS.map(k => (by[p.name] || fb)[k]));
+  const pv = avail.map(p => KEYS.map(k => { const r = by[p.name]; return r ? (k === 'imp' ? r.impIdx : r[k]) : fb[k]; }));
   // cost = weighted sum of the inequality (1 - min/max) of the team totals, the same measure as the equality panel
   const cost = asg => {
-    const tot = Array.from({length: n}, () => [0, 0, 0, 0]);
+    const tot = Array.from({length: n}, () => KEYS.map(() => 0));
     asg.forEach((t, i) => pv[i].forEach((v, k) => tot[t][k] += v));
     return KEYS.reduce((c, k, j) => { const v = tot.map(t => t[j]), mx = Math.max(...v); return c + W[k] * (mx ? 1 - Math.min(...v) / mx : 0); }, 0);
   };
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   // random restarts + hill climbing with player swaps between teams (team sizes stay balanced)
   const results = [];
-  for (let r = 0; r < 80; r++) {
+  const L = avail.length, K = KEYS.length, tot = new Float64Array(n * K);
+  const costT = () => {
+    let c = 0;
+    for (let j = 0; j < K; j++) { let mx = -Infinity, mn = Infinity; for (let t = 0; t < n; t++) { const v = tot[t * K + j]; if (v > mx) mx = v; if (v < mn) mn = v; } c += W[KEYS[j]] * (mx ? 1 - mn / mx : 0); }
+    return c;
+  };
+  const move = (i, from, to) => { for (let j = 0; j < K; j++) { tot[from * K + j] -= pv[i][j]; tot[to * K + j] += pv[i][j]; } };
+  const t0 = Date.now();
+  for (let r = 0; r < 3000 && (r < 40 || Date.now() - t0 < 2500); r++) {
     const asg = shuffle(avail.map((_, i) => i % n));
-    let c = cost(asg), improved = true;
+    tot.fill(0); asg.forEach((t, i) => { for (let j = 0; j < K; j++) tot[t * K + j] += pv[i][j]; });
+    let c = costT(), improved = true;
     while (improved) {
       improved = false;
-      for (let i = 0; i < asg.length; i++) for (let j = i + 1; j < asg.length; j++) {
-        if (asg[i] === asg[j]) continue;
-        [asg[i], asg[j]] = [asg[j], asg[i]];
-        const c2 = cost(asg);
-        if (c2 < c - 1e-9) { c = c2; improved = true; } else [asg[i], asg[j]] = [asg[j], asg[i]];
+      for (let i = 0; i < L; i++) for (let j = i + 1; j < L; j++) {
+        const a = asg[i], b = asg[j]; if (a === b) continue;
+        move(i, a, b); move(j, b, a);
+        const c2 = costT();
+        if (c2 < c - 1e-9) { c = c2; asg[i] = b; asg[j] = a; improved = true; } else { move(i, b, a); move(j, a, b); }
+      }
+      // 3-player rotations across teams escape optima that single swaps cannot leave
+      if (!improved && n >= 3) for (let i = 0; i < L && !improved; i++) for (let j = i + 1; j < L && !improved; j++) for (let k = j + 1; k < L; k++) {
+        const a = asg[i], b = asg[j], d = asg[k];
+        if (a === b || b === d || a === d) continue;
+        for (const [x, y, z] of [[b, d, a], [d, a, b]]) {
+          move(i, a, x); move(j, b, y); move(k, d, z);
+          const c2 = costT();
+          if (c2 < c - 1e-9) { c = c2; asg[i] = x; asg[j] = y; asg[k] = z; improved = true; break; }
+          move(i, x, a); move(j, y, b); move(k, z, d);
+        }
+        if (improved) break;
       }
     }
     results.push({asg: [...asg], c});
   }
-  // pick randomly among the (near-)best layouts, so repeated generations differ but all stay very balanced
-  const bestC = Math.min(...results.map(x => x.c)), pool = results.filter(x => x.c <= bestC + 0.015);
+  // pick randomly only among practically identical best layouts (differences below 0.3 percentage points)
+  const bestC = Math.min(...results.map(x => x.c)), pool = results.filter(x => x.c <= bestC + 0.003);
   const pick = pool[Math.floor(Math.random() * pool.length)];
   teams = Array.from({length: n}, () => []);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   avail.forEach((p, i) => teams[pick.asg[i]].push(p.id));
   layouts = []; await setKV('layouts', layouts);
-  await setKV('teams', teams); renderAll();
+  await setKV('teams', teams); gb.disabled = false; gb.textContent = gl; renderAll();
 };
 $('customTeams').onclick = async () => {
   const n = +$('teamCount').value;
@@ -550,7 +581,7 @@ function rowPairs(rows) {
   rows.forEach((r, i) => {
     for (let x = 0; x < r.length - 1; x++) pairs.push([r[x], r[x + 1]]);
     (rows[i + 1] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
-    if (i === 0 && rows.length === 4) (rows[2] || []).forEach(b => r.forEach(a => pairs.push([a, b])));
+    if (i === 0 && rows.length === 4) (rows[2] || []).forEach(b => r.forEach(a => pairs.push([a, b, true])));
   });
   return pairs;
 }
@@ -565,7 +596,8 @@ function arrangeSquad(names, st, games) {
   const split = o => ({ATT, MID: o.slice(0, nm), DEF: o.slice(nm, nm + nd), GK: o.slice(nm + nd, nm + nd + ng)});
   if (rest.length > 8) return split(rest);
   const ch = chemistry(games);
-  const score = sq => rowPairs([sq.ATT, sq.MID, sq.DEF, sq.GK]).reduce((t, [a, b]) => t + ch.ratio(a, b), 0);
+  // likely defenders (auto-detected) get a bonus for standing in the back row
+  const score = sq => rowPairs([sq.ATT, sq.MID, sq.DEF, sq.GK]).reduce((t, [a, b]) => t + ch.ratio(a, b), 0) + 0.4 * sq.DEF.filter(n => s(n).role === 'DEF').length;
   let best = null, bestScore = -1;
   permutations(rest).forEach(o => { const sq = split(o), sc = score(sq); if (sc > bestScore + 1e-9) { best = sq; bestScore = sc; } });
   return best || split(rest);
@@ -578,12 +610,12 @@ const awardFx = r => !r ? '' : r.bdo && r.boot ? 'bothc' : r.bdo ? 'bdoc' : r.bo
 // Full FC-style card used on the squad pitches (Teams, Sessions, TOTW, TOTY)
 function fcFut(n, r, pid, kindOverride, face) {
   const kind = kindOverride || (!r ? 'bronze' : r.toty ? 'toty' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze');
-  const label = !r ? '' : r.toty ? 'TOTY' : r.totw ? 'TOTW' : r.rare ? 'RARE' : '';
+  const label = !r ? '' : r.toty ? 'TOTY' : r.totw ? 'TOTW' : '';
   const ic = r && (r.bdo || r.boot) ? `<span class="bdo">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</span>` : '';
   return `<div class="fut fc ${kind} ${r && r.rare ? 'rare' : ''} ${awardFx(r)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
     <div class="lt"><div class="ovr">${r ? r.ovr : '–'}</div><span class="tag">${label || '&nbsp;'}</span>${ic}</div>
     <div class="av">${face || faceHtml(n)}</div><div class="nm">${esc(n)}</div><i class="ln"></i>
-    <div class="sub"><span><b>${r ? r.sho : '–'}</b>SHO</span><span><b>${r ? r.pas : '–'}</b>PAS</span><span><b>${r ? r.win : '–'}</b>WIN</span></div></div></div>`;
+    <div class="sub"><span><b>${r ? r.sho : '–'}</b>SHO</span><span><b>${r ? r.pas : '–'}</b>PAS</span><span><b>${r ? r.def : '–'}</b>DEF</span></div></div></div>`;
 }
 const fcCard = (n, r, pid, kindOverride) => `<div class="pp">${fcFut(n, r, pid, kindOverride)}</div>`;
 function fcColour(n, colour, pid) {
@@ -653,14 +685,16 @@ function layoutSquad(i, names) {
   const [na, nm, nd, ng] = formationOf(L.length), n = L.map(pName);
   return {ATT: n.slice(0, na), MID: n.slice(na, na + nm), DEF: n.slice(na + nm, na + nm + nd), GK: n.slice(na + nm + nd, na + nm + nd + ng)};
 }
-function teamPitch(names, key, games, colour) {
+// guest: a player borrowed from other teams, placed in goal and drawn shaded
+function teamPitch(names, key, games, colour, guest) {
   if (!names.length) return '';
   const m = !games && /^t\d+$/.test(key) ? layoutSquad(+key.slice(1)) : null;
   const s = m || (games ? arrangeSquad(names, n => ratingCache.byName[n], games) : teamSquad(names));
+  if (guest) s.GK = [...s.GK, guest];
   const row = arr => arr.length ? `<div class="pl">${arr.map(n => {
     const r = ratingCache.byName[n], pl = players.find(p => p.name === n) || {};
-    if (colour) return fcColour(n, colour, pl.id);
-    return fcCard(n, r, pl.id);
+    const html = colour ? fcColour(n, colour, pl.id) : fcCard(n, r, pl.id);
+    return n === guest ? html.replace('class="fut ', 'title="Also played for this team" class="fut guest ') : html;
   }).join('')}</div>` : '';
   return `<div class="pitch" data-squad="${key}">${row(s.ATT)}${row(s.MID)}${row(s.DEF)}${row(s.GK)}</div>`;
 }
@@ -1054,10 +1088,11 @@ async function saveEdit() {
   await put('games', g);
   editG = null; renderHistory(); renderAll();
 }
+let histOpen = null; // days left open; null = first render (newest day open)
 async function renderHistory() {
   if (editG) return renderEditor();
   const games = (await all('games')).reverse();
-  $('historyList').innerHTML = games.length ? games.map(g => {
+  const gameHtml = g => {
     const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists || p.gk || g.motm === p.name).map(p =>
           `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.gk ? '🧤 ' : ''}${g.motm === p.name ? '⭐' : ''}`).join('<br>') || '<span class="muted">no stats</span>';
     return `<div class="card" style="border:1px solid #e3e8ee">
@@ -1066,8 +1101,20 @@ async function renderHistory() {
       <span><button class="sec" data-gedit="${g.id}">✏️ Edit</button> <button class="danger" data-gdel="${g.id}">Delete</button></span></div>
       <div>${esc(g.teamA.name)} <b>${g.scoreA} : ${g.scoreB}</b> ${esc(g.teamB.name)} <span class="muted">(${Math.floor(g.durationSec / 60)} min)</span></div>
       <div class="match" style="margin-top:6px"><div><b>${esc(g.teamA.name)}</b><br>${rows(g.teamA)}</div>      <div><b>${esc(g.teamB.name)}</b><br>${rows(g.teamB)}</div></div>${histInsight(g)}</div>`;
+  };
+  const byDay = new Map();
+  games.forEach(g => { const d = new Date(g.date).toLocaleDateString(); if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push(g); });
+  if (histOpen === null) histOpen = new Set(byDay.size ? [[...byDay.keys()][0]] : []);
+  $('historyList').innerHTML = games.length ? [...byDay].map(([day, gs]) => {
+    const tally = {}; gs.forEach(g => { if (g.winner !== 'Draw') tally[g.winner] = (tally[g.winner] || 0) + 1; });
+    const wins = Object.entries(tally).sort((a, b) => b[1] - a[1]).map(([n, c]) => `${esc(n)} ${c}W`).join(' · ');
+    return `<details class="hday" data-day="${esc(day)}"${histOpen.has(day) ? ' open' : ''} style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:600;padding:8px 4px">📅 ${esc(day)} <span class="muted" style="font-weight:400">— ${gs.length} match${gs.length > 1 ? 'es' : ''}${wins ? ' · ' + wins : ''}</span></summary>${gs.map(gameHtml).join('')}</details>`;
   }).join('') : '<span class="muted">No games played yet.</span>';
 }
+$('historyList').addEventListener('toggle', e => {
+  const d = e.target; if (!d.classList || !d.classList.contains('hday') || histOpen === null) return;
+  d.open ? histOpen.add(d.dataset.day) : histOpen.delete(d.dataset.day);
+}, true);
       function histInsight(g) {
         const s = g.insight; if (!s || s.fp !== g.scoreA + ':' + g.scoreB) return ''; // hidden once the score was edited
         const pc = v => Math.round(v * 100) + '%', mm = t => String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
@@ -1135,8 +1182,17 @@ function topGA(dayGames, size) {
 // Screenshot of one session card: DOM with inlined computed styles -> SVG foreignObject -> canvas PNG (no libraries, works offline)
 async function screenshotCard(btn) {
   const src = document.getElementById(btn.dataset.shot);
+  // a collapsed session is expanded for the capture, then restored
+  const sb = src.querySelector('details.sbody'), wasClosed = sb && !sb.open;
+  if (wasClosed) { sb.open = true; drawLinks(sessPitchData, $('sessionList')); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); }
+  try { await shootCard(btn, src); } finally { if (wasClosed) sb.open = false; }
+}
+async function shootCard(btn, src) {
   const tb = src.querySelector('.totw-block'), noTotw = btn.dataset.notw && tb;
-  const w = src.offsetWidth, h = src.offsetHeight - (noTotw ? tb.offsetHeight + 10 : 0);
+  const hidden = [...src.querySelectorAll('.noshot')];
+  if (noTotw) hidden.push(tb);
+  const gap = el => { const cs = getComputedStyle(el); return el.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0); };
+  const w = src.offsetWidth;
   const clone = src.cloneNode(true);
   const so = [src, ...src.querySelectorAll('*')], co = [clone, ...clone.querySelectorAll('*')];
   so.forEach((el, i) => {
@@ -1145,8 +1201,20 @@ async function screenshotCard(btn) {
     for (const p of cs) css += `${p}:${cs.getPropertyValue(p)};`;
     co[i].setAttribute('style', css);
   });
-  clone.querySelectorAll('.shot').forEach(e => e.remove());
-  if (noTotw) { clone.querySelector('.totw-block').remove(); clone.style.height = h + 'px'; }
+  // ancestors of removed blocks carry a copied fixed height that still includes them: let those shrink
+  const shrink = new Set();
+  [...clone.querySelectorAll('.noshot, .shot'), ...(noTotw ? [clone.querySelector('.totw-block')] : [])].filter(Boolean).forEach(el => { for (let p = el.parentElement; p && p !== clone; p = p.parentElement) shrink.add(p); });
+  shrink.forEach(p => { p.style.height = 'auto'; p.style.minHeight = '0'; });
+  clone.querySelectorAll('.shot, .noshot').forEach(e => e.remove());
+  if (noTotw) clone.querySelector('.totw-block').remove();
+  // measure the clone itself: its text can wrap differently from the live page, which cut the last lines
+  const holder = document.createElement('div');
+  holder.style.cssText = `position:fixed;left:-99999px;top:0;width:${w}px;visibility:hidden`;
+  clone.style.height = 'auto'; clone.style.minHeight = '0'; clone.style.maxHeight = 'none';
+  holder.appendChild(clone); document.body.appendChild(holder);
+  const h = Math.ceil(clone.getBoundingClientRect().height) + 8;
+  holder.remove();
+  clone.style.height = h + 'px';
   clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
   const xml = new XMLSerializer().serializeToString(clone);
   const scale = 2, bg = getComputedStyle(document.body).backgroundColor;
@@ -1169,7 +1237,27 @@ async function screenshotCard(btn) {
   a.href = URL.createObjectURL(file); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
-let sessMode = 'rating';
+let sessMode = 'rating', sessOpen = null;
+// Per-session player table; default order is goals + assists. Sorting redraws only the table, so open/closed state is untouched.
+const sessStats = {};
+let psSort = {k: 'ga', dir: 1};
+function psTable(day) {
+  const {ps, main} = sessStats[day], {k, dir} = psSort;
+  const val = (n, s) => k === 'name' ? n : k === 'ga' ? s.goals + s.assists : k === 'pct' ? s.wins / s.games : s[k];
+  const list = Object.entries(ps).sort((a, b) => {
+    const x = val(...a), y = val(...b);
+    return (k === 'name' ? byName(x, y) : y - x) * dir || b[1].goals - a[1].goals || byName(a[0], b[0]);
+  });
+  const th = (key, label) => `<th data-psort="${key}" style="cursor:pointer;user-select:none">${label}${k === key ? (dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
+  return `<table><tr>${th('name', 'Player')}${th('games', 'Games')}${th('wins', 'Wins')}${th('goals', 'Goals')}${th('assists', 'Assists')}${th('cs', '🧤 CS')}${th('motm', '⭐ MOTM')}${th('pct', 'Win %')}</tr>` +
+    list.map(([n, s]) => `<tr><td>${esc(n)} <span class="muted">${esc(main[n] || '')}</span></td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.cs}</td><td>${s.motm}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>';
+}
+$('sessionList').addEventListener('click', e => {
+  const th = e.target.closest('[data-psort]'); if (!th) return;
+  const k = th.dataset.psort;
+  psSort = psSort.k === k ? {k, dir: -psSort.dir} : {k, dir: 1};
+  document.querySelectorAll('#sessionList .pswrap').forEach(w => w.innerHTML = psTable(w.dataset.day));
+});
 async function renderSessions() {
   await refreshRatings();
   const allPitch = [];
@@ -1177,6 +1265,7 @@ async function renderSessions() {
   const byDay = {};
   games.forEach(g => (byDay[new Date(g.date).toLocaleDateString()] ??= []).push(g));
   const days = Object.entries(byDay).reverse();
+  if (sessOpen === null) sessOpen = new Set(days.length ? [days[0][0]] : []);
   const toggle = `<div style="margin-bottom:8px"><button class="sec" id="sessMode" style="font-size:12px;padding:3px 8px">${sessMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)'}</button></div>`;
   const sessHtml = await Promise.all(days.map(async ([day, gs], di) => {
     const t = {};
@@ -1194,42 +1283,112 @@ async function renderSessions() {
     const teamCnt = {};
     gs.forEach(g => [g.teamA, g.teamB].forEach(tm => new Set(tm.players.map(p => p.name)).forEach(n => { ((teamCnt[tm.name] ??= {})[n] = (teamCnt[tm.name][n] || 0) + 1); })));
     const pitchData = {};
+    // teams smaller than the biggest one borrow the outsider who played most for them (ties: best rated)
+    const coreOf = tn => Object.keys(teamCnt[tn] || {}).filter(p => main[p] === tn);
+    const maxCore = Math.max(0, ...Object.keys(t).map(tn => coreOf(tn).length));
+    const guests = {}, usedG = new Set();
+    Object.keys(t).filter(tn => coreOf(tn).length && coreOf(tn).length < maxCore).forEach(tn => {
+      const c = Object.keys(teamCnt[tn]).filter(p => main[p] !== tn && !usedG.has(p))
+        .sort((a, b) => teamCnt[tn][b] - teamCnt[tn][a] || rOf(b).ovr - rOf(a).ovr || byName(a, b))[0];
+      if (c) { guests[tn] = c; usedG.add(c); }
+    });
     const squadOf = (tn, di) => {
       const all = Object.keys(teamCnt[tn] || {}), core = all.filter(p => main[p] === tn).sort(byName);
-      const others = all.filter(p => main[p] !== tn).sort(byName).map(p => `${esc(p)} <span class="muted">(${teamCnt[tn][p]}/${played[p]})</span>`);
+      const others = all.filter(p => main[p] !== tn && p !== guests[tn]).sort(byName).map(p => `${esc(p)} <span class="muted">(${teamCnt[tn][p]}/${played[p]})</span>`);
       const key = `s${di}_${tn}`; pitchData[key] = {games: ratingCache.games};
-      return (core.length ? teamPitch(core, key, ratingCache.games, sessMode === 'team' ? tn : '') : '') +
+      const gst = guests[tn] ? `<div style="font-size:13px">🧤 <b>Guest GK</b> (top external contributor): <b>${esc(guests[tn])}</b> <span class="muted">— ${teamCnt[tn][guests[tn]]} of ${t[tn].p} team matches</span></div>` : '';
+      return (core.length ? teamPitch(core, key, ratingCache.games, sessMode === 'team' ? tn : '', guests[tn]) : '') + gst +
         (others.length ? `<div style="font-size:13px">Also played: ${others.join(', ')}</div>` : '');
     };
     const line = (l, s) => `<div>${l}: ${s ? `<b>${esc(s.key)}</b> <span class="muted">— ${s.g} goals + ${s.a} assists = ${s.g + s.a} (${s.games} match${s.games > 1 ? 'es' : ''} together)</span>` : '<span class="muted">–</span>'}</div>`;
     const combosHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">` + Object.keys(t).sort((a, b) => a.localeCompare(b)).map(n => `<div style="min-width:0"><h4 style="margin:6px 0 0">${esc(n)}</h4>
       ${squadOf(n, di)}${line('🤝 Top duo', duo[n])}${line('🔱 Top trio', trio[n])}</div>`).join('') + '</div>';
-    const dr = (await computeRatings(gs)).list, top = dr.slice(0, 5), st = Object.fromEntries(top.map(p => [p.name, p]));
+    const dr = (await computeRatings(gs, true)).list, top = dr.slice(0, 5), st = Object.fromEntries(top.map(p => [p.name, p]));
     const tkey = `totw${di}`;
     pitchData[tkey] = {all: ratingCache.games};
     const totwHtml = top.length ? renderPitch({rows: arrangeSquad(top.map(p => p.name), n => st[n], ratingCache.games), byName: st, games: gs}, '📋 Team of the Week', '5 best-rated players of this session', '', '', tkey) : '';
+    const ps = {};
+    gs.forEach(g => [[g.teamA, g.scoreB], [g.teamB, g.scoreA]].forEach(([tm, conc]) => tm.players.forEach(p => {
+      const s = ps[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, cs: 0, motm: 0};
+      s.games++; s.goals += p.goals || 0; s.assists += p.assists || 0;
+      if (g.winner === tm.name) s.wins++;
+      if (p.gk && conc === 0) s.cs++;
+      if (g.motm === p.name) s.motm++;
+    })));
+    sessStats[day] = {ps, main};
+    const statsHtml = `<details class="noshot" style="margin-top:10px"><summary style="cursor:pointer"><b>📊 Player stats this session</b></summary>
+      <div style="overflow-x:auto" class="pswrap" data-day="${esc(day)}">${psTable(day)}</div></details>`;
     allPitch.push(pitchData);
     return `<div class="card" id="sess${di}"><h3>📅 ${esc(day)} <span class="muted">— ${gs.length} match${gs.length > 1 ? 'es' : ''}</span> <button class="sec shot" data-shot="sess${di}" data-day="${esc(day)}" style="font-size:12px;padding:3px 8px">📷 Screenshot</button> <button class="sec shot" data-notw="1" data-shot="sess${di}" data-day="${esc(day)}" style="font-size:12px;padding:3px 8px">📷 Without TOTW</button></h3>
-      <table><tr><th>#</th><th>Team</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>Goals</th><th>GD</th><th>Pts</th><th>Win %</th></tr>${rows}</table>
+      <details class="sbody" data-day="${esc(day)}"${sessOpen.has(day) ? ' open' : ''}><summary class="noshot" style="cursor:pointer;font-weight:600">Session summary</summary>
+      <table style="margin-top:6px"><tr><th>#</th><th>Team</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>Goals</th><th>GD</th><th>Pts</th><th>Win %</th></tr>${rows}</table>
       <div style="margin-top:10px">${combosHtml}</div>
-      <div class="totw-block" style="margin-top:10px;max-width:340px">${totwHtml}</div></div>`;
+      <div class="totw-block" style="margin-top:10px;max-width:340px">${totwHtml}</div>${statsHtml}</details></div>`;
   }));
   $('sessionList').innerHTML = toggle + (days.length ? sessHtml.join('') : '<div class="card"><span class="muted">No games played yet.</span></div>');
   $('sessMode').onclick = () => { sessMode = sessMode === 'team' ? 'rating' : 'team'; renderSessions(); };
   $('sessionList').classList.toggle('nophoto', sessMode === 'team');
   $('sessionList').querySelectorAll('.shot').forEach(b => b.onclick = () => screenshotCard(b));
-  drawLinks(Object.assign({}, ...allPitch), $('sessionList'));
+  sessPitchData = Object.assign({}, ...allPitch);
+  drawLinks(sessPitchData, $('sessionList'));
 }
-async function computeRatings(src) {
+let sessPitchData = {};
+// Open/closed state is remembered per day; the newest session starts open. Links are drawn on open (hidden pitches have no size).
+$('sessionList').addEventListener('toggle', e => {
+  const d = e.target; if (!d.classList || !d.classList.contains('sbody')) return;
+  d.open ? sessOpen.add(d.dataset.day) : sessOpen.delete(d.dataset.day);
+  if (d.open) drawLinks(sessPitchData, $('sessionList'));
+}, true);
+// Ridge regression over every team-match: how many goals a team scores (or concedes) are explained by its players, so
+// teammates share the credit/blame and mixed teams separate the players. Shrunk towards 0 for few matches.
+function ridgeImpact(games, scored, wOf = () => 1) {
+  const rows = [];
+  games.forEach(g => [[g.teamA, g.scoreA, g.scoreB], [g.teamB, g.scoreB, g.scoreA]].forEach(([t, gf, ga]) => {
+    const ns = [...new Set(t.players.map(p => p.name))];
+    if (ns.length) rows.push({ns, y: scored ? gf : ga, w: wOf(g)});
+  }));
+  const b = {};
+  if (!rows.length) return b;
+  const mu = rows.reduce((s, r) => s + r.w * r.y, 0) / rows.reduce((s, r) => s + r.w, 0), LAMBDA = 6, cnt = {};
+  rows.forEach(r => r.ns.forEach(n => { b[n] = 0; cnt[n] = (cnt[n] || 0) + r.w; }));
+  for (let it = 0; it < 40; it++) {
+    Object.keys(b).forEach(n => {
+      let num = 0;
+      rows.forEach(r => { if (r.ns.includes(n)) num += r.w * (r.y - mu - r.ns.reduce((s, m) => s + (m === n ? 0 : b[m]), 0)); });
+      b[n] = num / (cnt[n] + LAMBDA);
+    });
+  }
+  return b;
+}
+// Automatic role guess from defImp (goals conceded explained by the player; negative = good).
+// "DEF" needs 6+ games, a low attack share AND a better-than-average defensive impact.
+function assignRoles(list, games) {
+  const b = Object.fromEntries(list.map(p => [p.name, p.defImp || 0]));
+  const pct = (arr, v) => arr.filter(x => x < v).length / Math.max(1, arr.length - 1);
+  const ready = list.filter(p => p.games >= 6);
+  const atts = ready.map(p => (p.g + 0.7 * p.a) / p.games), imps = ready.map(p => b[p.name]);
+  list.forEach(p => {
+    p.role = null;
+    if (p.games < 6 || ready.length < 5) return;
+    const ap = pct(atts, (p.g + 0.7 * p.a) / p.games), dp = pct(imps, b[p.name]);
+    if (ap <= 0.4 && dp <= 0.4) p.role = 'DEF';
+  });
+}
+async function computeRatings(src, flat) {
   const games = src || await all('games');
   const day = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const days = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date)).slice(0, 5);
   const recentDays = new Set(days);
+  // Recency: every match is weighted 0.5^(sessions ago / HALF_LIFE), so form counts more without a hard cut-off.
+  // `flat` (awards, one-session or one-year views) gives every match the same weight.
+  const HALF_LIFE = 8;
+  const allDays = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date));
+  const wOf = g => flat ? 1 : Math.pow(0.5, allDays.indexOf(day(g)) / HALF_LIFE);
   // strength: name -> first-pass rating (or null). Used to judge each match against the quality of teammates and opponents.
   const build = strength => {
     const m = {};
     games.forEach(g => {
-      const rec = recentDays.has(day(g));
+      const rec = recentDays.has(day(g)), mw = wOf(g);
       const margin = Math.abs(g.scoreA - g.scoreB);
       const aw = margin <= 1 ? 1.15 : margin >= 4 ? 0.85 : 1; // goals and assists in close matches count a bit more than in blowouts
       const avg = (t, skip) => {
@@ -1237,7 +1396,8 @@ async function computeRatings(src) {
         return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
       };
       [[g.teamA, g.teamB], [g.teamB, g.teamA]].forEach(([t, o]) => t.players.forEach(p => {
-        const s = m[p.name] ??= {games: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, rw: 0, gd: 0, rgd: 0, ti: 0, rti: 0, att: 0, ratt: 0, gkG: 0, gkS: 0, conc: 0, mg: 0, motm: 0, days: new Set()};
+        const conc = t === g.teamA ? g.scoreB : g.scoreA;
+        const s = m[p.name] ??= {games: 0, wn: 0, wcs: 0, wconc: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, gd: 0, wg: 0, wa: 0, ti: 0, att: 0, gkG: 0, gkS: 0, conc: 0, mg: 0, motm: 0, days: new Set()};
         s.days.add(day(g));
         if (p.gk) { const c = t === g.teamA ? g.scoreB : g.scoreA; s.gkG++; s.conc += c; s.gkS += Math.max(0, 1 - c / 4); }
         if (g.motm) { s.mg++; if (g.motm === p.name) s.motm++; }
@@ -1248,48 +1408,53 @@ async function computeRatings(src) {
         const mine = avg(t, p.name), opp = avg(o);
         if (mine != null && opp != null) ti += Math.max(-0.12, Math.min(0.12, (opp - mine) * 0.005));
         ti = Math.max(0, Math.min(1, ti));
-        const att = (p.goals + 0.7 * p.assists) * aw;
-        s.games++; s.g += p.goals; s.a += p.assists; s.w += w; s.gd += gd; s.ti += ti; s.att += att;
-        if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; s.rw += w; s.rgd += gd; s.rti += ti; s.ratt += att; }
+        s.wcs += mw * (conc === 0 ? 1 : 0); s.wconc += mw * conc;
+        s.games++; s.wn += mw; s.g += p.goals; s.a += p.assists; s.w += w; s.gd += gd;
+        s.wg += mw * p.goals; s.wa += mw * p.assists; s.ti += mw * ti; s.att += mw * (p.goals + 0.7 * p.assists) * aw;
+        if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; }
       }));
     });
     return m;
   };
   const rate = (v, n) => n ? v / n : 0;
-  const keys = [['g', 'rg'], ['a', 'ra']];
+  const offB = ridgeImpact(games, true, wOf), defB = ridgeImpact(games, false, wOf);
   const scoreList = strength => {
   const list = Object.entries(build(strength)).map(([name, s]) => ({name, ...s}));
-  const max = keys.map(([all, rec]) => ({
-    all: Math.max(0, ...list.map(p => rate(p[all], p.games))),
-    rec: Math.max(0, ...list.map(p => rate(p[rec], p.rGames)))}));
+  const maxG = Math.max(0, ...list.map(p => rate(p.wg, p.wn))), maxA = Math.max(0, ...list.map(p => rate(p.wa, p.wn)));
   // attack per match (goals + 0.7 x assists, close matches weigh more) is pulled towards the group average for small samples
-  const K = 2, tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.games, t[2] + p.ratt, t[3] + p.rGames], [0, 0, 0, 0]);
-  const mean = {all: rate(tot[0], tot[1]), rec: rate(tot[2], tot[3])};
-  const attOf = (v, n, mu) => n ? (v + K * mu) / (n + K) : 0;
-  const maxAtt = {all: Math.max(0, ...list.map(p => attOf(p.att, p.games, mean.all))), rec: Math.max(0, ...list.map(p => attOf(p.ratt, p.rGames, mean.rec)))};
-  // Each stat = 60% all time + 40% last 5 match days; without games in the last 5 match days the all-time value is used for the 40%
-  const blend = (a, r, hasRecent) => 0.6 * a + 0.4 * (hasRecent ? r : a);
+  const K = 2, tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.wn], [0, 0]), mean = rate(tot[0], tot[1]);
+  const attOf = (v, n) => n ? (v + K * mean) / (n + K) : 0;
+  const maxAtt = Math.max(0, ...list.map(p => attOf(p.att, p.wn)));
+  const sumWn = list.reduce((s, p) => s + p.wn, 0) || 1;
+  const meanCS = list.reduce((s, p) => s + p.wcs, 0) / sumWn, meanConc = list.reduce((s, p) => s + p.wconc, 0) / sumWn;
   list.forEach(p => {
-    const sub = keys.map(([all, rec], i) => blend(
-      max[i].all ? rate(p[all], p.games) / max[i].all : 0,
-      max[i].rec ? rate(p[rec], p.rGames) / max[i].rec : 0, p.rGames > 0));
+    // SHO / PAS (goals / assists per match, recency-weighted) are only shown on the card
+    const sub = [maxG ? rate(p.wg, p.wn) / maxG : 0, maxA ? rate(p.wa, p.wn) / maxA : 0];
     // match impact is pulled towards the middle for small samples (like 2 extra average matches), so 1 lucky win is not 100%
-    const impact = (ti, n) => (ti + 1) / (n + 2);
-    const win = blend(impact(p.ti, p.games), impact(p.rti, p.rGames), p.rGames > 0);
+    const win = (p.ti + 1) / (p.wn + 2);
     p.winPct = Math.round(100 * rate(p.w, p.games));
     const conf = 0.7 + 0.3 * Math.min(1, p.games / 5);
-    // attack = goals + 0.7 x assists per match, scaled to the best player; SHO / PAS are only shown on the card
-    const att = blend(
-      maxAtt.all ? attOf(p.att, p.games, mean.all) / maxAtt.all : 0,
-      maxAtt.rec ? attOf(p.ratt, p.rGames, mean.rec) / maxAtt.rec : 0, p.rGames > 0);
+    // attack = goals + 0.7 x assists per match, scaled to the best player
+    const att = maxAtt ? attOf(p.att, p.wn) / maxAtt : 0;
     // man of the match (only when votes exist) and goalkeeper performance (only for players who played in goal)
     const hasMotm = games.some(g => g.motm);
     const motmScore = Math.min(1, 4 * p.motm / (p.mg + 2));
-    let score = ((hasMotm ? 0.72 : 0.8) * att + 0.2 * win + (hasMotm ? 0.08 * motmScore : 0)) * conf;
+    // ridge impact = goals the team scores more and concedes fewer with him (teammates' share removed); +-0.6 goals per match = full scale
+    p.offImp = Math.round(100 * (offB[p.name] || 0)) / 100; p.defImp = Math.round(100 * (defB[p.name] || 0)) / 100;
+    const impIdx = Math.max(0, Math.min(1, 0.5 + ((offB[p.name] || 0) - (defB[p.name] || 0)) / 1.2));
+    p.impIdx = Math.round(100 * impIdx);
     p.gks = p.gkG ? (p.gkS + 1) / (p.gkG + 2) : null;
+    // DEF index: 50% defensive impact (ridge), 20% clean-sheet rate, 15% goals conceded per match, 15% goalkeeper record
+    // (only for players who played in goal; otherwise its weight goes to the other three). Each part is pulled towards the group mean.
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const csR = (p.wcs + K * meanCS) / (p.wn + K), cdR = (p.wconc + K * meanConc) / (p.wn + K);
+    const parts = [[0.5, clamp01(0.5 - (defB[p.name] || 0) / 1.2)], [0.2, clamp01(0.5 + (csR - meanCS) / 0.6)], [0.15, clamp01(0.5 - (cdR - meanConc) / 4)]];
+    if (p.gkG) parts.push([0.15, p.gks]);
+    const defIdx = parts.reduce((s, [w, v]) => s + w * v, 0) / parts.reduce((s, [w]) => s + w, 0);
+    let score = ((hasMotm ? 0.5 : 0.55) * att + (hasMotm ? 0.2 : 0.22) * impIdx + (hasMotm ? 0.12 : 0.13) * win + 0.1 * defIdx + (hasMotm ? 0.08 * motmScore : 0)) * conf;
     if (p.gkG) { const share = 0.4 * Math.min(1, p.gkG / p.games); score = score * (1 - share) + p.gks * share * conf; }
     p.attIdx = Math.round(100 * att); p.motmScore = hasMotm ? Math.round(100 * motmScore) : null; p.prov = p.games < 5;
-    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.win = Math.round(40 + 59 * win);
+    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.win = Math.round(40 + 59 * win); p.def = Math.round(40 + 59 * defIdx);
     p.ovr = Math.min(99, Math.round(40 + 59 * score));
   });
   list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
@@ -1298,6 +1463,7 @@ async function computeRatings(src) {
   // pass 1 = plain ratings; pass 2 re-scores every match against the pass-1 strength of teammates and opponents
   let list = scoreList(null);
   list = scoreList(Object.fromEntries(list.map(p => [p.name, p.ovr])));
+  assignRoles(list, games);
   if (src) return {list, days};
   const byName = Object.fromEntries(list.map(p => [p.name, p]));
   // TOTW / TOTY: the 5 best-rated players of the period, laid out as a 1-2-2 squad
@@ -1312,7 +1478,7 @@ async function computeRatings(src) {
   if (days.length) {
     const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
     const lastGames = games.filter(g => dk(g) === days[0]);
-    const sel = selectTeam((await computeRatings(lastGames)).list, lastGames);
+    const sel = selectTeam((await computeRatings(lastGames, true)).list, lastGames);
     sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].totw = true; });
     squad = {rows: sel.rows, byName, day: lastGames[0].date, games: lastGames, all: games};
   }
@@ -1325,7 +1491,7 @@ async function computeRatings(src) {
   if (active) {
     const yg = games.filter(g => new Date(g.date).getFullYear() === year);
     if (yg.length) {
-      const sel = selectTeam((await computeRatings(yg)).list, yg);
+      const sel = selectTeam((await computeRatings(yg, true)).list, yg);
       sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].toty = true; });
       toty = {rows: sel.rows, byName, year, games: yg, all: games};
     }
@@ -1335,7 +1501,7 @@ async function computeRatings(src) {
   const awardEnd = new Date(awardYear, 9, 15, 23, 59, 59);
   const bg = games.filter(g => { const d = new Date(g.date); return d.getFullYear() === awardYear && d <= awardEnd; });
   if (bg.length) {
-    const lst = (await computeRatings(bg)).list;
+    const lst = (await computeRatings(bg, true)).list;
     const best = lst.find(p => p.g + p.a > 0);
     if (best && byName[best.name]) byName[best.name].bdo = true;
     // Golden Boot: same award date and period, most goals (ties: higher rating)
@@ -1351,7 +1517,7 @@ async function computeHonours() {
   const games = await all('games'), now = new Date();
   const H = {};
   const add = (n, k) => { (H[n] ??= {totw: 0, toty: 0, boot: 0, bdo: 0})[k]++; };
-  const top5 = async gs => (await computeRatings(gs)).list.slice(0, 5);
+  const top5 = async gs => (await computeRatings(gs, true)).list.slice(0, 5);
   const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const byDay = {};
   games.forEach(g => (byDay[dk(g)] ??= []).push(g));
@@ -1363,7 +1529,7 @@ async function computeHonours() {
     if (now >= new Date(y, 9, 15)) {
       const bg = games.filter(g => new Date(g.date) <= new Date(y, 9, 15, 23, 59, 59) && new Date(g.date).getFullYear() === y);
       if (bg.length) {
-        const lst = (await computeRatings(bg)).list;
+        const lst = (await computeRatings(bg, true)).list;
         const best = lst.find(p => p.g + p.a > 0); if (best) add(best.name, 'bdo');
         const boot = [...lst].filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.ovr - a.ovr)[0]; if (boot) add(boot.name, 'boot');
       }
@@ -1404,15 +1570,16 @@ function drawLinks(data, root = document) {
     const rows = [...pitch.querySelectorAll('.pl')].map(r => [...r.querySelectorAll('.pc[data-name], .fc[data-name]')]);
     const center = el => { const r = el.getBoundingClientRect(); return [r.left - box.left + r.width / 2 - 2, r.top - box.top + r.height / 2 - 2]; };
     const ch = chemistry(sq.all || sq.games);
-    const pairs = rowPairs(rows);
+    const pairs = rowPairs(rows).sort((p, q) => (q[2] ? 1 : 0) - (p[2] ? 1 : 0));
     const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', 'links'); svg.setAttribute('width', box.width); svg.setAttribute('height', box.height);
-    pairs.forEach(([a, b]) => {
+    pairs.forEach(([a, b, skip]) => {
       const na = a.dataset.name, nb = b.dataset.name, t = ch.together(na, nb), ratio = ch.ratio(na, nb);
       const ln = document.createElementNS(NS, 'line'), [x1, y1] = center(a), [x2, y2] = center(b);
       ln.setAttribute('x1', x1); ln.setAttribute('y1', y1); ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
       ln.setAttribute('stroke', t === 0 || ratio < 0.4 ? '#e02424' : ratio >= 0.55 ? '#22e06b' : '#ffb020');
-      ln.setAttribute('stroke-width', t === 0 || ratio < 0.4 ? 3 : ratio >= 0.55 ? 5 : 3);
+      ln.setAttribute('stroke-width', skip ? 3 : t === 0 || ratio < 0.4 ? 3 : ratio >= 0.55 ? 5 : 3);
+      // row-skipping links are drawn first (underneath), full lines at normal width
       const rec = ch.record(na, nb);
       const tip = document.createElementNS(NS, 'title'); tip.textContent = t ? `${na} + ${nb}: ${t} game${t === 1 ? '' : 's'} together, ${Math.round(100 * rec.w / rec.n)}% win rate (all time)` : `${na} + ${nb}: never played together`;
       ln.appendChild(tip); svg.appendChild(ln);
@@ -1444,29 +1611,43 @@ async function renderRanking() {
   window.rankInfo = {list, dTxt};
   const kind = p => p.toty ? 'toty' : p.totw ? 'totw' : '';
   const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
-  const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : p.rare ? 'RARE' : '';
+  const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : '';
   const fx = awardFx;
   $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''} ${fx(p)}" data-name="${esc(p.name)}" style="cursor:pointer"><div class="face">
     <div class="lt"><div class="ovr">${p.ovr}</div><span class="tag">${label(p) || '&nbsp;'}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}</div>
     <span class="rk">#${i + 1}</span>    <div class="av">${faceHtml(p.name)}</div>
     <div class="nm">${esc(p.name)}${p.prov ? ' <span title="Fewer than 5 games: provisional rating" style="font-size:.8em">⏳</span>' : ''}</div><i class="ln"></i>
-    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.win}</b>WIN</span></div></div></div>`).join('')
+    <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.def}</b>DEF</span></div></div></div>`).join('')
     : '<span class="muted">No games played yet.</span>';
   $('rankTable').innerHTML = list.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted.</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th>  <th>Win %</th><th title="Change since the previous session">Δ</th></tr>` +
       list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.prov ? ' ⏳' : ''}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td><td>${dTxt(p)}</td></tr>`).join('') + '</table>' : '';
 }
+let statsSort = {k: 'name', dir: 1};
 async function renderStats() {
   const games = await all('games'), m = {};
   games.forEach(g => [[g.teamA, 'A'], [g.teamB, 'B']].forEach(([t]) => t.players.forEach(p => {
-    const s = m[p.name] ??=     {games: 0, wins: 0, goals: 0, assists: 0};
-        s.games++; s.goals += p.goals; s.assists += p.assists;
+    const s = m[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0};
+    s.games++; s.goals += p.goals; s.assists += p.assists;
     if (g.winner === t.name) s.wins++;
   })));
-  const list = Object.entries(m).sort((a, b) => byName(a[0], b[0]));
-  $('statsList').innerHTML = list.length ? '<table><tr><th>Player</th><th>Games</th><th>Wins</th>  <th>Goals</th><th>Assists</th><th>Win %</th></tr>' +
+  const val = (n, s, k) => k === 'name' ? n : k === 'pct' ? s.wins / s.games : s[k];
+  const {k, dir} = statsSort;
+  const list = Object.entries(m).sort((a, b) => {
+    const x = val(...a, k), y = val(...b, k);
+    return (k === 'name' ? byName(x, y) : y - x) * dir || byName(a[0], b[0]);
+  });
+  const th = (key, label) => `<th data-sort="${key}" style="cursor:pointer;user-select:none">${label}${k === key ? (dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
+  $('statsList').innerHTML = list.length ? `<table><tr>${th('name', 'Player')}${th('games', 'Games')}${th('wins', 'Wins')}${th('goals', 'Goals')}${th('assists', 'Assists')}${th('pct', 'Win %')}</tr>` +
         list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>'
     : '<span class="muted">No data yet.</span>';
 }
+// Name sorts A-Z first; number columns sort highest first. Click the active column again to reverse.
+$('statsList').onclick = e => {
+  const th = e.target.closest('[data-sort]'); if (!th) return;
+  const k = th.dataset.sort;
+  statsSort = statsSort.k === k ? {k, dir: -statsSort.dir} : {k, dir: 1};
+  renderStats();
+};
 const dayStamp = () => new Date().toISOString().slice(0, 10);
 $('exportBtn').onclick = async () => {
   const pl = await all('players'), nameOf = id => pl.find(p => p.id === id)?.name;
@@ -1507,9 +1688,11 @@ $('rankCards').onclick = e => {
   box.innerHTML = `<h3 style="margin:0 0 6px">${esc(p.name)} — ${p.ovr} <span class="muted">(${window.rankInfo.dTxt(p)} since the previous session)</span>${p.prov ? ' <span class="muted">⏳ provisional: fewer than 5 games</span>' : ''}</h3>
     <table style="font-size:13px"><tr><td>Attack index (goals + 0.7 × assists per match, vs the best player)</td><td><b>${p.attIdx}</b>/100</td></tr>
     <tr><td>Goals / assists per match</td><td>${r(p.g, p.games)} / ${r(p.a, p.games)} (${p.g} + ${p.a} in ${p.games} games)</td></tr>
+    <tr><td>Defence rating (50% defensive impact, 20% clean sheets, 15% goals conceded, 15% goalkeeper record)</td><td><b>${p.def}</b></td></tr>
     <tr><td>Team impact (results, goal difference, opponent strength)</td><td><b>${p.win}</b> (win rate ${p.winPct}%)</td></tr>
     <tr><td>Form (last 5 match days)</td><td>${p.rGames} games, ${p.rg} goals, ${p.ra} assists</td></tr>
     <tr><td>Man of the match</td><td>${p.motmScore == null ? 'no votes yet' : `${p.motm} of ${p.mg} games (score ${p.motmScore}/100)`}</td></tr>
+    <tr><td>Impact index (ridge regression: goals his teams score more / concede fewer with him, teammates' share removed)</td><td><b>${p.impIdx}</b>/100 (offence ${p.offImp > 0 ? '+' : ''}${p.offImp}, defence ${p.defImp > 0 ? '+' : ''}${p.defImp} goals conceded per match)${p.role === 'DEF' ? ' — <b>🛡 likely defender</b>' : ''}</td></tr>
     <tr><td>Goalkeeper</td><td>${p.gkG ? `${p.gkG} games in goal, ${r(p.conc, p.gkG)} conceded per game` : '–'}</td></tr></table>`;
   box.scrollIntoView({block: 'nearest'});
 };
