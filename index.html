@@ -99,6 +99,8 @@
   .fut.tcf.tc-Yellow{--r1:#fff6b0;--r2:#a88400;--f1:#ffe45c;--f2:#e0b400;--tx:#2b2208;--ac:#2b2208;--sil:#0002}
   .fut.tcf.tc-Red{--r1:#ffc0c0;--r2:#8f0f0f;--f1:#ff5a5a;--f2:#b81414}
   .fut.tcf.tc-Green{--r1:#c2f5d0;--r2:#0d6630;--f1:#3fd067;--f2:#12803a}
+  .nophoto .fut.tc-split .face{background:var(--bands)}
+  .fut.tc-split .nm,.fut.tc-split .ovr{color:#fff;text-shadow:0 0 3px #000,0 0 3px #000}
   .fut.rare{filter:saturate(1.35) brightness(1.08)}
   .fut.guest,.fut.guest.rare{filter:saturate(.45) brightness(.8);opacity:.85}
   .fut::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0}
@@ -157,14 +159,14 @@
       <label>Number of teams
         <select id="teamCount"><option>2</option><option>3</option><option>4</option></select>
       </label>
-      <button id="genTeams">Generate random teams</button>
+      <button id="genTeams" title="Checks every possible split when feasible (can take minutes), otherwise searches for 60 s">Generate Teams</button>
       <button id="customTeams" class="sec">Create custom teams</button>
       <button id="teamsMode" class="sec">Hide rating (show team colour)</button>
       <button id="teamsShot" class="sec shot" data-shot="teamsView" data-file="football-teams">📷 Screenshot</button>
       <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
     <div id="teamsBal"></div>
-    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Team equality compares the summed ratings (100% = identical, 0% = weaker side 15% or more below); below 80% the app suggests swaps with an Apply button. Each team is shown as a squad: the best scorers are on top, likely defenders (auto-detected from the ranking stats) are preferred in the back row, and the other players are placed for the best chemistry. Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Team equality compares the summed ratings (100% = identical, 0% = weaker side 15% or more below); below 80% the app suggests swaps with an Apply button. <b>Generate Teams</b> checks every possible split when there are at most 200 million of them (about 7 minutes at most, with progress and Cancel), otherwise it searches for 60 s. When the available players don't divide evenly, the short teams are filled with <b>🔄 Rotation</b> players, rated as the group average (never ranked, at most one per team). Each team is shown as a squad: the best scorers are on top, likely defenders (auto-detected from the ranking stats) are preferred in the back row, and the other players are placed for the best chemistry. Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>
     <div id="teamsView" class="teams"></div>
   </div>
 </section>
@@ -298,17 +300,17 @@ $('playerForm').onsubmit = async e => {
 };
 async function loadPlayers() { players = (await all('players')).sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'})); }
 function renderPlayers() {
-  $('pCount').textContent = players.length;
+  $('pCount').textContent = players.filter(p => !p.rotation).length;
   const n = players.filter(isAvail).length;
   $('playerList').innerHTML = players.length ?
     `<div class="row"><b>${n} available</b><button class="sec" data-all="1">All available</button><button class="sec" data-all="0">None available</button></div>
     <table><tr><th>Available</th><th>Name</th><th></th></tr>` + players.map(p =>
-    `<tr><td style="width:80px"><input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}></td>
-    <td class="${isAvail(p) ? '' : 'muted'}"><span class="thumb">${faceFor(p.name, p)}</span>${esc(p.name)}</td>
+    `<tr><td style="width:80px">${p.rotation ? '🔄' : `<input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}>`}</td>
+    <td class="${isAvail(p) || p.rotation ? '' : 'muted'}"><span class="thumb">${faceFor(p.name, p)}</span>${esc(p.name)}${p.rotation ? ' <span class="muted" title="Added automatically to fill short teams; rated as the group average">(rotation player)</span>' : ''}</td>
     <td style="width:190px;white-space:nowrap"><button class="sec" data-face="${p.id}">📷 Photo</button> <button class="danger" data-del="${p.id}">Delete</button></td></tr>`).join('') + '</table>'
     : '<span class="muted">No players yet.</span>';
 }
-const isAvail = p => p.available !== false;
+const isAvail = p => p.available !== false && !p.rotation;
 $('playerList').onchange = async e => {
   const d = e.target.dataset;
   const field = d.avail ? 'avail' : null; if (!field) return;
@@ -336,6 +338,8 @@ async function refreshRatings() {
   const {list} = await computeRatings();
   const avg = k => list.length ? Math.round(list.reduce((s, p) => s + p[k], 0) / list.length) : 60;
   ratingCache = {games: await all('games'), byName: Object.fromEntries(list.map(p => [p.name, {...p, imp: p.impIdx}])), fb: {ovr: avg('ovr'), sho: avg('sho'),   pas: avg('pas'), def: avg('def'), imp: avg('impIdx')}};
+  // rotation players are always rated as the group average
+  players.filter(p => p.rotation).forEach(p => { ratingCache.byName[p.name] = {name: p.name, ...ratingCache.fb, impIdx: ratingCache.fb.imp, games: 0}; });
   ratingCache.fit = await walkForwardFit(ratingCache.games);
 }
 // Honest backtest data for the win-probability model: every game is judged with the ratings that existed BEFORE it
@@ -398,71 +402,121 @@ function balanceHtml(groups) {
 const activeNames = t => t.players.filter(p => !p.left).map(p => p.name);
 
 // ---------- Teams ----------
-$('genTeams').onclick = async () => {
+let genCancel = false;
+async function genTeams() {
   const n = +$('teamCount').value;
-  const avail = players.filter(isAvail);
-  if (avail.length < n) return alert(`Mark at least ${n} players as available (Players tab).`);
-  const gb = $('genTeams'), gl = gb.textContent; gb.disabled = true; gb.textContent = '⏳ Generating…';
+  const real = players.filter(isAvail);
+  if (real.length < n) return alert(`Mark at least ${n} players as available (Players tab).`);
+  const gb = $('genTeams'), gl = gb.textContent;
+  genCancel = false; $('customTeams').disabled = true;
+  gb.textContent = '✖ Cancel'; gb.onclick = () => { genCancel = true; };
+  const restore = () => { $('customTeams').disabled = false; gb.textContent = gl; gb.onclick = genTeams; };
   await new Promise(r => setTimeout(r, 30));
+  // short teams are filled with rotation players (rated as the group average), at most one per team
+  const fill = n * Math.ceil(real.length / n) - real.length;
+  for (let k = 1; players.filter(p => p.rotation).length < fill; k++) {
+    if (!players.some(p => p.name === 'Rotation ' + k)) { await add('players', {name: 'Rotation ' + k, rotation: true, available: false}); await loadPlayers(); }
+  }
+  const rots = players.filter(p => p.rotation).sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true})).slice(0, fill);
+  const avail = [...real, ...rots], isRot = avail.map(p => !!p.rotation);
   const {list} = await computeRatings();
   const by = Object.fromEntries(list.map(p => [p.name, p]));
   const avg = k => list.length ? list.reduce((s, p) => s + p[k], 0) / list.length : 60;
   const fb = {ovr: avg('ovr'), sho: avg('sho'), pas: avg('pas'), def: avg('def'), imp: avg('impIdx')};
   const KEYS = BAL_KEYS, W = BAL_W;
   const pv = avail.map(p => KEYS.map(k => { const r = by[p.name]; return r ? (k === 'imp' ? r.impIdx : r[k]) : fb[k]; }));
-  // cost = weighted sum of the inequality (1 - min/max) of the team totals, the same measure as the equality panel
-  const cost = asg => {
-    const tot = Array.from({length: n}, () => KEYS.map(() => 0));
-    asg.forEach((t, i) => pv[i].forEach((v, k) => tot[t][k] += v));
-    return KEYS.reduce((c, k, j) => { const v = tot.map(t => t[j]), mx = Math.max(...v); return c + W[k] * (mx ? 1 - Math.min(...v) / mx : 0); }, 0);
-  };
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   // random restarts + hill climbing with player swaps between teams (team sizes stay balanced)
   const results = [];
-  const L = avail.length, K = KEYS.length, tot = new Float64Array(n * K);
+  const L = avail.length, K = KEYS.length, tot = new Float64Array(n * K), rc = new Int8Array(n);
+  const validRot = asg => { if (!fill) return true; rc.fill(0); for (let k = 0; k < L; k++) if (isRot[k] && ++rc[asg[k]] > 1) return false; return true; };
   const costT = () => {
     let c = 0;
     for (let j = 0; j < K; j++) { let mx = -Infinity, mn = Infinity; for (let t = 0; t < n; t++) { const v = tot[t * K + j]; if (v > mx) mx = v; if (v < mn) mn = v; } c += W[KEYS[j]] * (mx ? 1 - mn / mx : 0); }
     return c;
   };
   const move = (i, from, to) => { for (let j = 0; j < K; j++) { tot[from * K + j] -= pv[i][j]; tot[to * K + j] += pv[i][j]; } };
-  const t0 = Date.now();
-  for (let r = 0; r < 3000 && (r < 40 || Date.now() - t0 < 2500); r++) {
-    const asg = shuffle(avail.map((_, i) => i % n));
+  const t0 = Date.now(), BUDGET = 60000;
+  // exhaustive mode: every distinct split (team colours ignored) when there are at most ~200 million of them (several minutes)
+  const fact = x => { let f = 1; for (let i = 2; i <= x; i++) f *= i; return f; };
+  const size = L / n, total = fact(L) / (Math.pow(fact(size), n) * fact(n));
+  const exhaustive = total <= 2e8;
+  if (exhaustive) {
+    const asg = new Int8Array(L), cnt = new Int8Array(n), nextT = new Int8Array(L), usedAt = new Int8Array(L + 1);
+    tot.fill(0); rc.fill(0);
+    let i = 0, leaves = 0, bestC = Infinity, ties = [], last = Date.now();
+    const undo = k => { const t = asg[k]; cnt[t]--; if (isRot[k]) rc[t]--; for (let j = 0; j < K; j++) tot[t * K + j] -= pv[k][j]; };
+    while (i >= 0 && !genCancel) {
+      if (i === L) {
+        leaves++;
+        const c = costT();
+        if (c < bestC - 1e-9) { bestC = c; ties = [{asg: Array.from(asg), c}]; }
+        else if (c <= bestC + 1e-9 && ties.length < 200) ties.push({asg: Array.from(asg), c});
+        i--; undo(i);
+        if ((leaves & 0xffff) === 0 && Date.now() - last > 120) {
+          last = Date.now();
+          gb.textContent = `✖ Cancel · ${Math.min(99, Math.floor(100 * leaves / total))}%`;
+          await new Promise(res => setTimeout(res, 0));
+        }
+        continue;
+      }
+      const maxT = Math.min(usedAt[i], n - 1);
+      let t = nextT[i];
+      while (t <= maxT && (cnt[t] >= size || (isRot[i] && rc[t] > 0))) t++;
+      if (t > maxT) { nextT[i] = 0; i--; if (i >= 0) undo(i); continue; }
+      nextT[i] = t + 1; asg[i] = t; cnt[t]++; if (isRot[i]) rc[t]++;
+      for (let j = 0; j < K; j++) tot[t * K + j] += pv[i][j];
+      usedAt[i + 1] = Math.max(usedAt[i], t + 1); i++;
+    }
+    results.push(...ties);
+  }
+  for (let r = 0; !exhaustive && !genCancel && r < 100000 && (r < 200 || Date.now() - t0 < BUDGET); r++) {
+    if (r % 20 === 0) { gb.textContent = `✖ Cancel · Searching… ${Math.min(99, Math.round(100 * (Date.now() - t0) / BUDGET))}%`; await new Promise(res => setTimeout(res, 0)); }
+    // rotation players are dealt last, so they land in different teams
+    const order = [...shuffle(avail.map((_, i) => i).filter(i => !isRot[i])), ...avail.map((_, i) => i).filter(i => isRot[i])];
+    const asg = new Array(L); order.forEach((idx, k) => asg[idx] = k % n);
     tot.fill(0); asg.forEach((t, i) => { for (let j = 0; j < K; j++) tot[t * K + j] += pv[i][j]; });
     let c = costT(), improved = true;
     while (improved) {
       improved = false;
       for (let i = 0; i < L; i++) for (let j = i + 1; j < L; j++) {
-        const a = asg[i], b = asg[j]; if (a === b) continue;
+        const a = asg[i], b = asg[j]; if (a === b || (isRot[i] && isRot[j])) continue;
+        asg[i] = b; asg[j] = a;
+        if (!validRot(asg)) { asg[i] = a; asg[j] = b; continue; }
         move(i, a, b); move(j, b, a);
         const c2 = costT();
-        if (c2 < c - 1e-9) { c = c2; asg[i] = b; asg[j] = a; improved = true; } else { move(i, b, a); move(j, a, b); }
+        if (c2 < c - 1e-9) { c = c2; improved = true; } else { move(i, b, a); move(j, a, b); asg[i] = a; asg[j] = b; }
       }
       // 3-player rotations across teams escape optima that single swaps cannot leave
       if (!improved && n >= 3) for (let i = 0; i < L && !improved; i++) for (let j = i + 1; j < L && !improved; j++) for (let k = j + 1; k < L; k++) {
         const a = asg[i], b = asg[j], d = asg[k];
         if (a === b || b === d || a === d) continue;
         for (const [x, y, z] of [[b, d, a], [d, a, b]]) {
-          move(i, a, x); move(j, b, y); move(k, d, z);
-          const c2 = costT();
-          if (c2 < c - 1e-9) { c = c2; asg[i] = x; asg[j] = y; asg[k] = z; improved = true; break; }
-          move(i, x, a); move(j, y, b); move(k, z, d);
+          asg[i] = x; asg[j] = y; asg[k] = z;
+          if (validRot(asg)) {
+            move(i, a, x); move(j, b, y); move(k, d, z);
+            const c2 = costT();
+            if (c2 < c - 1e-9) { c = c2; improved = true; break; }
+            move(i, x, a); move(j, y, b); move(k, z, d);
+          }
+          asg[i] = a; asg[j] = b; asg[k] = d;
         }
         if (improved) break;
       }
     }
     results.push({asg: [...asg], c});
   }
-  // pick randomly only among practically identical best layouts (differences below 0.3 percentage points)
-  const bestC = Math.min(...results.map(x => x.c)), pool = results.filter(x => x.c <= bestC + 0.003);
+  // pick randomly among exactly tied best layouts
+  if (genCancel || !results.length) { restore(); return; }
+  const bestC = Math.min(...results.map(x => x.c)), pool = results.filter(x => x.c <= bestC + 1e-9);
   const pick = pool[Math.floor(Math.random() * pool.length)];
   teams = Array.from({length: n}, () => []);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   avail.forEach((p, i) => teams[pick.asg[i]].push(p.id));
   layouts = []; await setKV('layouts', layouts);
-  await setKV('teams', teams); gb.disabled = false; gb.textContent = gl; renderAll();
-};
+  await setKV('teams', teams); restore(); renderAll();
+}
+$('genTeams').onclick = genTeams;
 $('customTeams').onclick = async () => {
   const n = +$('teamCount').value;
   if (teams.some(t => t.length) && !confirm('Replace the current teams with empty custom teams?')) return;
@@ -618,9 +672,12 @@ function fcFut(n, r, pid, kindOverride, face) {
     <div class="sub"><span><b>${r ? r.sho : '–'}</b>SHO</span><span><b>${r ? r.pas : '–'}</b>PAS</span><span><b>${r ? r.def : '–'}</b>DEF</span></div></div></div>`;
 }
 const fcCard = (n, r, pid, kindOverride) => `<div class="pp">${fcFut(n, r, pid, kindOverride)}</div>`;
-function fcColour(n, colour, pid) {
-  return `<div class="pp"><div class="fut fc tcf tc-${esc(colour)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
-    <div class="lt"><div class="ovr" style="font-size:9cqw">${esc(colour || '–')}</div></div>
+const SPLIT_COL = {Blue: '#2f6fe0', Red: '#d92b2b', Yellow: '#f2c400', Black: '#1c1c1c', White: '#f4f6f9', Green: '#1fa84f'};
+// split: colours of the other teams, cut diagonally (used for rotation players who belong to every team)
+function fcColour(n, colour, pid, split) {
+  const bands = split && split.length > 1 ? `linear-gradient(135deg,${split.map((c, i) => `${SPLIT_COL[c] || '#777'} ${Math.round(100 * i / split.length)}% ${Math.round(100 * (i + 1) / split.length)}%`).join(',')})` : '';
+  return `<div class="pp"><div class="fut fc tcf tc-${esc(colour)}${bands ? ' tc-split' : ''}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}${bands ? ` style="--bands:${bands}"` : ''}><div class="face">
+    <div class="lt"><div class="ovr" style="font-size:9cqw">${bands ? '🔄' : esc(colour || '–')}</div></div>
     <div class="av">${faceHtml(n)}</div><div class="nm">${esc(n)}</div></div></div></div>`;
 }
 
@@ -685,6 +742,8 @@ function layoutSquad(i, names) {
   const [na, nm, nd, ng] = formationOf(L.length), n = L.map(pName);
   return {ATT: n.slice(0, na), MID: n.slice(na, na + nm), DEF: n.slice(na + nm, na + nm + nd), GK: n.slice(na + nm + nd, na + nm + nd + ng)};
 }
+// rotation players: diagonal split of the other teams' colours (with only 2 teams: both team colours)
+const rotSplit = i => { const others = teams.map((_, j) => j).filter(j => j !== i).map(teamLabel); return others.length > 1 ? others : [teamLabel(i), ...others]; };
 // guest: a player borrowed from other teams, placed in goal and drawn shaded
 function teamPitch(names, key, games, colour, guest) {
   if (!names.length) return '';
@@ -693,7 +752,7 @@ function teamPitch(names, key, games, colour, guest) {
   if (guest) s.GK = [...s.GK, guest];
   const row = arr => arr.length ? `<div class="pl">${arr.map(n => {
     const r = ratingCache.byName[n], pl = players.find(p => p.name === n) || {};
-    const html = colour ? fcColour(n, colour, pl.id) : fcCard(n, r, pl.id);
+    const html = colour ? fcColour(n, colour, pl.id, pl.rotation && /^t\d+$/.test(key) ? rotSplit(+key.slice(1)) : null) : fcCard(n, r, pl.id);
     return n === guest ? html.replace('class="fut ', 'title="Also played for this team" class="fut guest ') : html;
   }).join('')}</div>` : '';
   return `<div class="pitch" data-squad="${key}">${row(s.ATT)}${row(s.MID)}${row(s.DEF)}${row(s.GK)}</div>`;
@@ -713,7 +772,7 @@ function renderTeams() {
     [...ids].sort((x, y) => byName(pName(x), pName(y))).map(id => `<li data-pid="${id}"><span class="grip" data-pid="${id}" title="Drag to move">⠿</span><span style="flex:1">${esc(pName(id))}</span><select data-move="${id}">${opts(cur)}</select></li>`).join('') + '</ul>' + extra + '</div>';
   $('teamsView').innerHTML = teams.length
     ? teams.map((t, i) => box(nameSel(i), t, i, teamPitch(t.map(pName), 't' + i, undefined, teamsMode === 'team' ? teamLabel(i) : ''))).join('') + (free.length ? box('Unassigned', free.map(p => p.id), -1) : '')
-    : '<span class="muted">No teams yet. Click “Generate random teams” or “Create custom teams”.</span>';
+    : '<span class="muted">No teams yet. Click “Generate Teams” or “Create custom teams”.</span>';
   $('teamsMode').textContent = teamsMode === 'team' ? 'Show rating' : 'Hide rating (show team colour)';
   $('teamsView').classList.toggle('three', teams.length === 3);
   $('teamsView').classList.toggle('nophoto', teamsMode === 'team');
@@ -1463,6 +1522,9 @@ async function computeRatings(src, flat) {
   // pass 1 = plain ratings; pass 2 re-scores every match against the pass-1 strength of teammates and opponents
   let list = scoreList(null);
   list = scoreList(Object.fromEntries(list.map(p => [p.name, p.ovr])));
+  // rotation (filler) players never appear in rankings, awards or the group averages
+  const rotNames = new Set((typeof players !== 'undefined' ? players : []).filter(p => p.rotation).map(p => p.name));
+  if (rotNames.size) list = list.filter(p => !rotNames.has(p.name));
   assignRoles(list, games);
   if (src) return {list, days};
   const byName = Object.fromEntries(list.map(p => [p.name, p]));
