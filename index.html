@@ -14,6 +14,7 @@
   main{max-width:1000px;margin:16px auto;padding:0 12px}
   section{display:none}section.active{display:block}
   .card{background:#fff;border-radius:8px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
+  #live{overflow-anchor:none}
   h2,h3{margin-top:0}
   input,select,button{font-size:15px;padding:7px 10px;border-radius:6px;border:1px solid #bbc4d0}
   button{cursor:pointer;background:#0f8a4b;color:#fff;border-color:#0f8a4b}
@@ -60,6 +61,20 @@
   .muted{color:#667}
   .win{color:#0b6b3a;font-weight:700}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .rank-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .rank-detail-head h3{margin:0 0 4px}
+  .rank-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin-top:12px}
+  .rank-detail-section{display:block;background:#f5f8fb;border:1px solid #e1e8ef;border-radius:8px;padding:12px;min-width:0}
+  .rank-detail-section h4{margin:0 0 8px;font-size:14px}
+  .rank-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .rank-metric{background:#fff;border-radius:6px;padding:7px;min-width:0}
+  .rank-metric b{display:block;font-size:19px;color:#0b6b3a}
+  .rank-metric span{font-size:12px;color:#596577}
+  .rank-detail-section p{margin:8px 0 0;font-size:13px;line-height:1.45}
+  .rank-detail-section dl{margin:0;font-size:13px}
+  .rank-detail-section dl div{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+  .rank-detail-section dt{color:#596577}.rank-detail-section dd{margin:0;font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+  #rankCards .fut:focus-visible{outline:3px solid #0b6b3a;outline-offset:3px}
   :root{--shape:polygon(0% 9%,2% 6%,8% 4.2%,25% 2.6%,40% 1%,50% 0%,60% 1%,75% 2.6%,92% 4.2%,98% 6%,100% 9%,100% 76%,97% 84%,88% 91%,74% 96.5%,62% 99%,56% 99.8%,50% 100%,44% 99.8%,38% 99%,26% 96.5%,12% 91%,3% 84%,0% 76%)}
   /* FC Ultimate Team style card: shaped rim (.fut) + shaped face (.face); everything inside scales with the card width (cqw) */
   .fut{--r1:#fff1a8;--r2:#b88a1c;--f1:#f6dc7a;--f2:#c99a2a;--tx:#3a2800;--ac:#3a2800;--sil:#0003;--ln:#3a280055;
@@ -163,10 +178,10 @@
       <button id="customTeams" class="sec">Create custom teams</button>
       <button id="teamsMode" class="sec">Hide rating (show team colour)</button>
       <button id="teamsShot" class="sec shot" data-shot="teamsView" data-file="football-teams">📷 Screenshot</button>
-      <span class="muted">Custom = empty teams you fill by hand: pick a team for each player in the Unassigned list. Changes save automatically.</span>
     </div>
     <div id="teamsBal"></div>
-    <div class="muted" style="font-size:12px;margin-bottom:6px"><b>Drag</b> a player (⠿ handle or pitch card) onto another team to move him, or onto a player to swap. Team equality compares the summed ratings (100% = identical, 0% = weaker side 15% or more below); below 80% the app suggests swaps with an Apply button. <b>Generate Teams</b> checks every possible split when there are at most 200 million of them (about 7 minutes at most, with progress and Cancel), otherwise it searches for 60 s. When the available players don't divide evenly, the short teams are filled with <b>🔄 Rotation</b> players, rated as the group average (never ranked, at most one per team). Each team is shown as a squad: the best scorers are on top, likely defenders (auto-detected from the ranking stats) are preferred in the back row, and the other players are placed for the best chemistry. Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>
+    <div class="muted" style="font-size:12px;margin-bottom:6px">Drag players to move or swap. Custom teams start empty. 🔄 Rotation fills uneven teams at the group-average rating.<br>
+    Chemistry: <b style="color:#22a84f">green</b> stronger, <b style="color:#d98a00">orange</b> average, <b style="color:#e02424">red</b> weaker, grey dashed unknown. Based on shared team results, not individual impact.</div>
     <div id="teamsView" class="teams"></div>
   </div>
 </section>
@@ -176,6 +191,7 @@
     <h2>Start game</h2>
     <div class="row">
       <select id="teamA"></select> <b>vs</b> <select id="teamB"></select>
+      <label>Match type <select id="matchType"><option value="short">Short match (8 minutes)</option><option value="long">Long match (no time-based predictions)</option></select></label>
       <button id="startBtn">Start Game</button>
     </div>
     <div class="muted" id="setupMsg"></div>
@@ -186,8 +202,8 @@
     <div class="score"><span id="nameA"></span> <span id="scoreA">0</span> : <span id="scoreB">0</span> <span id="nameB"></span></div>
     <div class="row" style="justify-content:center"><button id="stopBtn" class="danger">Stop Game</button><button id="cancelBtn" class="sec">Cancel (don't save)</button></div>
     <div class="row" style="justify-content:center"><button id="undoBtn" class="sec" disabled>↶ Undo last</button></div>
-    <div class="muted" style="text-align:center;font-size:12px">🧤 = goalkeeper of the team, ⭐ = man of the match (one per game)</div>
-    <div id="motmSug" style="text-align:center;margin:6px 0"></div>
+    <div class="row" style="justify-content:center"><label><input type="checkbox" id="longMatch"> Long match (disable time-based predictions)</label></div>
+    <div class="muted" style="text-align:center;font-size:12px">🧤 = goalkeeper of the team</div>
     <div id="liveInsights"></div>
     <div id="liveBal"></div>
     <div class="match"><div id="liveA"></div><div id="liveB"></div></div>
@@ -200,23 +216,19 @@
 
 <section id="sessions">
   <div class="card"><h2>Daily session summary</h2>
-  <div class="muted">One block per played date; tap "Session summary" to collapse or expand it (the newest is open). Teams are ranked by points (win 3, draw 1, loss 0), then goal difference, then goals scored. Win % = wins ÷ matches that team played that day. Main team = the team a player played most matches for that day. Each team is shown as a squad (main players, with chemistry lines from all-time results). A team with fewer main players than the biggest team borrows its top outside contributor as a shaded <b>Guest GK</b> card in goal (caption: his matches for the team out of the team's matches); other players who played only a few matches for the team are listed under it as "Also played", (x/y) = matches for this team / total matches that day. Top duo/trio = for each team colour, the 2 / 3 players with the most goals + assists scored while playing together on that team. "Player stats this session" lists games, wins, goals, assists, clean sheets (🧤 = goalkeeper's team conceded 0), man of the match and win % per player; click a column header to sort. The stats table and the "Session summary" label are not included in screenshots.</div></div>  <div id="sessionList"></div>
+  <div class="muted">Teams rank by points, goal difference, then goals scored. Tap a session to expand it; tap a stats heading to sort. Guest GK is a stand-in from another team.</div></div>  <div id="sessionList"></div>
 </section>
 
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
-  <div class="muted" style="margin-bottom:10px"><b>How the rating works</b> (40–99, like FUT). Every match counts with a recency weight: a match from the latest session counts fully, and the weight halves every 8 sessions back (no hard cut-off, so form counts more but nothing jumps when a session drops out).<br>
-  <b>Overall = 55% attack + 22% impact + 13% result + 10% defence</b>. With man-of-the-match votes recorded: 50% attack + 20% impact + 12% result + 10% defence + 8% man of the match. The total is slightly reduced for players with fewer than 5 games (⏳ provisional). A player who played in goal gets up to 40% of the rating from goals conceded while in goal.<br>
-  • <b>Attack</b>: goals + 0.7 × assists per match, scaled to the best player. Goals in close matches (margin ≤ 1) count a bit more than in blowouts (margin ≥ 4). Players with few matches are pulled towards the group average.<br>
-  • <b>Impact</b>: ridge regression over every team-match. It estimates how many more goals a team scores, and how many fewer it concedes, when this player is on the pitch, after removing his teammates' share. Because teams are mixed every session, players can be told apart; the estimate is pulled towards neutral for few matches (±0.6 goals per match = full scale).<br>
-  • <b>Result</b>: 60% result (win 1, draw ½) + 40% goal difference per match (capped at ±3) of the player's team, adjusted per match for how strong the opponents were compared with his teammates, and pulled towards the middle for small samples.<br>
-  • <b>Defence (DEF)</b>: 50% defensive impact (the ridge estimate of goals conceded with him on the pitch), 20% clean-sheet rate, 15% goals conceded per match against the group average, 15% goalkeeper record (only for players who played in goal; otherwise that share goes to the other three). Every part is recency-weighted and pulled towards the group average for few matches.<br>
-  • <b>Card stats</b>: SHO = goals per match, PAS = assists per match (both recency-weighted, scaled to the best player), DEF = the defence rating above. Team generation, the equality panel and swap suggestions balance Overall (40%), SHO, PAS, DEF (20%) and Impact (10%).<br>
-  • <b>🛡 Likely defender</b> (automatic, shown in the breakdown): at least 6 games, a low attack share and a better-than-average defensive impact. Likely defenders are preferred in the back row of squads. Tap a card to see the full breakdown and the change since the last session.<br>
-  <b>Colors:</b> Bronze ≤64, Silver 65–74, Gold ≥75. <b>Rare</b> (shiny card): played at least 50% of the last 5 match days (needs 2+ match days). 📋 <b>TOTW</b> (black): the 5 best-rated players of the last session (most recent match day). 🏆 <b>TOTY</b> (dark blue): after 15 January, the 5 best-rated players of the previous year. TOTW, TOTY and the awards use the plain average of the matches in their period, without the recency weights. Priority: TOTY › TOTW › base.<br>👑 <b>Ballon d'Or</b> (glowing gold shield-shaped card with a shine; 👑 + 👟 together give a shield card with a gold-to-fire foil and rotating light): only one player. Awarded on 15 October to the best-rated player of that year's games, shown on the card for a year until the next 15 October. 👟 <b>Golden Boot</b> (orange-red foil card with slanted cut corners and a shine): same schedule, the player with the most goals that year.<br>Table columns: Games = all / last 5 match days, Goals and Assists = all / last 5 match days, Δ = rating change since the previous session.</div>
+  <details class="muted" style="margin-bottom:10px"><summary>Rating and awards</summary>
+    <p>Overall: 60% attack, 40% estimated team impact; goalkeeper games add a goals-conceded blend. DEF is team-based, not measured defensive actions. ⏳ means fewer than 3 sessions; 🛡 is a defender guess.</p>
+    <p>A session is one calendar day. Recent sessions count more; partial attendance reduces evidence. A single long match counts as a full session. L5 means the last five session days. Win % averages session win rates.</p>
+    <p>TOTW uses the latest session. TOTY uses the previous year; Ballon d'Or and Golden Boot use games through 15 October. Yearly awards require attendance at 25% of sessions, rounded up.</p>
+  </details>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
-  <div id="rankDetail" class="card" style="border:1px solid #e3e8ee;display:none"></div>
+  <div id="rankDetail" class="card" aria-live="polite" style="border:1px solid #e3e8ee;display:none"></div>
   <div id="rankCards" class="cards"></div></div>
   <div class="card"><div id="rankTable"></div></div>
 </section>
@@ -226,7 +238,7 @@
   <div class="row" style="margin-top:12px"><button id="exportBtn">⬆ Export all data</button>
   <label class="sec" style="cursor:pointer;padding:7px 10px;border:1px solid #bbc4d0;border-radius:6px">⬇ Import &amp; merge <input type="file" id="importFile" accept=".json,application/json" hidden></label>
   <label class="sec" style="cursor:pointer;padding:7px 10px;border:1px solid #c0392b;border-radius:6px;color:#c0392b">Import &amp; replace all <input type="file" id="replaceFile" accept=".json,application/json" hidden></label></div>
-  <div class="muted">Merge adds new players and games to existing data and skips duplicates, so you can sync back and forth between PC and iPhone.</div></div>
+  <div class="muted">Win % averages session win rates. Merge skips duplicates; replace deletes current data.</div></div>
 </section>
 </main>
 
@@ -267,7 +279,7 @@ const getKV = async k => (await tx('kv', 'readonly', st => st.get(k)))?.value;
 const setKV = (k, value) => put('kv', {key: k, value});
 
 // ---------- State ----------
-let players = [], teams = [], layouts = [], game = null, timer = null;
+let players = [], rotations = [], teams = [], layouts = [], game = null, timer = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byName = (a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'});
@@ -298,15 +310,35 @@ $('playerForm').onsubmit = async e => {
   $('playerName').value = '';
   await loadPlayers(); renderAll();
 };
-async function loadPlayers() { players = (await all('players')).sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'})); }
+async function loadPlayers() {
+  const saved = await all('players');
+  rotations = (await getKV('rotations')) || [];
+  const legacy = saved.filter(p => p.rotation);
+  if (rotations.some(r => saved.some(p => p.id === r.id && (!p.rotation || p.name !== r.name)))) {
+    throw new Error('Rotation ID conflicts with an existing player. No player records were migrated.');
+  }
+  if (legacy.length) {
+    const known = new Set(rotations.map(p => p.id));
+    const migrated = [...rotations, ...legacy.filter(p => !known.has(p.id))];
+    await new Promise((resolve, reject) => {
+      const t = db.transaction(['players', 'kv'], 'readwrite');
+      t.objectStore('kv').put({key: 'rotations', value: migrated});
+      legacy.forEach(p => t.objectStore('players').delete(p.id));
+      t.oncomplete = resolve; t.onerror = t.onabort = () => reject(t.error);
+    });
+    rotations = migrated;
+  }
+  players = [...saved.filter(p => !p.rotation), ...rotations].sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+}
 function renderPlayers() {
-  $('pCount').textContent = players.filter(p => !p.rotation).length;
+  const roster = players.filter(p => !p.rotation);
+  $('pCount').textContent = roster.length;
   const n = players.filter(isAvail).length;
-  $('playerList').innerHTML = players.length ?
+  $('playerList').innerHTML = roster.length ?
     `<div class="row"><b>${n} available</b><button class="sec" data-all="1">All available</button><button class="sec" data-all="0">None available</button></div>
-    <table><tr><th>Available</th><th>Name</th><th></th></tr>` + players.map(p =>
-    `<tr><td style="width:80px">${p.rotation ? '🔄' : `<input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}>`}</td>
-    <td class="${isAvail(p) || p.rotation ? '' : 'muted'}"><span class="thumb">${faceFor(p.name, p)}</span>${esc(p.name)}${p.rotation ? ' <span class="muted" title="Added automatically to fill short teams; rated as the group average">(rotation player)</span>' : ''}</td>
+    <table><tr><th>Available</th><th>Name</th><th></th></tr>` + roster.map(p =>
+    `<tr><td style="width:80px"><input type="checkbox" data-avail="${p.id}" ${isAvail(p) ? 'checked' : ''}></td>
+    <td class="${isAvail(p) ? '' : 'muted'}"><span class="thumb">${faceFor(p.name, p)}</span>${esc(p.name)}</td>
     <td style="width:190px;white-space:nowrap"><button class="sec" data-face="${p.id}">📷 Photo</button> <button class="danger" data-del="${p.id}">Delete</button></td></tr>`).join('') + '</table>'
     : '<span class="muted">No players yet.</span>';
 }
@@ -320,7 +352,7 @@ $('playerList').onchange = async e => {
 };
 $('playerList').onclick = async e => {
   if (e.target.dataset.all !== undefined) {
-    for (const p of players) { p.available = e.target.dataset.all === '1'; await put('players', p); }
+    for (const p of players.filter(p => !p.rotation)) { p.available = e.target.dataset.all === '1'; await put('players', p); }
     return renderAll();
   }
   const id = +e.target.dataset.del;
@@ -411,11 +443,22 @@ async function genTeams() {
   genCancel = false; $('customTeams').disabled = true;
   gb.textContent = '✖ Cancel'; gb.onclick = () => { genCancel = true; };
   const restore = () => { $('customTeams').disabled = false; gb.textContent = gl; gb.onclick = genTeams; };
+  try {
   await new Promise(r => setTimeout(r, 30));
   // short teams are filled with rotation players (rated as the group average), at most one per team
   const fill = n * Math.ceil(real.length / n) - real.length;
-  for (let k = 1; players.filter(p => p.rotation).length < fill; k++) {
-    if (!players.some(p => p.name === 'Rotation ' + k)) { await add('players', {name: 'Rotation ' + k, rotation: true, available: false}); await loadPlayers(); }
+  const updatedRotations = [...rotations];
+  for (let k = 1; updatedRotations.length < fill; k++) {
+    if (![...players, ...updatedRotations].some(p => p.name.toLowerCase() === ('Rotation ' + k).toLowerCase())) {
+      const id = Math.min(0, ...updatedRotations.map(p => p.id)) - 1;
+      const p = {id, name: 'Rotation ' + k, rotation: true, available: false};
+      updatedRotations.push(p);
+    }
+  }
+  if (updatedRotations.length !== rotations.length) {
+    await setKV('rotations', updatedRotations);
+    players.push(...updatedRotations.slice(rotations.length));
+    rotations = updatedRotations;
   }
   const rots = players.filter(p => p.rotation).sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true})).slice(0, fill);
   const avail = [...real, ...rots], isRot = avail.map(p => !!p.rotation);
@@ -507,14 +550,18 @@ async function genTeams() {
     results.push({asg: [...asg], c});
   }
   // pick randomly among exactly tied best layouts
-  if (genCancel || !results.length) { restore(); return; }
+  if (genCancel || !results.length) return;
   const bestC = Math.min(...results.map(x => x.c)), pool = results.filter(x => x.c <= bestC + 1e-9);
   const pick = pool[Math.floor(Math.random() * pool.length)];
   teams = Array.from({length: n}, () => []);
   teamNames = COLORS.slice(0, n); await setKV('teamNames', teamNames);
   avail.forEach((p, i) => teams[pick.asg[i]].push(p.id));
   layouts = []; await setKV('layouts', layouts);
-  await setKV('teams', teams); restore(); renderAll();
+  await setKV('teams', teams); renderAll();
+  } catch (err) {
+    console.error('Team generation failed:', err);
+    alert('Could not generate teams. ' + err.message);
+  } finally { restore(); }
 }
 $('genTeams').onclick = genTeams;
 $('customTeams').onclick = async () => {
@@ -612,20 +659,27 @@ $('teamsView').addEventListener('pointerdown', e => {
 });
 const FORMATIONS = {1: [1, 0, 0, 0], 2: [1, 0, 0, 1], 3: [1, 1, 0, 1], 4: [2, 0, 2, 0], 5: [2, 0, 2, 1], 6: [2, 1, 2, 1], 7: [2, 2, 2, 1], 8: [3, 2, 2, 1]}; // rows: ATT, MID, DEF, GK (5 players = 2-2-1 from the top = 1-2-2 from the GK)
 const formationOf = n => { const r = n - 1, a = Math.ceil(r / 3); return FORMATIONS[n] || [a, r - a - Math.floor(r / 3), Math.floor(r / 3), 1]; };
-// Chemistry between two players = their all-time record when playing on the same team (win 1, draw ½, smoothed
-// with 2 neutral games). Never together = no chemistry (red). `ratio` is 0..1, green >= 0.55, orange >= 0.4, red below.
+const sessionKey = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+const sessionWinRate = days => {
+  const records = Object.values(days);
+  return records.length ? records.reduce((s, d) => s + d.wins / d.games, 0) / records.length : 0;
+};
+// Chemistry averages each shared session's result, with draws counting half and two neutral sessions of smoothing.
 function chemistry(games) {
   const st = {};
+  const key = (a, b) => JSON.stringify(a < b ? [a, b] : [b, a]);
   games.forEach(g => [g.teamA, g.teamB].forEach(t => {
     const names = [...new Set(t.players.map(p => p.name))].sort();
     const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
-    combos(names, 2).forEach(([a, b]) => { const s = st[a + '|' + b] ??= {n: 0, w: 0}; s.n++; s.w += w; });
+    combos(names, 2).forEach(([a, b]) => {
+      const s = st[key(a, b)] ??= {n: 0, days: {}}, d = s.days[sessionKey(g)] ??= {games: 0, wins: 0};
+      s.n++; d.games++; d.wins += w;
+    });
   }));
-  const sorted = (a, b) => a < b ? [a, b] : [b, a];
   return {
-    together: (a, b) => (st[sorted(a, b).join('|')] || {n: 0}).n,
-    ratio: (a, b) => { const s = st[sorted(a, b).join('|')]; return s ? (s.w + 1) / (s.n + 2) : 0; },
-    record: (a, b) => st[sorted(a, b).join('|')]
+    together: (a, b) => (st[key(a, b)] || {n: 0}).n,
+    ratio: (a, b) => { const s = st[key(a, b)]; const n = s ? Object.keys(s.days).length : 0; return n ? (sessionWinRate(s.days) * n + 1) / (n + 2) : 0.5; },
+    record: (a, b) => st[key(a, b)]
   };
 }
 // Linked positions: neighbours in a row, every player to the next row, and attackers to the 3rd row in 4-row squads
@@ -661,6 +715,7 @@ let teamsMode = 'rating';
 $('teamsMode').onclick = () => { teamsMode = teamsMode === 'team' ? 'rating' : 'team'; renderTeams(); };
 $('teamsShot').onclick = () => screenshotCard($('teamsShot'));
 const awardFx = r => !r ? '' : r.bdo && r.boot ? 'bothc' : r.bdo ? 'bdoc' : r.boot ? 'bootc' : '';
+const provisionalMark = r => r && r.prov ? ' <span title="Fewer than 3 sessions: provisional rating" aria-label="Provisional rating: fewer than 3 sessions" style="font-size:.8em">⏳</span>' : '';
 // Full FC-style card used on the squad pitches (Teams, Sessions, TOTW, TOTY)
 function fcFut(n, r, pid, kindOverride, face) {
   const kind = kindOverride || (!r ? 'bronze' : r.toty ? 'toty' : r.totw ? 'totw' : r.ovr >= 75 ? 'gold' : r.ovr >= 65 ? 'silver' : 'bronze');
@@ -668,7 +723,7 @@ function fcFut(n, r, pid, kindOverride, face) {
   const ic = r && (r.bdo || r.boot) ? `<span class="bdo">${r.bdo ? '👑' : ''}${r.boot ? '👟' : ''}</span>` : '';
   return `<div class="fut fc ${kind} ${r && r.rare ? 'rare' : ''} ${awardFx(r)}" data-name="${esc(n)}"${pid ? ` data-pid="${pid}"` : ''}><div class="face">
     <div class="lt"><div class="ovr">${r ? r.ovr : '–'}</div><span class="tag">${label || '&nbsp;'}</span>${ic}</div>
-    <div class="av">${face || faceHtml(n)}</div><div class="nm">${esc(n)}</div><i class="ln"></i>
+    <div class="av">${face || faceHtml(n)}</div><div class="nm">${esc(n)}${provisionalMark(r)}</div><i class="ln"></i>
     <div class="sub"><span><b>${r ? r.sho : '–'}</b>SHO</span><span><b>${r ? r.pas : '–'}</b>PAS</span><span><b>${r ? r.def : '–'}</b>DEF</span></div></div></div>`;
 }
 const fcCard = (n, r, pid, kindOverride) => `<div class="pp">${fcFut(n, r, pid, kindOverride)}</div>`;
@@ -791,10 +846,11 @@ function renderSetup() {
   $('startBtn').disabled = teams.length < 2;
   renderPreMatch();
 }
-$('teamA').onchange = $('teamB').onchange = () => renderPreMatch();
+$('teamA').onchange = $('teamB').onchange = $('matchType').onchange = () => renderPreMatch();
 function renderPreMatch() {
   const a = +$('teamA').value, b = +$('teamB').value;
   if (teams.length < 2 || a === b || !teams[a]?.length || !teams[b]?.length) { $('preMatch').innerHTML = ''; return; }
+  if ($('matchType').value === 'long') { $('preMatch').textContent = 'Time-based predictions are disabled for long matches.'; return; }
   const mk = i => ({name: teamLabel(i), players: teams[i].map(id => ({name: pName(id)}))});
   const A = mk(a), B = mk(b), w = winProb(teamPow(A), teamPow(B), 0, 0, MATCH_MIN);
   $('preMatch').innerHTML = `<b>🔮 Pre-match prediction</b>` + probBar(A.name, B.name, w) +
@@ -805,7 +861,7 @@ $('startBtn').onclick = () => {
   if (a === b) return alert('Pick two different teams.');
   if (!teams[a].length || !teams[b].length) return alert('Both teams need at least one player.');
   const mk = (idx) => ({name: teamLabel(idx), players: teams[idx].map(id => ({id, name: pName(id), goals: 0, assists: 0}))});
-  game = {start: Date.now(), A: mk(a), B: mk(b)}; liveSel = null;
+  game = {start: Date.now(), A: mk(a), B: mk(b), longMatch: $('matchType').value === 'long'}; liveSel = null;
   localStorage.setItem('liveGame', JSON.stringify(game));
   showLive();
 };
@@ -816,56 +872,56 @@ function showLive() {
   const tick = () => {
     const s = Math.floor((Date.now() - game.start) / 1000);
     $('clock').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-    if (s - lastIns >= 5) { lastIns = s; renderInsights(); }
+    if (s - lastIns >= 5) { lastIns = s; keepLivePosition(() => renderInsights()); }
   };
   tick(); timer = setInterval(tick, 1000);
   renderLive();
 }
 const goals = t => t.players.reduce((s, p) => s + p.goals, 0);
-function renderLive() {
+function keepLivePosition(update, target) {
+  if (!$('game').classList.contains('active') || $('live').style.display === 'none') return update();
+  const rows = () => [...$('live').querySelectorAll('[data-live-player]')];
+  const row = target?.closest('[data-live-player]') || rows().find(el => {
+    const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight;
+  });
+  const name = row?.dataset.livePlayer, top = row?.getBoundingClientRect().top, y = scrollY;
+  update();
+  const replacement = name && rows().find(el => el.dataset.livePlayer === name);
+  const delta = replacement ? replacement.getBoundingClientRect().top - top : y - scrollY;
+  if (Math.abs(delta) > 0.5) scrollBy(0, delta);
+}
+function renderLive(target) {
+  keepLivePosition(() => {
+  $('longMatch').checked = !!game.longMatch;
   $('nameA').textContent = game.A.name; $('nameB').textContent = game.B.name;
   $('scoreA').textContent = goals(game.A); $('scoreB').textContent = goals(game.B);
   renderInsights();
   $('liveBal').innerHTML = balanceHtml([{label: game.A.name, names: activeNames(game.A)}, {label: game.B.name, names: activeNames(game.B)}]);
   const last = game.log?.[game.log.length - 1];
   $('undoBtn').disabled = !last;
-  const sug = suggestMotm();
-  $('motmSug').innerHTML = game.motm ? `⭐ Man of the match: <b>${esc(game.motm)}</b>` : sug
-    ? `⭐ Suggested man of the match: <b>${esc(sug.name)}</b> <span class="muted">(${sug.goals}⚽ ${sug.assists}🅰️${sug.win ? ', winning team' : ''})</span> <button id="motmAccept" style="padding:3px 10px">✔ Accept</button>` : '';
   $('undoBtn').textContent = last ? `↶ Undo: ${last.name} ${last.f === 'goals' ? '⚽' : '🅰️'}${last.d > 0 ? '+' : '−'}1` : '↶ Undo last';
   const inGame = new Set([...game.A.players, ...game.B.players].map(p => p.id));
   const cands = players.filter(p => isAvail(p) && !inGame.has(p.id));
   game.A.players.sort((x, y) => byName(x.name, y.name)); game.B.players.sort((x, y) => byName(x.name, y.name));
-  const side = (k, t) => `<h3>${esc(t.name)}</h3><table>` + t.players.map((p, i) => `<tr><td>${esc(p.name)}${p.left ? ' <span class="muted">(left)</span>' : ''}<br>
+  const side = (k, t) => `<h3>${esc(t.name)}</h3><table>` + t.players.map((p, i) => `<tr data-live-player="${esc(p.name)}"><td>${esc(p.name)}${p.left ? ' <span class="muted">(left)</span>' : ''}<br>
     ${p.left ? '' : `<button class="sec" data-act="move" data-k="${k}" data-i="${i}">⇄ Move</button> <button class="sec" data-act="remove" data-k="${k}" data-i="${i}">✕ Remove</button>
-    <button class="${p.gk ? '' : 'sec'}" title="Goalkeeper" data-act="gk" data-k="${k}" data-i="${i}">🧤</button> <button class="${game.motm === p.name ? '' : 'sec'}" title="Man of the match" data-act="motm" data-k="${k}" data-i="${i}">⭐</button>`}</td><td><div class="stat">
+    <button class="${p.gk ? '' : 'sec'}" title="Goalkeeper" data-act="gk" data-k="${k}" data-i="${i}">🧤</button>`}</td><td><div class="stat">
     <span class="ctr">⚽<button data-k="${k}" data-i="${i}" data-f="goals" data-d="-1">−</button><b>${p.goals}</b><button data-k="${k}" data-i="${i}" data-f="goals" data-d="1">+</button></span>
     <span class="ctr">🅰️<button data-k="${k}" data-i="${i}" data-f="assists" data-d="-1">−</button><b>${p.assists}</b><button data-k="${k}" data-i="${i}" data-f="assists" data-d="1">+</button>    </span>
         </div></td></tr>`).join('') + '</table>' +
         `<div class="row"><select data-addsel="${k}"><option value="">+ Add player…</option>${cands.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`;
       $('liveA').innerHTML = side('A', game.A); $('liveB').innerHTML = side('B', game.B);
+  }, target);
     }
-    // Suggested man of the match: goals + 0.7 x assists, plus a bonus for the winning team (half a goal) or a draw (quarter)
-function suggestMotm() {
-  const ga = goals(game.A), gb = goals(game.B);
-  let best = null;
-  [[game.A, ga, gb], [game.B, gb, ga]].forEach(([t, f, a]) => t.players.forEach(p => {
-    const win = f > a;
-    const s = p.goals + 0.7 * p.assists;
-    if (s <= 0) return;
-    const sc = s + (win ? 0.5 : f === a ? 0.25 : 0);
-    if (!best || sc > best.sc) best = {name: p.name, goals: p.goals, assists: p.assists, win, sc};
-  }));
-  return best;
-}
 // ---------- Live insights: win probability, momentum, timeline, top performers ----------
 const MATCH_MIN = 8;
 const teamPow = t => Math.max(1, t.players.filter(p => !p.left).reduce((s, p) => s + rOf(p.name).ovr, 0));
 function avgGoalsPerGame() {
   const gs = ratingCache.games || [];
   if (!gs.length) return 6;
-  const tot = gs.reduce((s, g) => s + [...g.teamA.players, ...g.teamB.players].reduce((x, p) => x + (p.goals || 0), 0), 0);
-  return Math.max(2, tot / gs.length);
+  const sessions = new Set(gs.map(sessionKey)).size;
+  const tot = gs.reduce((s, g) => s + g.scoreA + g.scoreB, 0);
+  return Math.max(2, tot / sessions / 10);
 }
 // Calibration: pick the strength exponent k that best explains the recorded results (log-likelihood, with a prior
 // pulling towards k = 4 so that a few games cannot give extreme values). Cached per loaded games list.
@@ -923,28 +979,30 @@ function liveData() {
   const elapsed = (Date.now() - game.start) / 1000, total = MATCH_MIN * 60, axis = Math.max(total, elapsed);
   const pa = teamPow(game.A), pb = teamPow(game.B), sA = goals(game.A), sB = goals(game.B);
   const rem = MATCH_MIN - elapsed / 60;
-  const w = winProb(pa, pb, sA, sB, rem), pre = winProb(pa, pb, 0, 0, MATCH_MIN);
+  const w = game.longMatch ? null : winProb(pa, pb, sA, sB, rem), pre = game.longMatch ? null : winProb(pa, pb, 0, 0, MATCH_MIN);
   const ev = liveEvents();
   let a = 0, b = 0, last = 0, leadA = 0, leadB = 0, level = 0;
-  const pts = [[0, pre]], lead = dt => { if (a > b) leadA += dt; else if (b > a) leadB += dt; else level += dt; };
+  const pts = pre ? [[0, pre]] : [], lead = dt => { if (a > b) leadA += dt; else if (b > a) leadB += dt; else level += dt; };
   ev.forEach(e => {
     if (e.f !== 'goals') return;
-    const t = e.t / 1000, rm = MATCH_MIN - t / 60, before = eqA(winProb(pa, pb, a, b, rm));
+    const t = e.t / 1000, rm = MATCH_MIN - t / 60, before = pre ? eqA(winProb(pa, pb, a, b, rm)) : null;
     lead(Math.max(0, t - last)); last = Math.max(last, t);
     e.k === 'A' ? a++ : b++;
-    const after = winProb(pa, pb, a, b, rm);
-    e.sw = e.k === 'A' ? eqA(after) - before : before - eqA(after);
-    pts.push([t, after]);
+    if (pre) {
+      const after = winProb(pa, pb, a, b, rm);
+      e.sw = e.k === 'A' ? eqA(after) - before : before - eqA(after);
+      pts.push([t, after]);
+    }
   });
   lead(Math.max(0, elapsed - last));
-  pts.push([elapsed, w]);
+  if (w) pts.push([elapsed, w]);
   const gev = ev.filter(e => e.f === 'goals');
-  const turning = gev.reduce((m, e) => !m || e.sw > m.sw ? e : m, null);
-  const gvTeam = k => { const g = gev.filter(e => e.k === k); return g.length ? g.reduce((s, e) => s + 1 + 4 * Math.max(0.05, e.sw), 0) / g.length : 1.6; };
+  const turning = pre ? gev.reduce((m, e) => !m || e.sw > m.sw ? e : m, null) : null;
+  const gvTeam = k => { const g = gev.filter(e => e.k === k); return g.length ? g.reduce((s, e) => s + (pre ? 1 + 4 * Math.max(0.05, e.sw) : 1), 0) / g.length : pre ? 1.6 : 1; };
   const conceded = k => k === 'A' ? sB : sA;
   const rate = [['A', game.A], ['B', game.B]].flatMap(([k, t]) => t.players.map(p => {
     const items = [];
-    gev.filter(e => e.name === p.name).forEach(e => items.push({ic: '⚽', pts: 1 + 4 * Math.max(0.05, e.sw), note: `+${Math.round(e.sw * 100)}% win equity`}));
+    gev.filter(e => e.name === p.name).forEach(e => items.push(pre ? {ic: '⚽', pts: 1 + 4 * Math.max(0.05, e.sw), note: `+${Math.round(e.sw * 100)}% win equity`} : {ic: '⚽', pts: 1, note: 'goal'}));
     ev.filter(e => e.f === 'assists' && e.name === p.name).forEach(() => items.push({ic: '🅰️', pts: 0.6 * gvTeam(k), note: 'assist'}));
     if (p.gk) items.push(conceded(k) === 0 ? {ic: '🧤', pts: 1, note: 'clean sheet'} : {ic: '🧤', pts: -Math.min(1, 0.25 * conceded(k)), note: `${conceded(k)} conceded`});
     const res = (k === 'A' ? sA - sB : sB - sA), bonus = res > 0 ? 0.4 : res < 0 ? -0.2 : 0;
@@ -1016,14 +1074,15 @@ function renderInsights() {
       ${sel.items.map(i => `<div>${i.ic} <b>${i.pts >= 0 ? '+' : ''}${i.pts.toFixed(1)}</b> <span class="muted">${i.note}</span></div>`).join('')}
       <div class="muted">Base 6.0${sel.bonus ? ` · ${sel.bonus > 0 ? 'winning' : 'losing'} team ${sel.bonus > 0 ? '+' : ''}${sel.bonus}` : ''}</div></div></div>`;
   })() : '';
-  const duos = duoFlags(d).map(x => `<div style="font-size:13px">🔗 <b>${esc(x.x)} &amp; ${esc(x.y)}</b> <span class="muted">are combining again — ${Math.round(x.r * 100)}% win rate together (${x.n} games)</span></div>`).join('');
+  const duos = duoFlags(d).map(x => `<div style="font-size:13px">🔗 <b>${esc(x.x)} &amp; ${esc(x.y)}</b> <span class="muted">are combining again — ${Math.round(x.r * 100)}% smoothed session result together (${x.n} games; draws count half)</span></div>`).join('');
   const tpText = d.turning && d.gev.length > 1 ? `<div style="font-size:13px;margin-top:4px">🔥 <b>Turning point:</b> ${mmss(d.turning.t / 1000)} ${esc(d.turning.name)} (${Math.round(d.turning.sw * 100)}% swing)</div>` : '';
-  const f = Math.max(0, Math.round(rem * 10) / 10), m = model();
+  const f = Math.max(0, Math.round(rem * 10) / 10), m = w ? model() : null;
   el.innerHTML = `<div style="border:1px solid #d5dbe3;border-radius:8px;padding:8px 12px;margin-bottom:10px">
+    ${w ? `
     <b>📈 Live win chances</b> <span class="muted" style="font-size:12px">(${rem > 0 ? f + ' min left of ' + MATCH_MIN : 'overtime'}; expected final ${w.ea.toFixed(1)} : ${w.eb.toFixed(1)})</span>
     ${probBar(game.A.name, game.B.name, w)}
     <div class="muted" style="font-size:11px">${m.n >= 4 ? `Model fitted on ${m.n} of your games (backtested on ratings from before each game; strength exponent ${m.k}${m.acc != null ? `; favourite won ${Math.round(m.acc * 100)}% of decided games` : ''})` : 'Default model (needs 4+ recorded games to fit)'}</div>
-    <div style="margin-top:8px"><b>Momentum</b> <span class="muted" style="font-size:12px">(bars per minute: up = ${esc(game.A.name)} favoured, down = ${esc(game.B.name)} · ⚽ = goals)</span></div>${momentumSvg(d)}
+    <div style="margin-top:8px"><b>Momentum</b> <span class="muted" style="font-size:12px">(bars per minute: up = ${esc(game.A.name)} favoured, down = ${esc(game.B.name)} · ⚽ = goals)</span></div>${momentumSvg(d)}` : '<div class="muted">Long match: time-based predictions and momentum are disabled. Live ratings use fixed goal and assist points.</div>'}
     <div class="muted" style="font-size:12px">Leading time: ${esc(game.A.name)} ${mmss(d.leadA)} · level ${mmss(d.level)} · ${esc(game.B.name)} ${mmss(d.leadB)}</div>${tpText}
     <div style="margin-top:10px"><b>Timeline</b></div><div>${timelineHtml(d)}</div>
     <div style="margin-top:10px"><b>⭐ Top performers</b> <span class="muted" style="font-size:12px">tap a name for the card</span><div>${tp}</div>${card}</div>${duos ? `<div style="margin-top:8px">${duos}</div>` : ''}</div>`;
@@ -1045,15 +1104,12 @@ function matchSummary() {
 }
 $('live').onclick = e => {
   const lp = e.target.closest('[data-lp]');
-  if (lp) { liveSel = lp.dataset.lp; return renderInsights(); }
-  if (e.target.id === 'motmAccept') { game.motm = suggestMotm().name; persistLive(); return renderLive(); }
+  if (lp) { liveSel = lp.dataset.lp; return keepLivePosition(() => renderInsights()); }
       const d = e.target.dataset;
       if (d.act) {
         const t = game[d.k], p = t.players[+d.i];
         if (d.act === 'gk') {
           const on = !p.gk; t.players.forEach(x => delete x.gk); if (on) p.gk = true;
-        } else if (d.act === 'motm') {
-          if (game.motm === p.name) delete game.motm; else game.motm = p.name;
         } else if (d.act === 'move') {
           const other = game[d.k === 'A' ? 'B' : 'A'];
           t.players.splice(+d.i, 1); other.players.push(p);
@@ -1061,28 +1117,29 @@ $('live').onclick = e => {
           if (!confirm(`${p.name} has stats. Remove from the game but keep their stats on record?`)) return;
           p.left = true;
         } else t.players.splice(+d.i, 1);
-        persistLive(); return renderLive();
+        persistLive(); return renderLive(e.target);
       }
   if (d.f) {
     const p = game[d.k].players[+d.i];
     const before = +p[d.f] || 0;
     p[d.f] = Math.max(0, before + +d.d);
     if (p[d.f] !== before) (game.log ??= []).push({name: p.name, f: d.f, d: p[d.f] - before, t: Date.now() - game.start, k: d.k});
-    persistLive(); renderLive();
+    persistLive(); renderLive(e.target);
   }
 };
-$('undoBtn').onclick = () => {
+$('undoBtn').onclick = event => {
   const e = game.log?.pop(); if (!e) return;
   const p = [...game.A.players, ...game.B.players].find(x => x.name === e.name);
   if (p) p[e.f] = Math.max(0, (+p[e.f] || 0) - e.d);
-  persistLive(); renderLive();
+  persistLive(); renderLive(event.target);
 };
 $('live').onchange = e => {
+  if (e.target.id === 'longMatch') { game.longMatch = e.target.checked; persistLive(); renderLive(e.target); return; }
   const k = e.target.dataset.addsel;
   if (!k || !e.target.value) return;
   const id = +e.target.value;
   game[k].players.push({id, name: pName(id), goals: 0, assists: 0});
-  persistLive(); renderLive();
+  persistLive(); renderLive(e.target);
 };
 const persistLive = () => localStorage.setItem('liveGame', JSON.stringify(game));
 function endLive() {
@@ -1097,11 +1154,11 @@ $('stopBtn').onclick = async () => {
   let winner = ga > gb ? game.A.name : gb > ga ? game.B.name : 'Draw';
   if (!confirm(`Stop game?\n${game.A.name} ${ga} : ${gb} ${game.B.name}\nResult: ${winner === 'Draw' ? 'Draw' : winner + ' wins'}`)) return;
   stopping = true;
-  const end = Date.now(), insight = matchSummary();
+  const end = Date.now(), insight = game.longMatch ? null : matchSummary();
   try {
     await add('games', {
       date: new Date(end).toISOString(), durationSec: Math.round((end - game.start) / 1000),
-      teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner, insight, ...(game.motm ? {motm: game.motm} : {})
+      teamA: game.A, teamB: game.B, scoreA: ga, scoreB: gb, winner, ...(insight ? {insight} : {})
     });
   } catch { stopping = false; return alert('Could not save the game. It is still running, try again.'); }
   stopping = false;
@@ -1110,10 +1167,11 @@ $('stopBtn').onclick = async () => {
 };
 
 // ---------- History / Stats ----------
-let editG = null;
+let editG = null, editOriginal = null;
 const STAT_FIELDS = [['goals', '⚽'], ['assists', '🅰️']];
 const pad2 = n => String(n).padStart(2, '0');
 const toLocalInput = iso => { const d = new Date(iso); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const insightFingerprint = g => JSON.stringify([toLocalInput(g.date), Math.round(g.durationSec / 60), ...[g.teamA, g.teamB].map(t => [t.name, t.players.map(p => [p.name, +p.goals || 0, +p.assists || 0, !!p.gk, !!p.left]).sort((a, b) => byName(a[0], b[0]))])]);
 function renderEditor() {
   const inGame = new Set([...editG.teamA.players, ...editG.teamB.players].map(p => p.name));
   const cands = players.filter(p => !inGame.has(p.name));
@@ -1131,7 +1189,6 @@ function renderEditor() {
     <div class="row"><label>Date &amp; time <input type="datetime-local" id="eDate" value="${toLocalInput(editG.date)}"></label>
     <label>Duration (min) <input type="number" min="0" id="eDur" style="width:70px" value="${Math.round(editG.durationSec / 60)}"></label></div>
     <div class="muted">Score and winner are calculated from the goals entered.</div>
-    <div class="row"><label>⭐ Man of the match <select data-emotm="1"><option value="">–</option>${[...editG.teamA.players, ...editG.teamB.players].map(p => `<option ${editG.motm === p.name ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label></div>
     <div class="match" style="margin-top:8px">${side('teamA')}${side('teamB')}</div>
     <div class="row" style="margin-top:10px"><button id="eSave">Save changes</button><button class="sec" id="eCancel">Cancel</button></div></div>`;
 }
@@ -1140,20 +1197,21 @@ async function saveEdit() {
   if (g.teamA.name === g.teamB.name) return alert('Pick two different team colours.');
   const d = new Date($('eDate').value);
   if (isNaN(d)) return alert('Enter a valid date and time.');
+  syncEditorInputs();
   g.date = d.toISOString(); g.durationSec = Math.max(0, Math.round(+$('eDur').value || 0)) * 60;
   g.scoreA = goals(g.teamA); g.scoreB = goals(g.teamB);
-  if (g.motm && ![...g.teamA.players, ...g.teamB.players].some(p => p.name === g.motm)) delete g.motm;
   g.winner = g.scoreA > g.scoreB ? g.teamA.name : g.scoreB > g.scoreA ? g.teamB.name : 'Draw';
+  if (insightFingerprint(g) !== editOriginal) delete g.insight;
   await put('games', g);
-  editG = null; renderHistory(); renderAll();
+  editG = null; editOriginal = null; renderHistory(); renderAll();
 }
 let histOpen = null; // days left open; null = first render (newest day open)
 async function renderHistory() {
   if (editG) return renderEditor();
   const games = (await all('games')).reverse();
   const gameHtml = g => {
-    const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists || p.gk || g.motm === p.name).map(p =>
-          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.gk ? '🧤 ' : ''}${g.motm === p.name ? '⭐' : ''}`).join('<br>') || '<span class="muted">no stats</span>';
+    const rows = t =>     [...t.players].sort((x, y) => byName(x.name, y.name)).filter(p => p.goals || p.assists || p.gk).map(p =>
+          `${esc(p.name)}: ${p.goals ? '⚽' + p.goals + ' ' : ''}${p.assists ? '🅰️' + p.assists + ' ' : ''}${p.gk ? '🧤 ' : ''}`).join('<br>') || '<span class="muted">no stats</span>';
     return `<div class="card" style="border:1px solid #e3e8ee">
       <div class="row" style="justify-content:space-between"><b>${new Date(g.date).toLocaleString()}</b>
       <span class="win">${g.winner === 'Draw' ? 'Draw' : '🏆 ' + esc(g.winner)}</span>
@@ -1190,9 +1248,9 @@ $('historyList').addEventListener('toggle', e => {
       }
       $('historyList').onclick = async e => {
   const d = e.target.dataset;
-  if (d.gedit) { editG = structuredClone((await all('games')).find(g => g.id === +d.gedit)); return renderHistory(); }
+  if (d.gedit) { editG = structuredClone((await all('games')).find(g => g.id === +d.gedit)); editOriginal = insightFingerprint(editG); return renderHistory(); }
   if (d.erem) { syncEditorInputs(); editG[d.erem].players.splice(+d.i, 1); return renderEditor(); }
-  if (e.target.id === 'eCancel') { editG = null; return renderHistory(); }
+  if (e.target.id === 'eCancel') { editG = null; editOriginal = null; return renderHistory(); }
   if (e.target.id === 'eSave') return saveEdit();
   const id = +d.gdel; if (!id || !confirm('Delete this game?')) return;
   await del('games', id); renderHistory(); renderAll();
@@ -1202,7 +1260,6 @@ $('historyList').onchange = e => {
   if (d.f) editG[d.k].players[+d.i][d.f] = Math.max(0, Math.floor(+e.target.value || 0));
   else if (d.ename) editG[d.ename].name = e.target.value;
   else if (d.egk) { editG[d.egk].players.forEach(p => { if (p.name === e.target.value) p.gk = true; else delete p.gk; }); }
-  else if (d.emotm) { if (e.target.value) editG.motm = e.target.value; else delete editG.motm; }
   else if (d.eadd && e.target.value) {
     const pl = players.find(p => p.id === +e.target.value);
     editG[d.eadd].players.push({id: pl.id, name: pl.name, goals: 0, assists: 0});
@@ -1308,8 +1365,8 @@ function psTable(day) {
     return (k === 'name' ? byName(x, y) : y - x) * dir || b[1].goals - a[1].goals || byName(a[0], b[0]);
   });
   const th = (key, label) => `<th data-psort="${key}" style="cursor:pointer;user-select:none">${label}${k === key ? (dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
-  return `<table><tr>${th('name', 'Player')}${th('games', 'Games')}${th('wins', 'Wins')}${th('goals', 'Goals')}${th('assists', 'Assists')}${th('cs', '🧤 CS')}${th('motm', '⭐ MOTM')}${th('pct', 'Win %')}</tr>` +
-    list.map(([n, s]) => `<tr><td>${esc(n)} <span class="muted">${esc(main[n] || '')}</span></td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.cs}</td><td>${s.motm}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>';
+  return `<table><tr>${th('name', 'Player')}${th('games', 'Games')}${th('wins', 'Wins')}${th('goals', 'Goals')}${th('assists', 'Assists')}${th('cs', '🧤 CS')}${th('pct', 'Win %')}</tr>` +
+    list.map(([n, s]) => `<tr><td>${esc(n)} <span class="muted">${esc(main[n] || '')}</span></td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${s.cs}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>';
 }
 $('sessionList').addEventListener('click', e => {
   const th = e.target.closest('[data-psort]'); if (!th) return;
@@ -1368,11 +1425,10 @@ async function renderSessions() {
     const totwHtml = top.length ? renderPitch({rows: arrangeSquad(top.map(p => p.name), n => st[n], ratingCache.games), byName: st, games: gs}, '📋 Team of the Week', '5 best-rated players of this session', '', '', tkey) : '';
     const ps = {};
     gs.forEach(g => [[g.teamA, g.scoreB], [g.teamB, g.scoreA]].forEach(([tm, conc]) => tm.players.forEach(p => {
-      const s = ps[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, cs: 0, motm: 0};
+      const s = ps[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, cs: 0};
       s.games++; s.goals += p.goals || 0; s.assists += p.assists || 0;
       if (g.winner === tm.name) s.wins++;
       if (p.gk && conc === 0) s.cs++;
-      if (g.motm === p.name) s.motm++;
     })));
     sessStats[day] = {ps, main};
     const statsHtml = `<details class="noshot" style="margin-top:10px"><summary style="cursor:pointer"><b>📊 Player stats this session</b></summary>
@@ -1398,136 +1454,158 @@ $('sessionList').addEventListener('toggle', e => {
   d.open ? sessOpen.add(d.dataset.day) : sessOpen.delete(d.dataset.day);
   if (d.open) drawLinks(sessPitchData, $('sessionList'));
 }, true);
-// Ridge regression over every team-match: how many goals a team scores (or concedes) are explained by its players, so
-// teammates share the credit/blame and mixed teams separate the players. Shrunk towards 0 for few matches.
-function ridgeImpact(games, scored, wOf = () => 1) {
+// Joint attack/conceding model: each scoring side faces the defensive coefficients of the opposing side.
+function ridgeImpact(games, wOf, scaleOf, excluded = new Set()) {
   const rows = [];
-  games.forEach(g => [[g.teamA, g.scoreA, g.scoreB], [g.teamB, g.scoreB, g.scoreA]].forEach(([t, gf, ga]) => {
-    const ns = [...new Set(t.players.map(p => p.name))];
-    if (ns.length) rows.push({ns, y: scored ? gf : ga, w: wOf(g)});
+  games.forEach(g => [[g.teamA, g.teamB, g.scoreA], [g.teamB, g.teamA, g.scoreB]].forEach(([t, opponent, goals]) => {
+    const attack = [...new Set(t.players.map(p => p.name).filter(n => !excluded.has(n)))], defence = [...new Set(opponent.players.map(p => p.name).filter(n => !excluded.has(n)))];
+    if (attack.length && defence.length) rows.push({attack, defence, y: goals * scaleOf(g), w: wOf(g)});
   }));
-  const b = {};
-  if (!rows.length) return b;
-  const mu = rows.reduce((s, r) => s + r.w * r.y, 0) / rows.reduce((s, r) => s + r.w, 0), LAMBDA = 6, cnt = {};
-  rows.forEach(r => r.ns.forEach(n => { b[n] = 0; cnt[n] = (cnt[n] || 0) + r.w; }));
-  for (let it = 0; it < 40; it++) {
-    Object.keys(b).forEach(n => {
-      let num = 0;
-      rows.forEach(r => { if (r.ns.includes(n)) num += r.w * (r.y - mu - r.ns.reduce((s, m) => s + (m === n ? 0 : b[m]), 0)); });
-      b[n] = num / (cnt[n] + LAMBDA);
+  const attack = {}, defence = {}, exposure = {attack: {}, defence: {}};
+  if (!rows.length) return {attack, defence};
+  let mu = rows.reduce((s, r) => s + r.w * r.y, 0) / rows.reduce((s, r) => s + r.w, 0);
+  rows.forEach(r => ['attack', 'defence'].forEach(side => r[side].forEach(n => {
+    const b = side === 'attack' ? attack : defence;
+    b[n] = 0; exposure[side][n] = (exposure[side][n] || 0) + r.w;
+  })));
+  const prediction = r => r.attack.reduce((s, n) => s + attack[n], mu) + r.defence.reduce((s, n) => s + defence[n], 0);
+  for (let it = 0; it < 80; it++) {
+    ['attack', 'defence'].forEach(side => {
+      const b = side === 'attack' ? attack : defence;
+      Object.keys(b).forEach(n => {
+        let num = 0;
+        rows.forEach(r => { if (r[side].includes(n)) num += r.w * (r.y - prediction(r) + b[n]); });
+        b[n] = num / (exposure[side][n] + 6);
+      });
     });
+    mu += rows.reduce((s, r) => s + r.w * (r.y - prediction(r)), 0) / rows.reduce((s, r) => s + r.w, 0);
   }
-  return b;
+  return {attack, defence};
 }
 // Automatic role guess from defImp (goals conceded explained by the player; negative = good).
-// "DEF" needs 6+ games, a low attack share AND a better-than-average defensive impact.
+// "DEF" needs at least two sessions, a low attack share and better-than-average defensive impact.
+function eligibleYearlyAwards(list, games) {
+  const sessions = new Set(games.map(g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }));
+  const minimum = Math.ceil(sessions.size * 0.25);
+  return list.filter(p => p.days.size >= minimum);
+}
 function assignRoles(list, games) {
   const b = Object.fromEntries(list.map(p => [p.name, p.defImp || 0]));
   const pct = (arr, v) => arr.filter(x => x < v).length / Math.max(1, arr.length - 1);
-  const ready = list.filter(p => p.games >= 6);
-  const atts = ready.map(p => (p.g + 0.7 * p.a) / p.games), imps = ready.map(p => b[p.name]);
+  const ready = list.filter(p => p.days.size >= 2);
+  const attack = p => (p.wg + 0.7 * p.wa) / p.wn;
+  const atts = ready.map(attack), imps = ready.map(p => b[p.name]);
   list.forEach(p => {
     p.role = null;
-    if (p.games < 6 || ready.length < 5) return;
-    const ap = pct(atts, (p.g + 0.7 * p.a) / p.games), dp = pct(imps, b[p.name]);
+    if (p.days.size < 2 || ready.length < 5) return;
+    const ap = pct(atts, attack(p)), dp = pct(imps, b[p.name]);
     if (ap <= 0.4 && dp <= 0.4) p.role = 'DEF';
   });
 }
 async function computeRatings(src, flat) {
   const games = src || await all('games');
-  const day = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+  const day = sessionKey;
   const days = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date)).slice(0, 5);
   const recentDays = new Set(days);
-  // Recency: every match is weighted 0.5^(sessions ago / HALF_LIFE), so form counts more without a hard cut-off.
-  // `flat` (awards, one-session or one-year views) gives every match the same weight.
+  // Sessions have equal weight before recency; flat views omit the recency adjustment.
   const HALF_LIFE = 8;
   const allDays = [...new Set(games.map(g => day(g)))].sort((a, b) => new Date(games.find(g => day(g) === b).date) - new Date(games.find(g => day(g) === a).date));
-  const wOf = g => flat ? 1 : Math.pow(0.5, allDays.indexOf(day(g)) / HALF_LIFE);
-  // strength: name -> first-pass rating (or null). Used to judge each match against the quality of teammates and opponents.
-  const build = strength => {
+  const rotNames = new Set(players.filter(p => p.rotation).map(p => p.name));
+  const counts = {}, appearances = {}, maxAppearances = {}, partners = {}, opponents = {};
+  games.forEach(g => {
+    const d = day(g); counts[d] = (counts[d] || 0) + 1;
+    maxAppearances[d] = Math.max(1, maxAppearances[d] || 0);
+    new Set([...g.teamA.players, ...g.teamB.players].map(p => p.name).filter(n => !rotNames.has(n))).forEach(n => {
+      const byDay = appearances[n] ??= {}; byDay[d] = (byDay[d] || 0) + 1;
+      maxAppearances[d] = Math.max(maxAppearances[d] || 0, byDay[d]);
+    });
+    [g.teamA, g.teamB].forEach(t => {
+      const names = [...new Set(t.players.map(p => p.name).filter(n => !rotNames.has(n)))];
+      names.forEach(n => names.filter(other => other !== n).forEach(other => {
+        const shared = partners[n] ??= {}; shared[other] = (shared[other] || 0) + 1;
+      }));
+    });
+    [[g.teamA, g.teamB], [g.teamB, g.teamA]].forEach(([t, o]) => {
+      [...new Set(t.players.map(p => p.name).filter(n => !rotNames.has(n)))].forEach(n => [...new Set(o.players.map(p => p.name).filter(n => !rotNames.has(n)))].forEach(other => {
+        const faced = opponents[n] ??= {}; faced[other] = (faced[other] || 0) + 1;
+      }));
+    });
+  });
+  const recency = g => flat ? 1 : Math.pow(0.5, allDays.indexOf(day(g)) / HALF_LIFE);
+  const wOf = g => 6 * recency(g) / counts[day(g)];
+  const playerWeight = g => 6 * recency(g) / maxAppearances[day(g)];
+  // Put goals on a common ten-match session scale, without using unreliable durations.
+  const scaleOf = g => maxAppearances[day(g)] / 10;
+  const build = () => {
     const m = {};
     games.forEach(g => {
-      const rec = recentDays.has(day(g)), mw = wOf(g);
-      const margin = Math.abs(g.scoreA - g.scoreB);
+      const rec = recentDays.has(day(g)), scale = scaleOf(g);
+      const margin = Math.abs(g.scoreA - g.scoreB) * scale;
       const aw = margin <= 1 ? 1.15 : margin >= 4 ? 0.85 : 1; // goals and assists in close matches count a bit more than in blowouts
-      const avg = (t, skip) => {
-        const v = t.players.filter(x => x.name !== skip && strength?.[x.name] != null).map(x => strength[x.name]);
-        return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
-      };
-      [[g.teamA, g.teamB], [g.teamB, g.teamA]].forEach(([t, o]) => t.players.forEach(p => {
-        const conc = t === g.teamA ? g.scoreB : g.scoreA;
-        const s = m[p.name] ??= {games: 0, wn: 0, wcs: 0, wconc: 0, rGames: 0, g: 0, a: 0, w: 0, rg: 0, ra: 0, gd: 0, wg: 0, wa: 0, ti: 0, att: 0, gkG: 0, gkS: 0, conc: 0, mg: 0, motm: 0, days: new Set()};
+      [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
+        const conc = t === g.teamA ? g.scoreB : g.scoreA, mw = playerWeight(g);
+        const s = m[p.name] ??= {games: 0, wn: 0, rGames: 0, g: 0, a: 0, rg: 0, ra: 0, wg: 0, wa: 0, att: 0, gkG: 0, gkWeight: 0, gkS: 0, conc: 0, days: new Set(), winDays: {}};
         s.days.add(day(g));
-        if (p.gk) { const c = t === g.teamA ? g.scoreB : g.scoreA; s.gkG++; s.conc += c; s.gkS += Math.max(0, 1 - c / 4); }
-        if (g.motm) { s.mg++; if (g.motm === p.name) s.motm++; }
-        const w = g.winner === t.name ? 1 : g.winner === 'Draw' ? 0.5 : 0;
-        const gd = t === g.teamA ? g.scoreA - g.scoreB : g.scoreB - g.scoreA;
-        // match impact = 60% result + 40% goal difference (capped at +-3), then adjusted for opponent strength vs teammates' strength
-        let ti = 0.6 * w + 0.4 * (0.5 + Math.max(-3, Math.min(3, gd)) / 6);
-        const mine = avg(t, p.name), opp = avg(o);
-        if (mine != null && opp != null) ti += Math.max(-0.12, Math.min(0.12, (opp - mine) * 0.005));
-        ti = Math.max(0, Math.min(1, ti));
-        s.wcs += mw * (conc === 0 ? 1 : 0); s.wconc += mw * conc;
-        s.games++; s.wn += mw; s.g += p.goals; s.a += p.assists; s.w += w; s.gd += gd;
-        s.wg += mw * p.goals; s.wa += mw * p.assists; s.ti += mw * ti; s.att += mw * (p.goals + 0.7 * p.assists) * aw;
+        if (p.gk) { s.gkG++; s.conc += conc; s.gkWeight += mw; s.gkS += mw * Math.max(0, 1 - conc * scale / 4); }
+        const record = s.winDays[day(g)] ??= {games: 0, wins: 0};
+        record.games++; if (g.winner === t.name) record.wins++;
+        s.games++; s.wn += mw; s.g += p.goals; s.a += p.assists;
+        s.wg += mw * p.goals * scale; s.wa += mw * p.assists * scale; s.att += mw * (p.goals + 0.7 * p.assists) * scale * aw;
         if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; }
       }));
     });
     return m;
   };
   const rate = (v, n) => n ? v / n : 0;
-  const offB = ridgeImpact(games, true, wOf), defB = ridgeImpact(games, false, wOf);
-  const scoreList = strength => {
-  const list = Object.entries(build(strength)).map(([name, s]) => ({name, ...s}));
-  const maxG = Math.max(0, ...list.map(p => rate(p.wg, p.wn))), maxA = Math.max(0, ...list.map(p => rate(p.wa, p.wn)));
-  // attack per match (goals + 0.7 x assists, close matches weigh more) is pulled towards the group average for small samples
-  const K = 2, tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.wn], [0, 0]), mean = rate(tot[0], tot[1]);
-  const attOf = (v, n) => n ? (v + K * mean) / (n + K) : 0;
-  const maxAtt = Math.max(0, ...list.map(p => attOf(p.att, p.wn)));
-  const sumWn = list.reduce((s, p) => s + p.wn, 0) || 1;
-  const meanCS = list.reduce((s, p) => s + p.wcs, 0) / sumWn, meanConc = list.reduce((s, p) => s + p.wconc, 0) / sumWn;
+  const {attack: offB, defence: defB} = ridgeImpact(games, wOf, scaleOf, rotNames);
+  const list = Object.entries(build()).filter(([name]) => !rotNames.has(name)).map(([name, s]) => ({name, ...s}));
+  list.forEach(p => {
+    p.effectiveSessions = [...p.days].reduce((s, d) => s + appearances[p.name][d] / maxAppearances[d], 0);
+    p.partnerGames = Math.max(0, ...Object.values(partners[p.name] || {}));
+    p.opponentGames = Math.max(0, ...Object.values(opponents[p.name] || {}));
+    p.partnerNames = Object.entries(partners[p.name] || {}).filter(([, n]) => n === p.partnerGames).map(([name]) => name).sort(byName);
+    p.opponentNames = Object.entries(opponents[p.name] || {}).filter(([, n]) => n === p.opponentGames).map(([name]) => name).sort(byName);
+  });
+  const totalWeight = list.reduce((s, p) => s + p.wn, 0);
+  const meanG = rate(list.reduce((s, p) => s + p.wg, 0), totalWeight), meanA = rate(list.reduce((s, p) => s + p.wa, 0), totalWeight);
+  const PRIOR = 12;
+  // Bound extreme rates before shrinking, so a single exceptional session cannot bypass the prior.
+  const adjustedIndex = (v, p, mean, scale) => {
+    if (!mean) return 0.5;
+    const observed = Math.min(1, rate(v, p.wn) / (scale * mean));
+    const confidence = p.wn / (p.wn + PRIOR);
+    return confidence * observed + (1 - confidence) / scale;
+  };
+  const tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.wn], [0, 0]), mean = rate(tot[0], tot[1]);
   list.forEach(p => {
     // SHO / PAS (goals / assists per match, recency-weighted) are only shown on the card
-    const sub = [maxG ? rate(p.wg, p.wn) / maxG : 0, maxA ? rate(p.wa, p.wn) / maxA : 0];
-    // match impact is pulled towards the middle for small samples (like 2 extra average matches), so 1 lucky win is not 100%
-    const win = (p.ti + 1) / (p.wn + 2);
-    p.winPct = Math.round(100 * rate(p.w, p.games));
-    const conf = 0.7 + 0.3 * Math.min(1, p.games / 5);
-    // attack = goals + 0.7 x assists per match, scaled to the best player
-    const att = maxAtt ? attOf(p.att, p.wn) / maxAtt : 0;
-    // man of the match (only when votes exist) and goalkeeper performance (only for players who played in goal)
-    const hasMotm = games.some(g => g.motm);
-    const motmScore = Math.min(1, 4 * p.motm / (p.mg + 2));
+    const sub = [adjustedIndex(p.wg, p, meanG, 2.5), adjustedIndex(p.wa, p, meanA, 2.5)];
+    p.winPct = Math.round(100 * sessionWinRate(p.winDays));
+    const att = adjustedIndex(p.att, p, mean, 2);
     // ridge impact = goals the team scores more and concedes fewer with him (teammates' share removed); +-0.6 goals per match = full scale
     p.offImp = Math.round(100 * (offB[p.name] || 0)) / 100; p.defImp = Math.round(100 * (defB[p.name] || 0)) / 100;
     const impIdx = Math.max(0, Math.min(1, 0.5 + ((offB[p.name] || 0) - (defB[p.name] || 0)) / 1.2));
     p.impIdx = Math.round(100 * impIdx);
-    p.gks = p.gkG ? (p.gkS + 1) / (p.gkG + 2) : null;
-    // DEF index: 50% defensive impact (ridge), 20% clean-sheet rate, 15% goals conceded per match, 15% goalkeeper record
-    // (only for players who played in goal; otherwise its weight goes to the other three). Each part is pulled towards the group mean.
+    p.gks = p.gkG ? (p.gkS + 1) / (p.gkWeight + 2) : null;
     const clamp01 = v => Math.max(0, Math.min(1, v));
-    const csR = (p.wcs + K * meanCS) / (p.wn + K), cdR = (p.wconc + K * meanConc) / (p.wn + K);
-    const parts = [[0.5, clamp01(0.5 - (defB[p.name] || 0) / 1.2)], [0.2, clamp01(0.5 + (csR - meanCS) / 0.6)], [0.15, clamp01(0.5 - (cdR - meanConc) / 4)]];
-    if (p.gkG) parts.push([0.15, p.gks]);
-    const defIdx = parts.reduce((s, [w, v]) => s + w * v, 0) / parts.reduce((s, [w]) => s + w, 0);
-    let score = ((hasMotm ? 0.5 : 0.55) * att + (hasMotm ? 0.2 : 0.22) * impIdx + (hasMotm ? 0.12 : 0.13) * win + 0.1 * defIdx + (hasMotm ? 0.08 * motmScore : 0)) * conf;
-    if (p.gkG) { const share = 0.4 * Math.min(1, p.gkG / p.games); score = score * (1 - share) + p.gks * share * conf; }
-    p.attIdx = Math.round(100 * att); p.motmScore = hasMotm ? Math.round(100 * motmScore) : null; p.prov = p.games < 5;
-    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.win = Math.round(40 + 59 * win); p.def = Math.round(40 + 59 * defIdx);
-    p.ovr = Math.min(99, Math.round(40 + 59 * score));
+    const gkShare = p.gkG ? Math.min(1, p.gkWeight / p.wn) : 0;
+    const defIdx = clamp01(0.5 - (defB[p.name] || 0) / 1.2) * (1 - 0.15 * gkShare) + (p.gks || 0) * 0.15 * gkShare;
+    let score = 0.60 * att + 0.40 * impIdx;
+    if (gkShare) score = score * (1 - 0.25 * gkShare) + p.gks * 0.25 * gkShare;
+    p.ratingParts = {attack: 59 * 0.60 * att * (1 - 0.25 * gkShare), impact: 59 * 0.40 * impIdx * (1 - 0.25 * gkShare), goalkeeper: gkShare ? 59 * p.gks * 0.25 * gkShare : 0, gkShare};
+    p.attIdx = Math.round(100 * att); p.prov = p.days.size < 3;
+    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.def = Math.round(40 + 59 * defIdx);
+    p.baseScore = score;
+  });
+  list.forEach(p => {
+    p.confidence = p.wn / (p.wn + PRIOR);
+    p.ovr = Math.min(99, Math.round(40 + 59 * p.baseScore));
+    delete p.baseScore;
   });
   list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
-  return list;
-  };
-  // pass 1 = plain ratings; pass 2 re-scores every match against the pass-1 strength of teammates and opponents
-  let list = scoreList(null);
-  list = scoreList(Object.fromEntries(list.map(p => [p.name, p.ovr])));
-  // rotation (filler) players never appear in rankings, awards or the group averages
-  const rotNames = new Set((typeof players !== 'undefined' ? players : []).filter(p => p.rotation).map(p => p.name));
-  if (rotNames.size) list = list.filter(p => !rotNames.has(p.name));
   assignRoles(list, games);
   if (src) return {list, days};
-  const byName = Object.fromEntries(list.map(p => [p.name, p]));
+  const ratingsByName = Object.fromEntries(list.map(p => [p.name, p]));
   // TOTW / TOTY: the 5 best-rated players of the period, laid out as a 1-2-2 squad
   // (top scorers up front, the others placed for the best chemistry)
   const selectTeam = (l, gs) => {
@@ -1541,8 +1619,8 @@ async function computeRatings(src, flat) {
     const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
     const lastGames = games.filter(g => dk(g) === days[0]);
     const sel = selectTeam((await computeRatings(lastGames, true)).list, lastGames);
-    sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].totw = true; });
-    squad = {rows: sel.rows, byName, day: lastGames[0].date, games: lastGames, all: games};
+    sel.picked.forEach(p => { if (ratingsByName[p.name]) ratingsByName[p.name].totw = true; });
+    squad = {rows: sel.rows, byName: ratingsByName, day: lastGames[0].date, games: lastGames, all: games};
   }
   // Rare (shiny): played at least 50% of the last 5 match days (needs at least 2 match days)
   if (days.length >= 2) list.forEach(p => { p.rare = [...p.days].filter(d => days.includes(d)).length >= days.length / 2; });
@@ -1553,9 +1631,12 @@ async function computeRatings(src, flat) {
   if (active) {
     const yg = games.filter(g => new Date(g.date).getFullYear() === year);
     if (yg.length) {
-      const sel = selectTeam((await computeRatings(yg, true)).list, yg);
-      sel.picked.forEach(p => { if (byName[p.name]) byName[p.name].toty = true; });
-      toty = {rows: sel.rows, byName, year, games: yg, all: games};
+      const eligible = eligibleYearlyAwards((await computeRatings(yg, true)).list, yg);
+      if (eligible.length) {
+        const sel = selectTeam(eligible, yg);
+        sel.picked.forEach(p => { if (ratingsByName[p.name]) ratingsByName[p.name].toty = true; });
+        toty = {rows: sel.rows, byName: ratingsByName, year, games: yg, all: games};
+      }
     }
   }
   // Ballon d'Or: awarded 15 October from that year's games up to the award day, held until the next 15 October
@@ -1563,12 +1644,12 @@ async function computeRatings(src, flat) {
   const awardEnd = new Date(awardYear, 9, 15, 23, 59, 59);
   const bg = games.filter(g => { const d = new Date(g.date); return d.getFullYear() === awardYear && d <= awardEnd; });
   if (bg.length) {
-    const lst = (await computeRatings(bg, true)).list;
+    const lst = eligibleYearlyAwards((await computeRatings(bg, true)).list, bg);
     const best = lst.find(p => p.g + p.a > 0);
-    if (best && byName[best.name]) byName[best.name].bdo = true;
+    if (best && ratingsByName[best.name]) ratingsByName[best.name].bdo = true;
     // Golden Boot: same award date and period, most goals (ties: higher rating)
     const boot = [...lst].filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.ovr - a.ovr)[0];
-    if (boot && byName[boot.name]) byName[boot.name].boot = true;
+    if (boot && ratingsByName[boot.name]) ratingsByName[boot.name].boot = true;
   }
   return {list, days, squad, toty};
 }
@@ -1587,11 +1668,11 @@ async function computeHonours() {
   const years = [...new Set(games.map(g => new Date(g.date).getFullYear()))];
   for (const y of years) {
     const yg = games.filter(g => new Date(g.date).getFullYear() === y);
-    if (y < now.getFullYear() - 1 || (y === now.getFullYear() - 1 && now >= new Date(now.getFullYear(), 0, 15))) (await top5(yg)).forEach(p => add(p.name, 'toty'));
+    if (y < now.getFullYear() - 1 || (y === now.getFullYear() - 1 && now >= new Date(now.getFullYear(), 0, 15))) eligibleYearlyAwards((await computeRatings(yg, true)).list, yg).slice(0, 5).forEach(p => add(p.name, 'toty'));
     if (now >= new Date(y, 9, 15)) {
       const bg = games.filter(g => new Date(g.date) <= new Date(y, 9, 15, 23, 59, 59) && new Date(g.date).getFullYear() === y);
       if (bg.length) {
-        const lst = (await computeRatings(bg, true)).list;
+        const lst = eligibleYearlyAwards((await computeRatings(bg, true)).list, bg);
         const best = lst.find(p => p.g + p.a > 0); if (best) add(best.name, 'bdo');
         const boot = [...lst].filter(p => p.g > 0).sort((a, b) => b.g - a.g || b.ovr - a.ovr)[0]; if (boot) add(boot.name, 'boot');
       }
@@ -1623,7 +1704,7 @@ function renderPitch(squad, title, sub, emptyMsg, cls = '', key = '') {
   return `<div style="flex:1 1 280px"><h3>${title} <span class="muted">— ${sub}</span>${toggle}</h3>
     <div class="pitch ${cls}" data-squad="${key || (cls ? 'toty' : 'totw')}">${line(s.ATT)}${line(s.MID)}${line(s.DEF)}${line(s.GK)}</div></div>`;
 }
-// Chemistry lines between linked positions: green = winning pair, orange = average, red = losing or never together
+// Chemistry lines between linked positions; unknown pairs are neutral and dashed.
 function drawLinks(data, root = document) {
   root.querySelectorAll('.pitch[data-squad]').forEach(pitch => {
     const sq = data[pitch.dataset.squad]; if (!sq) return;
@@ -1639,11 +1720,13 @@ function drawLinks(data, root = document) {
       const na = a.dataset.name, nb = b.dataset.name, t = ch.together(na, nb), ratio = ch.ratio(na, nb);
       const ln = document.createElementNS(NS, 'line'), [x1, y1] = center(a), [x2, y2] = center(b);
       ln.setAttribute('x1', x1); ln.setAttribute('y1', y1); ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
-      ln.setAttribute('stroke', t === 0 || ratio < 0.4 ? '#e02424' : ratio >= 0.55 ? '#22e06b' : '#ffb020');
-      ln.setAttribute('stroke-width', skip ? 3 : t === 0 || ratio < 0.4 ? 3 : ratio >= 0.55 ? 5 : 3);
+      ln.setAttribute('stroke', t === 0 ? '#aab4bf' : ratio < 0.4 ? '#e02424' : ratio >= 0.55 ? '#22e06b' : '#ffb020');
+      ln.setAttribute('stroke-width', skip ? 3 : t > 0 && ratio >= 0.55 ? 5 : 3);
+      if (!t) ln.setAttribute('stroke-dasharray', '6 5');
       // row-skipping links are drawn first (underneath), full lines at normal width
       const rec = ch.record(na, nb);
-      const tip = document.createElementNS(NS, 'title'); tip.textContent = t ? `${na} + ${nb}: ${t} game${t === 1 ? '' : 's'} together, ${Math.round(100 * rec.w / rec.n)}% win rate (all time)` : `${na} + ${nb}: never played together`;
+      const n = rec ? Object.keys(rec.days).length : 0;
+      const tip = document.createElementNS(NS, 'title'); tip.textContent = t ? `${na} + ${nb}: ${t} game${t === 1 ? '' : 's'} in ${n} session${n === 1 ? '' : 's'}; ${Math.round(100 * sessionWinRate(rec.days))}% actual session-average result, ${Math.round(100 * ratio)}% after smoothing (draws count half)` : `${na} + ${nb}: no shared matches; neutral estimate`;
       ln.appendChild(tip); svg.appendChild(ln);
     });
     pitch.prepend(svg);
@@ -1653,15 +1736,14 @@ async function renderRanking() {
   const {list, days, squad, toty} = await computeRatings();
   $('rankPitch').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:16px">` +
     renderPitch(squad, '📋 Team of the Week', squad ? new Date(squad.day).toLocaleDateString() : '', 'No games played yet.') +
-    renderPitch(toty, '🏆 Team of the Year', toty ? toty.year : '', 'Available after 15 January, based on the previous year\'s games.', 'toty-pitch') + `</div>
-    <div class="muted" style="font-size:12px">1-2-2: the 5 best-rated players. The 2 top scorers play up front, the other 3 are placed for the best chemistry. TOTW = last session, TOTY = previous year.<br>
-    Chemistry lines = all-time win rate of the two players when on the same team: <b style="color:#22a84f">green</b> = winning pair, <b style="color:#d98a00">orange</b> = average, <b style="color:#e02424">red</b> = losing pair or never played together.</div>`;
+    renderPitch(toty, '🏆 Team of the Year', toty ? toty.year : '', 'Available after 15 January, when eligible players have games in the previous year.', 'toty-pitch') + `</div>
+    <div class="muted" style="font-size:12px">Chemistry: <b style="color:#22a84f">green</b> stronger, <b style="color:#d98a00">orange</b> average, <b style="color:#e02424">red</b> weaker, grey dashed unknown. Based on shared team results.</div>`;
   drawLinks({totw: squad, toty});
   const hon = await computeHonours();
   $('honours').innerHTML = `<h3 style="margin-top:0">🏅 Honours standings</h3>` + (hon.length
     ? `<table style="font-size:13px"><tr><th>#</th><th>Player</th><th title="Ballon d'Or">👑</th><th title="Team of the Year">🏆 TOTY</th><th title="Golden Boot">👟</th><th title="Team of the Week">📋 TOTW</th><th>Total</th></tr>` +
       hon.map((h, i) => `<tr><td>${i + 1}</td><td>${esc(h.name)}</td><td>${h.bdo || '–'}</td><td>${h.toty || '–'}</td><td>${h.boot || '–'}</td><td>${h.totw || '–'}</td><td><b>${h.total}</b></td></tr>`).join('') + '</table>'
-      + `<div class="muted" style="font-size:12px;margin-top:6px">Counts every award won: TOTW on each match day, TOTY for each finished year (after 15 January), Ballon d'Or and Golden Boot for each year (awarded 15 October). Sorted by 👑, then 🏆, 👟, 📋.</div>`
+      + `<div class="muted" style="font-size:12px;margin-top:6px">Sorted by 👑, 🏆, 👟, then 📋.</div>`
     : '<span class="muted">No awards yet.</span>');
   const tb = $('totwMode'); if (tb) tb.onclick = () => { totwMode = totwMode === 'team' ? 'rating' : 'team'; renderRanking(); };
   // change since the previous session: ratings computed without the latest match day
@@ -1670,29 +1752,35 @@ async function renderRanking() {
   const prev = before.length && before.length < allG.length ? Object.fromEntries((await computeRatings(before)).list.map(p => [p.name, p.ovr])) : {};
   const delta = p => prev[p.name] == null ? null : p.ovr - prev[p.name];
   const dTxt = p => { const d = delta(p); return d == null ? 'new' : d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : '＝ 0'; };
-  window.rankInfo = {list, dTxt};
+  window.rankInfo = {list, dTxt, games: allG};
   const kind = p => p.toty ? 'toty' : p.totw ? 'totw' : '';
   const tier = p => p.ovr >= 75 ? 'gold' : p.ovr >= 65 ? 'silver' : 'bronze';
   const label = p => p.toty ? 'TOTY' : p.totw ? 'TOTW' : '';
   const fx = awardFx;
-  $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''} ${fx(p)}" data-name="${esc(p.name)}" style="cursor:pointer"><div class="face">
+  $('rankCards').innerHTML = list.length ? list.map((p, i) => `<div class="fut ${kind(p) || tier(p)} ${p.rare ? 'rare' : ''} ${fx(p)}" data-name="${esc(p.name)}" role="button" tabindex="0" aria-label="Show statistics for ${esc(p.name)}" style="cursor:pointer"><div class="face">
     <div class="lt"><div class="ovr">${p.ovr}</div><span class="tag">${label(p) || '&nbsp;'}</span>${p.bdo || p.boot ? `<span class="bdo">${p.bdo ? '<span title="Ballon d\'Or winner">👑</span>' : ''}${p.boot ? '<span title="Golden Boot">👟</span>' : ''}</span>` : ''}</div>
     <span class="rk">#${i + 1}</span>    <div class="av">${faceHtml(p.name)}</div>
-    <div class="nm">${esc(p.name)}${p.prov ? ' <span title="Fewer than 5 games: provisional rating" style="font-size:.8em">⏳</span>' : ''}</div><i class="ln"></i>
+    <div class="nm">${esc(p.name)}${provisionalMark(p)}</div><i class="ln"></i>
     <div class="sub"><span><b>${p.sho}</b>SHO</span><span><b>${p.pas}</b>PAS</span><span><b>${p.def}</b>DEF</span></div></div></div>`).join('')
     : '<span class="muted">No games played yet.</span>';
-  $('rankTable').innerHTML = list.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted.</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games</th><th>Goals all/L5</th><th>Assists all/L5</th>  <th>Win %</th><th title="Change since the previous session">Δ</th></tr>` +
-      list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${p.prov ? ' ⏳' : ''}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td><td>${dTxt(p)}</td></tr>`).join('') + '</table>' : '';
+  if (selectedRankName) {
+    const selected = list.find(p => p.name === selectedRankName);
+    if (selected) renderRankDetail(selected);
+    else { selectedRankName = null; $('rankDetail').style.display = 'none'; }
+  }
+  $('rankTable').innerHTML = list.length ? `<div class="muted">Last 5 match days: ${days.length} day(s) counted.</div><table style="font-size:13px"><tr><th>#</th><th>Player</th><th>OVR</th><th>Games all/L5</th><th>Goals all/L5</th><th>Assists all/L5</th>  <th>Win %</th><th title="Change since the previous session">Δ</th></tr>` +
+      list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}${provisionalMark(p)}${p.bdo ? ' 👑' : ''}${p.boot ? ' 👟' : ''}${label(p) ? ' ' + label(p).split(' ')[0] : ''}</td><td><b>${p.ovr}</b></td><td>${p.games}/${p.rGames}</td><td>${p.g}/${p.rg}</td>    <td>${p.a}/${p.ra}</td><td>${p.winPct}%</td><td>${dTxt(p)}</td></tr>`).join('') + '</table>' : '';
 }
 let statsSort = {k: 'name', dir: 1};
 async function renderStats() {
   const games = await all('games'), m = {};
   games.forEach(g => [[g.teamA, 'A'], [g.teamB, 'B']].forEach(([t]) => t.players.forEach(p => {
-    const s = m[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0};
+    const s = m[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, days: {}};
+    const d = s.days[sessionKey(g)] ??= {games: 0, wins: 0}; d.games++;
     s.games++; s.goals += p.goals; s.assists += p.assists;
-    if (g.winner === t.name) s.wins++;
+    if (g.winner === t.name) { s.wins++; d.wins++; }
   })));
-  const val = (n, s, k) => k === 'name' ? n : k === 'pct' ? s.wins / s.games : s[k];
+  const val = (n, s, k) => k === 'name' ? n : k === 'pct' ? sessionWinRate(s.days) : s[k];
   const {k, dir} = statsSort;
   const list = Object.entries(m).sort((a, b) => {
     const x = val(...a, k), y = val(...b, k);
@@ -1700,7 +1788,7 @@ async function renderStats() {
   });
   const th = (key, label) => `<th data-sort="${key}" style="cursor:pointer;user-select:none">${label}${k === key ? (dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
   $('statsList').innerHTML = list.length ? `<table><tr>${th('name', 'Player')}${th('games', 'Games')}${th('wins', 'Wins')}${th('goals', 'Goals')}${th('assists', 'Assists')}${th('pct', 'Win %')}</tr>` +
-        list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${Math.round(100 * s.wins / s.games)}%</td></tr>`).join('') + '</table>'
+        list.map(([n, s]) => `<tr><td>${esc(n)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.goals}</td><td>${s.assists}</td><td>${Math.round(100 * sessionWinRate(s.days))}%</td></tr>`).join('') + '</table>'
     : '<span class="muted">No data yet.</span>';
 }
 // Name sorts A-Z first; number columns sort highest first. Click the active column again to reverse.
@@ -1712,10 +1800,11 @@ $('statsList').onclick = e => {
 };
 const dayStamp = () => new Date().toISOString().slice(0, 10);
 $('exportBtn').onclick = async () => {
-  const pl = await all('players'), nameOf = id => pl.find(p => p.id === id)?.name;
+  const pl = await all('players'), nameOf = id => players.find(p => p.id === id)?.name;
   const data = {
     app: 'football', version: 2, exportedAt: new Date().toISOString(),
     players: pl.map(({id, ...p}) => p),
+    rotations: rotations.map(({id, ...p}) => p),
     games: (await all('games')).map(({id, ...g}) => g),
     teams: teams.map(t => t.map(nameOf).filter(Boolean)), teamNames,
     layouts: layouts.map(l => (l || []).map(nameOf).filter(Boolean))
@@ -1741,44 +1830,137 @@ async function updateBackupBar() {
   $('backupMsg').textContent = `💾 ${n} match${n > 1 ? 'es' : ''} not backed up yet. Your data only lives in this browser.`;
 }
 $('backupNow').onclick = () => $('exportBtn').click();
+let selectedRankName = null;
+function playerMatchStats(name, games) {
+  const stats = {wins: 0, draws: 0, losses: 0, scoredGames: 0, assistGames: 0, involvedGames: 0, multiGoalGames: 0, bestGoals: 0, bestAssists: 0, goalsFor: 0, goalsAgainst: 0, gkCleanSheets: 0};
+  games.forEach(g => {
+    [[g.teamA, g.scoreA, g.scoreB], [g.teamB, g.scoreB, g.scoreA]].forEach(([team, scored, conceded]) => {
+      team.players.filter(p => p.name === name).forEach(p => {
+        const goals = p.goals || 0, assists = p.assists || 0;
+        if (g.winner === 'Draw') stats.draws++;
+        else if (g.winner === team.name) stats.wins++;
+        else stats.losses++;
+        if (goals > 0) stats.scoredGames++;
+        if (assists > 0) stats.assistGames++;
+        if (goals > 0 || assists > 0) stats.involvedGames++;
+        if (goals >= 2) stats.multiGoalGames++;
+        stats.bestGoals = Math.max(stats.bestGoals, goals);
+        stats.bestAssists = Math.max(stats.bestAssists, assists);
+        stats.goalsFor += scored; stats.goalsAgainst += conceded;
+        if (p.gk && conceded === 0) stats.gkCleanSheets++;
+      });
+    });
+  });
+  return stats;
+}
+function renderRankDetail(p) {
+  const rate = (v, n) => n ? (v / n).toFixed(2) : '–';
+  const metric = (value, label) => `<div class="rank-metric"><b>${value}</b><span>${label}</span></div>`;
+  const parts = p.ratingParts, gkWeight = 25 * parts.gkShare;
+  const stats = playerMatchStats(p.name, window.rankInfo.games);
+  const gd = stats.goalsFor - stats.goalsAgainst;
+  const lineup = (names, count) => names.length ? `${names.map(esc).join(', ')} · ${count}/${p.games} games` : '–';
+  const box = $('rankDetail');
+  box.style.display = '';
+  box.innerHTML = `<div class="rank-detail-head"><div><h3>${esc(p.name)} · ${p.ovr} OVR</h3>
+    <div class="muted">${window.rankInfo.dTxt(p)} since the previous session${p.prov ? ' · ⏳ Provisional: fewer than 3 sessions' : ''}${p.role === 'DEF' ? ' · 🛡 Likely defender (guess)' : ''}</div></div>
+    <button class="sec" type="button" data-close-detail>Close</button></div>
+    <div class="rank-detail-grid">
+      <section class="rank-detail-section"><h4>Match record · all time</h4>
+        <div class="rank-metrics">${metric(p.games, 'Games')}${metric(p.g, 'Goals')}${metric(p.a, 'Assists')}</div>
+        <dl><div><dt>Goals per game</dt><dd>${rate(p.g, p.games)}</dd></div><div><dt>Assists per game</dt><dd>${rate(p.a, p.games)}</dd></div><div><dt>Session-average win rate</dt><dd>${p.winPct}%</dd></div></dl>
+        </section>
+      <section class="rank-detail-section"><h4>Recent form · last 5 session days</h4>
+        <div class="rank-metrics">${metric(p.rGames, 'Games')}${metric(p.rg, 'Goals')}${metric(p.ra, 'Assists')}</div>
+        </section>
+      <section class="rank-detail-section"><h4>Attacking contributions · all time</h4>
+        <div class="rank-metrics">${metric(p.g + p.a, 'Goals + assists')}${metric(rate(p.g + p.a, p.games), 'Per game')}${metric(`${stats.involvedGames}/${p.games}`, 'Games with G/A')}</div>
+        <dl><div><dt>Games with a goal</dt><dd>${stats.scoredGames}</dd></div><div><dt>Games with an assist</dt><dd>${stats.assistGames}</dd></div>
+        <div><dt>Games with 2+ goals</dt><dd>${stats.multiGoalGames}</dd></div><div><dt>Most goals in a game</dt><dd>${stats.bestGoals}</dd></div><div><dt>Most assists in a game</dt><dd>${stats.bestAssists}</dd></div></dl>
+        <p class="muted">Raw match totals; short and long matches differ.</p></section>
+      <section class="rank-detail-section"><h4>Team results · all time</h4>
+        <div class="rank-metrics">${metric(stats.wins, 'Wins')}${metric(stats.draws, 'Draws')}${metric(stats.losses, 'Losses')}</div>
+        <dl><div><dt>Match win rate</dt><dd>${p.games ? Math.round(100 * stats.wins / p.games) + '%' : '–'}</dd></div>
+        <div><dt>Team goals scored / conceded</dt><dd>${stats.goalsFor} / ${stats.goalsAgainst}</dd></div><div><dt>Team goal difference</dt><dd>${gd > 0 ? '+' : ''}${gd}</dd></div></dl>
+        <p class="muted">Team totals use whole-match scores, including when players move or leave. Match win rate weights games equally.</p></section>
+      <section class="rank-detail-section"><h4>What makes up the overall</h4>
+        <dl><div><dt>Starting value</dt><dd>40</dd></div><div><dt>Attack · ${p.attIdx}/100</dt><dd>+${parts.attack.toFixed(1)}</dd></div>
+        <div><dt>Team impact · ${p.impIdx}/100</dt><dd>+${parts.impact.toFixed(1)}</dd></div>
+        ${parts.gkShare ? `<div><dt>Goalkeeper blend · ${gkWeight.toFixed(1)}%</dt><dd>+${parts.goalkeeper.toFixed(1)}</dd></div>` : ''}
+        <div><dt>Overall · rounded</dt><dd>${p.ovr}</dd></div></dl>
+        <p class="muted">Rounded contributions. Estimated team impact: attack ${p.offImp > 0 ? '+' : ''}${p.offImp}, conceded ${p.defImp > 0 ? '+' : ''}${p.defImp} normalised goals.</p></section>
+      <section class="rank-detail-section"><h4>Card attributes</h4>
+        <div class="rank-metrics">${metric(p.sho, 'SHO')}${metric(p.pas, 'PAS')}${metric(p.def, 'DEF')}</div>
+        <p class="muted">DEF is a team-based estimate, not individual defensive actions.</p></section>
+      <section class="rank-detail-section"><h4>Attendance &amp; uncertainty</h4>
+        <dl><div><dt>Sessions attended</dt><dd>${p.days.size}</dd></div><div><dt>Effective sessions</dt><dd>${p.effectiveSessions.toFixed(1)}</dd></div><div><dt>Attack evidence weight</dt><dd>${Math.round(100 * p.confidence)}%</dd></div>
+        <div><dt>Most frequent teammate${p.partnerNames.length > 1 ? 's' : ''}</dt><dd>${lineup(p.partnerNames, p.partnerGames)}</dd></div><div><dt>Most frequent opponent${p.opponentNames.length > 1 ? 's' : ''}</dt><dd>${lineup(p.opponentNames, p.opponentGames)}</dd></div></dl>
+        <p class="muted">Limited evidence pulls attack toward average. Repeated lineups make impact harder to separate; evidence weight is not a probability.</p></section>
+      <section class="rank-detail-section"><h4>Goalkeeper</h4>
+        <dl><div><dt>Games marked in goal</dt><dd>${p.gkG}</dd></div>${p.gkG ? `<div><dt>Team clean sheets</dt><dd>${stats.gkCleanSheets}</dd></div><div><dt>Team goals conceded</dt><dd>${p.conc}</dd></div><div><dt>Conceded per marked game</dt><dd>${rate(p.conc, p.gkG)}</dd></div>` : ''}</dl>
+        ${p.gkG ? '<p class="muted">Minutes and saves are not recorded; conceding includes team defending.</p>' : ''}</section>
+    </div>`;
+}
 $('rankCards').onclick = e => {
   const c = e.target.closest('.fut[data-name]'); if (!c || !window.rankInfo) return;
   const p = window.rankInfo.list.find(x => x.name === c.dataset.name); if (!p) return;
-  const r = (v, n) => n ? (v / n).toFixed(2) : '–';
-  const box = $('rankDetail');
-  box.style.display = '';
-  box.innerHTML = `<h3 style="margin:0 0 6px">${esc(p.name)} — ${p.ovr} <span class="muted">(${window.rankInfo.dTxt(p)} since the previous session)</span>${p.prov ? ' <span class="muted">⏳ provisional: fewer than 5 games</span>' : ''}</h3>
-    <table style="font-size:13px"><tr><td>Attack index (goals + 0.7 × assists per match, vs the best player)</td><td><b>${p.attIdx}</b>/100</td></tr>
-    <tr><td>Goals / assists per match</td><td>${r(p.g, p.games)} / ${r(p.a, p.games)} (${p.g} + ${p.a} in ${p.games} games)</td></tr>
-    <tr><td>Defence rating (50% defensive impact, 20% clean sheets, 15% goals conceded, 15% goalkeeper record)</td><td><b>${p.def}</b></td></tr>
-    <tr><td>Team impact (results, goal difference, opponent strength)</td><td><b>${p.win}</b> (win rate ${p.winPct}%)</td></tr>
-    <tr><td>Form (last 5 match days)</td><td>${p.rGames} games, ${p.rg} goals, ${p.ra} assists</td></tr>
-    <tr><td>Man of the match</td><td>${p.motmScore == null ? 'no votes yet' : `${p.motm} of ${p.mg} games (score ${p.motmScore}/100)`}</td></tr>
-    <tr><td>Impact index (ridge regression: goals his teams score more / concede fewer with him, teammates' share removed)</td><td><b>${p.impIdx}</b>/100 (offence ${p.offImp > 0 ? '+' : ''}${p.offImp}, defence ${p.defImp > 0 ? '+' : ''}${p.defImp} goals conceded per match)${p.role === 'DEF' ? ' — <b>🛡 likely defender</b>' : ''}</td></tr>
-    <tr><td>Goalkeeper</td><td>${p.gkG ? `${p.gkG} games in goal, ${r(p.conc, p.gkG)} conceded per game` : '–'}</td></tr></table>`;
-  box.scrollIntoView({block: 'nearest'});
+  selectedRankName = p.name;
+  renderRankDetail(p);
+  $('rankDetail').scrollIntoView({block: 'nearest'});
+};
+$('rankCards').onkeydown = e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.fut[data-name]')) { e.preventDefault(); e.target.click(); }
+};
+$('rankDetail').onclick = e => {
+  if (!e.target.closest('[data-close-detail]')) return;
+  selectedRankName = null; $('rankDetail').style.display = 'none';
 };
 const gameKey = g => [g.date, g.scoreA, g.scoreB, g.teamA?.name, g.teamB?.name,
   [...(g.teamA?.players || []), ...(g.teamB?.players || [])].map(p => `${p.name}:${p.goals}:${p.assists}`).sort().join(',')].join('|');
 async function importData(file, replace) {
   const d = JSON.parse(await file.text());
   if (!Array.isArray(d.players) || !Array.isArray(d.games)) throw new Error('bad');
+  if (d.rotations != null && !Array.isArray(d.rotations)) throw new Error('bad rotations');
+  if (d.players.some(p => !p || typeof p.name !== 'string' || !p.name.trim())) throw new Error('Invalid player in backup.');
+  if ((d.teams != null && (!Array.isArray(d.teams) || d.teams.some(t => !Array.isArray(t)))) ||
+      (d.layouts != null && (!Array.isArray(d.layouts) || d.layouts.some(l => l != null && !Array.isArray(l))))) {
+    throw new Error('Invalid teams or layouts in backup.');
+  }
+  if ([...(d.teams || []), ...(d.layouts || []).filter(Boolean)].some(t => t.some(n => typeof n !== 'string' && typeof n !== 'number'))) {
+    throw new Error('Invalid team member in backup.');
+  }
+  const incomingRotations = [...d.players.filter(p => p.rotation), ...(d.rotations || [])];
+  if (incomingRotations.some(p => !p || typeof p.name !== 'string' || !p.name.trim())) throw new Error('bad rotation');
+  const normalNames = new Set(d.players.filter(p => !p.rotation).map(p => p.name.toLowerCase()));
+  if (!replace) players.filter(p => !p.rotation).forEach(p => normalNames.add(p.name.toLowerCase()));
+  if (incomingRotations.some(p => normalNames.has(p.name.toLowerCase()))) throw new Error('A rotation name conflicts with a player name. Rename it before importing.');
+  if (!replace && d.players.some(p => !p.rotation && rotations.some(r => r.name.toLowerCase() === p.name.toLowerCase()))) throw new Error('A player name conflicts with an existing rotation. Rename it before importing.');
   // backups from the first version stored team members as ids
-  const oldIds = Object.fromEntries(d.players.filter(p => p.id).map(p => [p.id, p.name]));
+  const oldIds = Object.fromEntries([...d.players, ...incomingRotations].filter(p => p.id).map(p => [p.id, p.name]));
   const impTeams = (d.teams || []).map(t => t.map(x => typeof x === 'number' ? oldIds[x] : x).filter(Boolean));
   if (replace) {
     await tx('players', 'readwrite', s => s.clear()); await tx('games', 'readwrite', s => s.clear());
-    teams = []; teamNames = []; layouts = [];
-    await setKV('teams', teams); await setKV('teamNames', teamNames); await setKV('layouts', layouts);
+    teams = []; teamNames = []; layouts = []; rotations = [];
+    await setKV('teams', teams); await setKV('teamNames', teamNames); await setKV('layouts', layouts); await setKV('rotations', rotations);
   }
   await loadPlayers();
   let addedP = 0, addedG = 0;
-  for (const p of d.players) {
+  for (const p of d.players.filter(p => !p.rotation)) {
     const {id, ...rest} = p;
     const ex = players.find(x => x.name.toLowerCase() === p.name.toLowerCase());
     if (ex) { if (p.photo && !ex.photo) { ex.photo = p.photo; await put('players', ex); } }
     else { await add('players', rest); addedP++; await loadPlayers(); }
   }
+  for (const p of incomingRotations) {
+    const ex = players.find(x => x.name.toLowerCase() === p.name.toLowerCase());
+    if (ex && !ex.rotation) throw new Error('rotation name conflicts with player');
+    if (!ex) {
+      const {id, ...rest} = p;
+      const rotation = {...rest, id: Math.min(0, ...rotations.map(x => x.id)) - 1, rotation: true, available: false};
+      rotations.push(rotation); players.push(rotation);
+    }
+  }
+  await setKV('rotations', rotations);
   const have = new Set((await all('games')).map(gameKey));
   for (const g of d.games) {
     const {id, ...rest} = g;
@@ -1790,7 +1972,10 @@ async function importData(file, replace) {
   if (!teams.length && impTeams.length) {
     teams = impTeams.map(t => t.map(n => players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id).filter(Boolean));
     teamNames = d.teamNames || [];
-    const idOf = n => players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id;
+    const idOf = n => {
+      const name = typeof n === 'number' ? oldIds[n] : n;
+      return typeof name === 'string' ? players.find(p => p.name.toLowerCase() === name.toLowerCase())?.id : undefined;
+    };
     layouts = (d.layouts || []).map(l => (l || []).map(idOf).filter(Boolean));
     await setKV('layouts', layouts);
     await setKV('teams', teams); await setKV('teamNames', teamNames);
@@ -1802,7 +1987,7 @@ for (const [id, replace] of [['importFile', false], ['replaceFile', true]]) {
   $(id).onchange = async e => {
     const f = e.target.files[0]; e.target.value = ''; if (!f) return;
     if (replace && !confirm('This DELETES all current data and replaces it with the backup. Continue?')) return;
-    try { await importData(f, replace); } catch { alert('Invalid backup file'); }
+    try { await importData(f, replace); } catch (err) { alert(`Could not import backup: ${err.message}`); }
   };
 }
 
@@ -1829,7 +2014,10 @@ function renderAll() { updateBackupBar(); refreshRatings().then(() => { renderPl
   renderAll();
   const saved = localStorage.getItem('liveGame');
   if (saved) { game = JSON.parse(saved); showLive(); }
-})();
+})().catch(err => {
+  console.error('Could not load football data:', err);
+  alert('Could not load football data. ' + err.message);
+});
 </script>
 </body>
 </html>
