@@ -224,7 +224,7 @@
   <details class="muted" style="margin-bottom:10px"><summary>Rating and awards</summary>
     <p>Overall: 55% attack (goals + 0.7 × assists), 22% team impact, 13% result and 10% DEF. Result combines 60% win/draw and 40% normalised goal difference, adjusted for team strength. Goalkeeper games contribute a direct goals-conceded blend of up to 40%; goalkeeper record also affects DEF. DEF and impact are team-based estimates, not measured defensive actions. 🛡 is a defender guess.</p>
     <p>Overall blends 60% all-time and 40% last five session days; without a recent appearance it uses all-time only. Both periods use recency weighting, halving every eight sessions. Sessions are calendar days, with partial attendance reducing influence. One long match is treated as a full session; clean-sheet rates remain imperfectly comparable. ⏳: −5 points for one session, −2 for two.</p>
-    <p>TOTW uses the latest session. TOTY uses the previous year; Ballon d'Or and Golden Boot use games through 15 October. These period ratings weight sessions equally, without L5 blending. Yearly awards require attendance at 25% of sessions, rounded up.</p>
+    <p>TOTW selects the highest-rated eligible players from each session. To qualify, a player must appear in more than half of their main team's matches; ties between main teams go to the most recently played for. Fewer than five may qualify. TOTY uses the previous year; Ballon d'Or and Golden Boot use games through 15 October. These period ratings weight sessions equally, without L5 blending. Yearly awards require attendance at 25% of sessions, rounded up.</p>
   </details>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
@@ -1419,10 +1419,10 @@ async function renderSessions() {
     const line = (l, s) => `<div>${l}: ${s ? `<b>${esc(s.key)}</b> <span class="muted">— ${s.g} goals + ${s.a} assists = ${s.g + s.a} (${s.games} match${s.games > 1 ? 'es' : ''} together)</span>` : '<span class="muted">–</span>'}</div>`;
     const combosHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">` + Object.keys(t).sort((a, b) => a.localeCompare(b)).map(n => `<div style="min-width:0"><h4 style="margin:6px 0 0">${esc(n)}</h4>
       ${squadOf(n, di)}${line('🤝 Top duo', duo[n])}${line('🔱 Top trio', trio[n])}</div>`).join('') + '</div>';
-    const dr = (await computeRatings(gs, true)).list, top = dr.slice(0, 5), st = Object.fromEntries(top.map(p => [p.name, p]));
+    const dr = (await computeRatings(gs, true)).list, top = eligibleTOTW(dr, gs).slice(0, 5), st = Object.fromEntries(top.map(p => [p.name, p]));
     const tkey = `totw${di}`;
     pitchData[tkey] = {all: ratingCache.games};
-    const totwHtml = top.length ? renderPitch({rows: arrangeSquad(top.map(p => p.name), n => st[n], ratingCache.games), byName: st, games: gs}, '📋 Team of the Week', '5 best-rated players of this session', '', '', tkey) : '';
+    const totwHtml = top.length ? renderPitch({rows: arrangeSquad(top.map(p => p.name), n => st[n], ratingCache.games), byName: st, games: gs}, '📋 Team of the Week', '', '', '', tkey) : '<h3>📋 Team of the Week</h3><span class="muted">No eligible players.</span>';
     const ps = {};
     gs.forEach(g => [[g.teamA, g.scoreB], [g.teamB, g.scoreA]].forEach(([tm, conc]) => tm.players.forEach(p => {
       const s = ps[p.name] ??= {games: 0, wins: 0, goals: 0, assists: 0, cs: 0};
@@ -1646,9 +1646,12 @@ async function computeRatings(src, flat) {
   if (days.length) {
     const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
     const lastGames = games.filter(g => dk(g) === days[0]);
-    const sel = selectTeam((await computeRatings(lastGames, true)).list, lastGames);
-    sel.picked.forEach(p => { if (ratingsByName[p.name]) ratingsByName[p.name].totw = true; });
-    squad = {rows: sel.rows, byName: ratingsByName, day: lastGames[0].date, games: lastGames, all: games};
+    const eligible = eligibleTOTW((await computeRatings(lastGames, true)).list, lastGames);
+    if (eligible.length) {
+      const sel = selectTeam(eligible, lastGames);
+      sel.picked.forEach(p => { if (ratingsByName[p.name]) ratingsByName[p.name].totw = true; });
+      squad = {rows: sel.rows, byName: ratingsByName, day: lastGames[0].date, games: lastGames, all: games};
+    }
   }
   // Rare (shiny): played at least 50% of the last 5 match days (needs at least 2 match days)
   if (days.length >= 2) list.forEach(p => { p.rare = [...p.days].filter(d => days.includes(d)).length >= days.length / 2; });
@@ -1688,7 +1691,7 @@ async function computeHonours() {
   const games = await all('games'), now = new Date();
   const H = {};
   const add = (n, k) => { (H[n] ??= {totw: 0, toty: 0, boot: 0, bdo: 0})[k]++; };
-  const top5 = async gs => (await computeRatings(gs, true)).list.slice(0, 5);
+  const top5 = async gs => eligibleTOTW((await computeRatings(gs, true)).list, gs).slice(0, 5);
   const dk = g => { const d = new Date(g.date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const byDay = {};
   games.forEach(g => (byDay[dk(g)] ??= []).push(g));
@@ -1720,6 +1723,16 @@ function sessionTeams(games) {
   return Object.fromEntries(Object.entries(cnt).map(([n, c]) =>
     [n, Object.entries(c).sort((a, b) => b[1].n - a[1].n || b[1].last - a[1].last)[0][0]]));
 }
+function eligibleTOTW(list, games) {
+  const main = sessionTeams(games), teamGames = new Map(), playerGames = new Map();
+  games.forEach(g => [g.teamA, g.teamB].forEach(t => {
+    teamGames.set(t.name, (teamGames.get(t.name) || 0) + 1);
+    new Set(t.players.map(p => p.name)).forEach(name => {
+      if (main[name] === t.name) playerGames.set(name, (playerGames.get(name) || 0) + 1);
+    });
+  }));
+  return list.filter(p => main[p.name] != null && (playerGames.get(p.name) || 0) > (teamGames.get(main[p.name]) || 0) / 2);
+}
 function renderPitch(squad, title, sub, emptyMsg, cls = '', key = '') {
   if (!squad) return `<div style="flex:1 1 280px"><h3>${title}</h3><span class="muted">${emptyMsg}</span></div>`;
   const colour = key ? (sessMode === 'team' ? sessionTeams(squad.games) : null) : !cls && totwMode === 'team' ? sessionTeams(squad.games) : null;
@@ -1729,7 +1742,7 @@ function renderPitch(squad, title, sub, emptyMsg, cls = '', key = '') {
   const line = arr => arr.length ? `<div class="pl">${arr.map(card).join('')}</div>` : '';
   const s = squad.rows;
   const toggle = cls || key ? '' : ` <button class="sec" id="totwMode" style="font-size:12px;padding:3px 8px">${totwMode === 'team' ? 'Show rating' : 'Show team colour'}</button>`;
-  return `<div style="flex:1 1 280px"><h3>${title} <span class="muted">— ${sub}</span>${toggle}</h3>
+  return `<div style="flex:1 1 280px"><h3>${title}${sub ? ` <span class="muted">— ${sub}</span>` : ''}${toggle}</h3>
     <div class="pitch ${cls}" data-squad="${key || (cls ? 'toty' : 'totw')}">${line(s.ATT)}${line(s.MID)}${line(s.DEF)}${line(s.GK)}</div></div>`;
 }
 // Chemistry lines between linked positions; unknown pairs are neutral and dashed.
@@ -1763,7 +1776,7 @@ function drawLinks(data, root = document) {
 async function renderRanking() {
   const {list, days, squad, toty} = await computeRatings();
   $('rankPitch').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:16px">` +
-    renderPitch(squad, '📋 Team of the Week', squad ? new Date(squad.day).toLocaleDateString() : '', 'No games played yet.') +
+    renderPitch(squad, '📋 Team of the Week', squad ? new Date(squad.day).toLocaleDateString() : '', days.length ? 'No eligible players in the latest session.' : 'No games played yet.') +
     renderPitch(toty, '🏆 Team of the Year', toty ? toty.year : '', 'Available after 15 January, when eligible players have games in the previous year.', 'toty-pitch') + `</div>
     <div class="muted" style="font-size:12px">Chemistry: <b style="color:#22a84f">green</b> stronger, <b style="color:#d98a00">orange</b> average, <b style="color:#e02424">red</b> weaker, grey dashed unknown. Based on shared team results.</div>`;
   drawLinks({totw: squad, toty});
