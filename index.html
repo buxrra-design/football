@@ -222,9 +222,9 @@
 <section id="ranking">
   <div class="card"><h2>Player ranking</h2>
   <details class="muted" style="margin-bottom:10px"><summary>Rating and awards</summary>
-    <p>Overall: 60% attack, 40% estimated team impact; goalkeeper games add a goals-conceded blend. DEF is team-based, not measured defensive actions. ⏳ means fewer than 3 sessions; 🛡 is a defender guess.</p>
-    <p>A session is one calendar day. Recent sessions count more; partial attendance reduces evidence. A single long match counts as a full session. L5 means the last five session days. Win % averages session win rates.</p>
-    <p>TOTW uses the latest session. TOTY uses the previous year; Ballon d'Or and Golden Boot use games through 15 October. Yearly awards require attendance at 25% of sessions, rounded up.</p>
+    <p>Overall: 55% attack (goals + 0.7 × assists), 22% team impact, 13% result and 10% DEF. Result combines 60% win/draw and 40% normalised goal difference, adjusted for team strength. Goalkeeper games contribute a direct goals-conceded blend of up to 40%; goalkeeper record also affects DEF. DEF and impact are team-based estimates, not measured defensive actions. 🛡 is a defender guess.</p>
+    <p>Overall blends 60% all-time and 40% last five session days; without a recent appearance it uses all-time only. Both periods use recency weighting, halving every eight sessions. Sessions are calendar days, with partial attendance reducing influence. One long match is treated as a full session; clean-sheet rates remain imperfectly comparable. ⏳: −5 points for one session, −2 for two.</p>
+    <p>TOTW uses the latest session. TOTY uses the previous year; Ballon d'Or and Golden Boot use games through 15 October. These period ratings weight sessions equally, without L5 blending. Yearly awards require attendance at 25% of sessions, rounded up.</p>
   </details>
   <div id="rankPitch" class="card" style="border:1px solid #e3e8ee"></div>
   <div id="honours" class="card" style="border:1px solid #e3e8ee"></div>
@@ -1536,29 +1536,78 @@ async function computeRatings(src, flat) {
   const playerWeight = g => 6 * recency(g) / maxAppearances[day(g)];
   // Put goals on a common ten-match session scale, without using unreliable durations.
   const scaleOf = g => maxAppearances[day(g)] / 10;
-  const build = () => {
+  const build = (periodGames, strength) => {
     const m = {};
-    games.forEach(g => {
+    periodGames.forEach(g => {
       const rec = recentDays.has(day(g)), scale = scaleOf(g);
       const margin = Math.abs(g.scoreA - g.scoreB) * scale;
       const aw = margin <= 1 ? 1.15 : margin >= 4 ? 0.85 : 1; // goals and assists in close matches count a bit more than in blowouts
-      [g.teamA, g.teamB].forEach(t => t.players.forEach(p => {
+      [[g.teamA, g.teamB], [g.teamB, g.teamA]].forEach(([t, o]) => t.players.forEach(p => {
         const conc = t === g.teamA ? g.scoreB : g.scoreA, mw = playerWeight(g);
-        const s = m[p.name] ??= {games: 0, wn: 0, rGames: 0, g: 0, a: 0, rg: 0, ra: 0, wg: 0, wa: 0, att: 0, gkG: 0, gkWeight: 0, gkS: 0, conc: 0, days: new Set(), winDays: {}};
+        const s = m[p.name] ??= {games: 0, wn: 0, rGames: 0, g: 0, a: 0, rg: 0, ra: 0, wg: 0, wa: 0, att: 0, ti: 0, wcs: 0, wconc: 0, gkG: 0, gkWeight: 0, gkS: 0, conc: 0, days: new Set(), winDays: {}};
         s.days.add(day(g));
         if (p.gk) { s.gkG++; s.conc += conc; s.gkWeight += mw; s.gkS += mw * Math.max(0, 1 - conc * scale / 4); }
         const record = s.winDays[day(g)] ??= {games: 0, wins: 0};
         record.games++; if (g.winner === t.name) record.wins++;
+        const outcome = g.winner === 'Draw' ? 0.5 : g.winner === t.name ? 1 : 0;
+        const gd = (t === g.teamA ? g.scoreA - g.scoreB : g.scoreB - g.scoreA) * scale;
+        let result = 0.6 * outcome + 0.4 * (0.5 + Math.max(-3, Math.min(3, gd)) / 6);
+        const avg = (team, skip) => {
+          const values = team.players.filter(x => x.name !== skip && strength[x.name] != null).map(x => strength[x.name]);
+          return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+        };
+        const mine = avg(t, p.name), opponent = avg(o);
+        if (mine != null && opponent != null) result += Math.max(-0.12, Math.min(0.12, (opponent - mine) * 0.005));
         s.games++; s.wn += mw; s.g += p.goals; s.a += p.assists;
         s.wg += mw * p.goals * scale; s.wa += mw * p.assists * scale; s.att += mw * (p.goals + 0.7 * p.assists) * scale * aw;
+        s.ti += mw * Math.max(0, Math.min(1, result)); s.wcs += mw * (conc === 0 ? 1 : 0); s.wconc += mw * conc * scale;
         if (rec) { s.rGames++; s.rg += p.goals; s.ra += p.assists; }
       }));
     });
     return m;
   };
   const rate = (v, n) => n ? v / n : 0;
-  const {attack: offB, defence: defB} = ridgeImpact(games, wOf, scaleOf, rotNames);
-  const list = Object.entries(build()).filter(([name]) => !rotNames.has(name)).map(([name, s]) => ({name, ...s}));
+  const PRIOR = 12;
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const scorePeriod = periodGames => {
+    if (!periodGames.length) return {};
+    const {attack: offB, defence: defB} = ridgeImpact(periodGames, wOf, scaleOf, rotNames);
+    const calculate = strength => {
+      const list = Object.entries(build(periodGames, strength)).filter(([name]) => !rotNames.has(name)).map(([name, s]) => ({name, ...s}));
+      const total = list.reduce((s, p) => s + p.wn, 0);
+      const mean = key => rate(list.reduce((s, p) => s + p[key], 0), total);
+      const meanG = mean('wg'), meanA = mean('wa'), meanAtt = mean('att'), meanCS = mean('wcs'), meanConc = mean('wconc');
+      const adjustedIndex = (v, p, reference, scale) => {
+        if (!reference) return 0.5;
+        const observed = Math.min(1, rate(v, p.wn) / (scale * reference));
+        const confidence = p.wn / (p.wn + PRIOR);
+        return confidence * observed + (1 - confidence) / scale;
+      };
+      return Object.fromEntries(list.map(p => {
+        const att = adjustedIndex(p.att, p, meanAtt, 2);
+        const imp = clamp01(0.5 + ((offB[p.name] || 0) - (defB[p.name] || 0)) / 1.2);
+        const result = (p.ti + PRIOR * 0.5) / (p.wn + PRIOR);
+        const cs = (p.wcs + PRIOR * meanCS) / (p.wn + PRIOR);
+        const conceded = (p.wconc + PRIOR * meanConc) / (p.wn + PRIOR);
+        const defImpact = clamp01(0.5 - (defB[p.name] || 0) / 1.2);
+        const concededIndex = clamp01(0.5 - (conceded - meanConc) / 4);
+        const gks = p.gkG ? (p.gkS + 1) / (p.gkWeight + 2) : null;
+        const def = (0.5 * defImpact + 0.2 * cs + 0.15 * concededIndex + (p.gkG ? 0.15 * gks : 0)) / (p.gkG ? 1 : 0.85);
+        const gkShare = p.gkG ? Math.min(1, p.gkWeight / p.wn) : 0, blend = 0.4 * gkShare;
+        const parts = {attack: 59 * 0.55 * att * (1 - blend), impact: 59 * 0.22 * imp * (1 - blend), result: 59 * 0.13 * result * (1 - blend), defence: 59 * 0.10 * def * (1 - blend), goalkeeper: blend ? 59 * gks * blend : 0};
+        const score = 0.55 * att + 0.22 * imp + 0.13 * result + 0.10 * def;
+        return [p.name, {...p, att, imp, result, def, gks, gkShare, parts, score: score * (1 - blend) + (gks || 0) * blend,
+          sho: adjustedIndex(p.wg, p, meanG, 2.5), pas: adjustedIndex(p.wa, p, meanA, 2.5),
+          offImp: offB[p.name] || 0, defImp: defB[p.name] || 0, cleanSheetRate: rate(p.wcs, p.wn), defImpact, concededIndex}];
+      }));
+    };
+    const first = calculate({});
+    const strength = Object.fromEntries(Object.entries(first).map(([name, p]) => [name, 40 + 59 * p.score]));
+    return calculate(strength);
+  };
+  const allScores = scorePeriod(games);
+  const recentScores = flat ? {} : scorePeriod(games.filter(g => recentDays.has(day(g))));
+  const list = Object.values(allScores);
   list.forEach(p => {
     p.effectiveSessions = [...p.days].reduce((s, d) => s + appearances[p.name][d] / maxAppearances[d], 0);
     p.partnerGames = Math.max(0, ...Object.values(partners[p.name] || {}));
@@ -1566,41 +1615,20 @@ async function computeRatings(src, flat) {
     p.partnerNames = Object.entries(partners[p.name] || {}).filter(([, n]) => n === p.partnerGames).map(([name]) => name).sort(byName);
     p.opponentNames = Object.entries(opponents[p.name] || {}).filter(([, n]) => n === p.opponentGames).map(([name]) => name).sort(byName);
   });
-  const totalWeight = list.reduce((s, p) => s + p.wn, 0);
-  const meanG = rate(list.reduce((s, p) => s + p.wg, 0), totalWeight), meanA = rate(list.reduce((s, p) => s + p.wa, 0), totalWeight);
-  const PRIOR = 12;
-  // Bound extreme rates before shrinking, so a single exceptional session cannot bypass the prior.
-  const adjustedIndex = (v, p, mean, scale) => {
-    if (!mean) return 0.5;
-    const observed = Math.min(1, rate(v, p.wn) / (scale * mean));
-    const confidence = p.wn / (p.wn + PRIOR);
-    return confidence * observed + (1 - confidence) / scale;
-  };
-  const tot = list.reduce((t, p) => [t[0] + p.att, t[1] + p.wn], [0, 0]), mean = rate(tot[0], tot[1]);
   list.forEach(p => {
-    // SHO / PAS (goals / assists per match, recency-weighted) are only shown on the card
-    const sub = [adjustedIndex(p.wg, p, meanG, 2.5), adjustedIndex(p.wa, p, meanA, 2.5)];
+    const recent = recentScores[p.name], recentWeight = recent ? 0.4 : 0;
+    const mix = key => (1 - recentWeight) * p[key] + recentWeight * (recent ? recent[key] : 0);
+    p.ratingParts = Object.fromEntries(Object.keys(p.parts).map(key => [key, (1 - recentWeight) * p.parts[key] + recentWeight * (recent ? recent.parts[key] : 0)]));
+    p.allRating = 40 + 59 * p.score;
+    p.recentRating = recent ? 40 + 59 * recent.score : null;
+    p.provisionalPenalty = p.days.size === 1 ? 5 : p.days.size === 2 ? 2 : 0;
     p.winPct = Math.round(100 * sessionWinRate(p.winDays));
-    const att = adjustedIndex(p.att, p, mean, 2);
-    // ridge impact = goals the team scores more and concedes fewer with him (teammates' share removed); +-0.6 goals per match = full scale
-    p.offImp = Math.round(100 * (offB[p.name] || 0)) / 100; p.defImp = Math.round(100 * (defB[p.name] || 0)) / 100;
-    const impIdx = Math.max(0, Math.min(1, 0.5 + ((offB[p.name] || 0) - (defB[p.name] || 0)) / 1.2));
-    p.impIdx = Math.round(100 * impIdx);
-    p.gks = p.gkG ? (p.gkS + 1) / (p.gkWeight + 2) : null;
-    const clamp01 = v => Math.max(0, Math.min(1, v));
-    const gkShare = p.gkG ? Math.min(1, p.gkWeight / p.wn) : 0;
-    const defIdx = clamp01(0.5 - (defB[p.name] || 0) / 1.2) * (1 - 0.15 * gkShare) + (p.gks || 0) * 0.15 * gkShare;
-    let score = 0.60 * att + 0.40 * impIdx;
-    if (gkShare) score = score * (1 - 0.25 * gkShare) + p.gks * 0.25 * gkShare;
-    p.ratingParts = {attack: 59 * 0.60 * att * (1 - 0.25 * gkShare), impact: 59 * 0.40 * impIdx * (1 - 0.25 * gkShare), goalkeeper: gkShare ? 59 * p.gks * 0.25 * gkShare : 0, gkShare};
-    p.attIdx = Math.round(100 * att); p.prov = p.days.size < 3;
-    p.sho = Math.round(40 + 59 * sub[0]); p.pas = Math.round(40 + 59 * sub[1]); p.def = Math.round(40 + 59 * defIdx);
-    p.baseScore = score;
-  });
-  list.forEach(p => {
     p.confidence = p.wn / (p.wn + PRIOR);
-    p.ovr = Math.min(99, Math.round(40 + 59 * p.baseScore));
-    delete p.baseScore;
+    p.prov = p.days.size < 3;
+    p.attIdx = Math.round(100 * mix('att')); p.impIdx = Math.round(100 * mix('imp'));
+    p.resultIdx = Math.round(100 * mix('result'));
+    p.sho = Math.round(40 + 59 * mix('sho')); p.pas = Math.round(40 + 59 * mix('pas')); p.def = Math.round(40 + 59 * mix('def'));
+    p.ovr = Math.max(40, Math.min(99, Math.round((1 - recentWeight) * p.allRating + recentWeight * (p.recentRating ?? 0) - p.provisionalPenalty)));
   });
   list.sort((a, b) => b.ovr - a.ovr || b.g - a.g);
   assignRoles(list, games);
@@ -1856,7 +1884,7 @@ function playerMatchStats(name, games) {
 function renderRankDetail(p) {
   const rate = (v, n) => n ? (v / n).toFixed(2) : '–';
   const metric = (value, label) => `<div class="rank-metric"><b>${value}</b><span>${label}</span></div>`;
-  const parts = p.ratingParts, gkWeight = 25 * parts.gkShare;
+  const parts = p.ratingParts;
   const stats = playerMatchStats(p.name, window.rankInfo.games);
   const gd = stats.goalsFor - stats.goalsAgainst;
   const lineup = (names, count) => names.length ? `${names.map(esc).join(', ')} · ${count}/${p.games} games` : '–';
@@ -1886,14 +1914,18 @@ function renderRankDetail(p) {
       <section class="rank-detail-section"><h4>What makes up the overall</h4>
         <dl><div><dt>Starting value</dt><dd>40</dd></div><div><dt>Attack · ${p.attIdx}/100</dt><dd>+${parts.attack.toFixed(1)}</dd></div>
         <div><dt>Team impact · ${p.impIdx}/100</dt><dd>+${parts.impact.toFixed(1)}</dd></div>
-        ${parts.gkShare ? `<div><dt>Goalkeeper blend · ${gkWeight.toFixed(1)}%</dt><dd>+${parts.goalkeeper.toFixed(1)}</dd></div>` : ''}
+        <div><dt>Result · ${p.resultIdx}/100</dt><dd>+${parts.result.toFixed(1)}</dd></div><div><dt>Defence</dt><dd>+${parts.defence.toFixed(1)}</dd></div>
+        ${parts.goalkeeper ? `<div><dt>Goalkeeper blend</dt><dd>+${parts.goalkeeper.toFixed(1)}</dd></div>` : ''}
+        ${p.provisionalPenalty ? `<div><dt>Provisional adjustment</dt><dd>−${p.provisionalPenalty}</dd></div>` : ''}
         <div><dt>Overall · rounded</dt><dd>${p.ovr}</dd></div></dl>
-        <p class="muted">Rounded contributions. Estimated team impact: attack ${p.offImp > 0 ? '+' : ''}${p.offImp}, conceded ${p.defImp > 0 ? '+' : ''}${p.defImp} normalised goals.</p></section>
+        <p class="muted">Before the provisional adjustment: all-time ${p.allRating.toFixed(1)}${p.recentRating == null ? ' (100%; no L5 appearance)' : ` × 60%, L5 ${p.recentRating.toFixed(1)} × 40%`}. Rounded contributions; the rating is bounded to 40–99.</p>
+        <p class="muted">Base weights: attack 55%, impact 22%, result 13%, defence 10%; goalkeeper games replace up to 40%. All-time ridge estimates: scoring ${p.offImp >= 0 ? '+' : ''}${p.offImp.toFixed(2)}, conceding ${p.defImp >= 0 ? '+' : ''}${p.defImp.toFixed(2)} normalised goals.</p></section>
       <section class="rank-detail-section"><h4>Card attributes</h4>
         <div class="rank-metrics">${metric(p.sho, 'SHO')}${metric(p.pas, 'PAS')}${metric(p.def, 'DEF')}</div>
-        <p class="muted">DEF is a team-based estimate, not individual defensive actions.</p></section>
+        <dl><div><dt>All-time defensive impact</dt><dd>${Math.round(100 * p.defImpact)}/100</dd></div><div><dt>Weighted clean-sheet rate</dt><dd>${Math.round(100 * p.cleanSheetRate)}%</dd></div><div><dt>All-time conceded index</dt><dd>${Math.round(100 * p.concededIndex)}/100</dd></div></dl>
+        <p class="muted">DEF: 50% defensive impact, 20% clean sheets, 15% conceded, 15% goalkeeper record. Without goalkeeper games, the last 15% is redistributed. Clean sheets may favour shorter matches; DEF is not individual defensive actions.</p></section>
       <section class="rank-detail-section"><h4>Attendance &amp; uncertainty</h4>
-        <dl><div><dt>Sessions attended</dt><dd>${p.days.size}</dd></div><div><dt>Effective sessions</dt><dd>${p.effectiveSessions.toFixed(1)}</dd></div><div><dt>Attack evidence weight</dt><dd>${Math.round(100 * p.confidence)}%</dd></div>
+        <dl><div><dt>Sessions attended</dt><dd>${p.days.size}</dd></div><div><dt>Effective sessions</dt><dd>${p.effectiveSessions.toFixed(1)}</dd></div><div><dt>All-time attack evidence weight</dt><dd>${Math.round(100 * p.confidence)}%</dd></div>
         <div><dt>Most frequent teammate${p.partnerNames.length > 1 ? 's' : ''}</dt><dd>${lineup(p.partnerNames, p.partnerGames)}</dd></div><div><dt>Most frequent opponent${p.opponentNames.length > 1 ? 's' : ''}</dt><dd>${lineup(p.opponentNames, p.opponentGames)}</dd></div></dl>
         <p class="muted">Limited evidence pulls attack toward average. Repeated lineups make impact harder to separate; evidence weight is not a probability.</p></section>
       <section class="rank-detail-section"><h4>Goalkeeper</h4>
